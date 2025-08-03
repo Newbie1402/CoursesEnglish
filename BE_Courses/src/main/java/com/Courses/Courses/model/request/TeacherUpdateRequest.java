@@ -17,7 +17,6 @@ import jakarta.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TeacherUpdateRequest {
-    @NotNull(message = "ID giáo viên không được để trống")
     private Long id;
 
     @NotBlank(message = "Chuyên môn không được để trống")

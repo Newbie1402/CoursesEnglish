@@ -20,12 +20,23 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @NotNull(message = "Người dùng không được để trống")
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", unique = true)
     private Users user;
 
-    private String parentName;
-    private String parentPhone;
+    @NotNull(message = "Tên cha không được để trống")
+    @Size(min = 3, max = 100, message = "Tên cha phải có độ dài từ 3 đến 100 ký tự")
+    private String fatherName;
+
+    private String fatherPhone;
+
+    @NotNull(message = "Tên mẹ không được để trống")
+    @Size(min = 3, max = 100, message = "Tên mẹ phải có độ dài từ 3 đến 100 ký tự")
+    private String motherName;
+
+    private String motherPhone;
+
     private String application;
 
     @OneToMany(mappedBy = "student")

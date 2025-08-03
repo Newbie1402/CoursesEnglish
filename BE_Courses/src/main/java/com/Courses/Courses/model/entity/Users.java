@@ -3,8 +3,7 @@ package com.Courses.Courses.model.entity;
 import com.Courses.Courses.enums.Role;
 import com.Courses.Courses.enums.Status;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +24,8 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @NotNull(message = "Full Name không được để trống")
+    @Size(min = 3, max = 100, message = "Full Name phải có độ dài từ 3 đến 100 ký tự")
     private String fullName;
 
     private String email;
@@ -38,10 +38,13 @@ public class Users {
     @NotEmpty(message = "Người dùng phải có ít nhất một vai trò")
     private Set<Role> roles;
 
+    @Past(message = "Ngày sinh phải là ngày trong quá khứ")
     private LocalDate dateOfBirth;
 
+    @NotBlank(message = "Giới tính không được để trống")
     private String gender;
 
+    @NotBlank(message = "Địa chỉ không được để trống")
     private String address;
 
     private LocalDateTime createdAt;

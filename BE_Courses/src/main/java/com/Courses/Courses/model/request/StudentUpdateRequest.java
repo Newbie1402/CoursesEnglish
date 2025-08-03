@@ -17,14 +17,19 @@ import jakarta.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StudentUpdateRequest {
-    @NotNull(message = "ID học viên không được để trống")
     private Long id;
 
     @NotBlank(message = "Tên phụ huynh không được để trống")
-    private String parentName;
+    private String fatherName;
 
     @NotBlank(message = "Số điện thoại phụ huynh không được để trống")
-    private String parentPhone;
+    private String fatherPhone;
+
+    @NotBlank(message = "Tên phụ huynh không được để trống")
+    private String motherName;
+
+    @NotBlank(message = "Số điện thoại phụ huynh không được để trống")
+    private String motherPhone;
 
     private String application;
 }

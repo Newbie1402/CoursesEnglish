@@ -8,10 +8,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class StudentDto {
-    private Long id;
+    private Long studentId;
     private Long userId;
-    private String parentName;
-    private String parentPhone;
+    private String fatherName;
+    private String fatherPhone;
+    private String motherName;
+    private String motherPhone;
     private String application;
 }
 
