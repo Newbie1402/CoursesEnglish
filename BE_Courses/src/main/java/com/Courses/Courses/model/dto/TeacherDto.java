@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class TeacherDto {
-    private Long id;
+    private Long teacherId;
     private Long userId;
     private String bio;
     private String specialization;
