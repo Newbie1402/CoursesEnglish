@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CourseDto {
-    private Long id;
+    private Long CourseId;
     private String title;
     private String description;
     private boolean online;

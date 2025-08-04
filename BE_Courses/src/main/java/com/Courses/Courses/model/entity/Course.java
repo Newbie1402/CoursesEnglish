@@ -25,9 +25,11 @@ public class Course {
 
     private String title;
     private String description;
-    private boolean online; // true = online, false = offline
+    private boolean online; // true = online, false = offline loại hình thức lớp học: học online hoặc học trực tiếp
     private LocalDate startDate;
     private LocalDate endDate;
+
+    private boolean active = true;
 
     @ManyToOne
     private Teacher teacher;
