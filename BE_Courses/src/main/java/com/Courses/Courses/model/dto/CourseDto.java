@@ -15,5 +15,5 @@ public class CourseDto {
     private java.time.LocalDate startDate;
     private java.time.LocalDate endDate;
     private Long teacherId;
+    private boolean active;
 }
-

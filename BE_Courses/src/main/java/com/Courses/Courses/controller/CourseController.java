@@ -27,6 +27,12 @@ public class CourseController {
         return ResponseEntity.ok(courses);
     }
 
+    @GetMapping("/view/full")
+    public ResponseEntity<List<CourseDto>> getFULLCourses() {
+        List<CourseDto> courses = courseService.getFULLCourses();
+        return ResponseEntity.ok(courses);
+    }
+
     /**
      * Lấy thông tin khoá học theo id
      */
@@ -49,9 +55,10 @@ public class CourseController {
      * Inactive (xoá mềm) khoá học
      */
     @DeleteMapping("/inactive/{id}")
-    public ResponseEntity<Void> inactiveCourse(@PathVariable Long id) {
-        courseService.inactiveCourse(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> inactiveCourse(@PathVariable Long id, @RequestParam boolean active) {
+        courseService.setActiveStatus(id, active);
+        String message = active ? "Hiển thị khoá học thành công." : "Ẩn khoá học thành công.";
+        return ResponseEntity.ok(message);
     }
 
     /**

@@ -29,6 +29,16 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Lấy tất cả khoá học (bao gồm cả active và inactive)
+     * @return Danh sách CourseDto
+     */
+    @Transactional(readOnly = true)
+    public List<CourseDto> getFULLCourses() {
+        List<Course> courses = courseRepository.findAll();
+        return courses.stream().map(this::toDto).toList();
+    }
+
     // Lấy thông tin khoá học theo id
     public CourseDto getCourseById(Long id) {
         Course course = courseRepository.findById(id)
@@ -57,11 +67,10 @@ public class CourseService {
 
     // Inactive khoá học
     @Transactional
-    public void inactiveCourse(Long id) {
+    public void setActiveStatus(Long id, boolean active) {
         Course course = courseRepository.findById(id)
-                .filter(Course::isActive)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + id));
-        course.setActive(false);
+        course.setActive(active);
         courseRepository.save(course);
     }
 
@@ -97,6 +106,7 @@ public class CourseService {
                 .startDate(course.getStartDate())
                 .endDate(course.getEndDate())
                 .teacherId(course.getTeacher() != null ? course.getTeacher().getId() : null)
+                .active(course.isActive())
                 .build();
     }
 }
