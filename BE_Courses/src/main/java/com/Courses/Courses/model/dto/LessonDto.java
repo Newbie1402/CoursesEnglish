@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class LessonDto {
-    private Long id;
+    private Long lessonId;
     private String title;
     private String contentUrl;
     private Long courseId;
     private LocalDateTime uploadedAt;
+    private Boolean active;
 }
-

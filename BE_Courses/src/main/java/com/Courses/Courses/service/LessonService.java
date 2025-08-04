@@ -1,0 +1,118 @@
+package com.Courses.Courses.service;
+
+import com.Courses.Courses.model.dto.LessonDto;
+import com.Courses.Courses.model.entity.Course;
+import com.Courses.Courses.model.entity.Lesson;
+import com.Courses.Courses.repository.CourseRepository;
+import com.Courses.Courses.repository.LessonRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+public class LessonService {
+    @Autowired
+    private S3Service s3Service;
+    @Autowired
+    private LessonRepository lessonRepository;
+    @Autowired
+    private CourseRepository courseRepository;
+
+    /**
+     * Xử lý upload file, lưu bài học mới và trả về LessonDto
+     */
+    @Transactional
+    public LessonDto createLesson(String title, MultipartFile file, Long courseId) throws IOException {
+        String fileUrl = s3Service.uploadFile(file);
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + courseId));
+
+        Lesson lesson = new Lesson();
+        lesson.setTitle(title);
+        lesson.setContentUrl(fileUrl);
+        lesson.setUploadedAt(LocalDateTime.now());
+        lesson.setCourse(course);
+        lessonRepository.save(lesson);
+        return convertToDto(lesson);
+    }
+
+    /**
+     * Lấy tất cả bài giảng (kể cả active/inactive)
+     */
+    public List<LessonDto> getAllLessons() {
+        return lessonRepository.findAll().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy tất cả bài giảng chỉ active
+     */
+    public List<LessonDto> getAllActiveLessons() {
+        return lessonRepository.findAll().stream()
+                .filter(lesson -> Boolean.TRUE.equals(lesson.getActive()))
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy chi tiết 1 bài giảng theo id
+     */
+    public LessonDto getLessonById(Long id) {
+        Lesson lesson = lessonRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài giảng với id: " + id));
+        return convertToDto(lesson);
+    }
+
+    /**
+     * Cập nhật thông tin bài giảng (title, contentUrl, courseId)
+     */
+    @Transactional
+    public LessonDto updateLesson(Long id, String title, String contentUrl, Long courseId) {
+        Lesson lesson = lessonRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài giảng với id: " + id));
+        lesson.setTitle(title);
+        lesson.setContentUrl(contentUrl);
+        if (courseId != null) {
+            Course course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + courseId));
+            lesson.setCourse(course);
+        }
+        lessonRepository.save(lesson);
+        return convertToDto(lesson);
+    }
+
+    /**
+     * Đổi trạng thái active/inactive cho bài giảng
+     */
+    @Transactional
+    public LessonDto setLessonActive(Long id, boolean active) {
+        Lesson lesson = lessonRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài giảng với id: " + id));
+        lesson.setActive(active);
+        lessonRepository.save(lesson);
+        return convertToDto(lesson);
+    }
+
+    /**
+     * Chuyển đổi entity Lesson sang DTO LessonDto
+     */
+    private LessonDto convertToDto(Lesson lesson) {
+        if (lesson == null) return null;
+        return LessonDto.builder()
+                .lessonId(lesson.getId())
+                .title(lesson.getTitle())
+                .contentUrl(lesson.getContentUrl())
+                .courseId(lesson.getCourse() != null ? lesson.getCourse().getId() : null)
+                .uploadedAt(lesson.getUploadedAt())
+                .active(lesson.getActive())
+                .build();
+    }
+}

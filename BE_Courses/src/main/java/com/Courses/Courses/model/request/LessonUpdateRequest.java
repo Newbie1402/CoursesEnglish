@@ -16,10 +16,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LessonUpdateRequest {
-    /** ID bài học cần cập nhật */
-    @NotNull(message = "ID bài học không được để trống")
-    private Long id;
-
     /** Tiêu đề bài học */
     @NotBlank(message = "Tiêu đề bài học không được để trống")
     private String title;
