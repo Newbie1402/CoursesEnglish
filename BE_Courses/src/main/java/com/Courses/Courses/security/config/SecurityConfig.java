@@ -1,13 +1,11 @@
 package com.Courses.Courses.security.config;
 
-import com.Courses.Courses.JWT.OAuth2SuccessHandler;
+import com.Courses.Courses.security.OAuth2SuccessHandler;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
-import org.springframework.web.client.RestTemplate;
 
 
 @Configuration
