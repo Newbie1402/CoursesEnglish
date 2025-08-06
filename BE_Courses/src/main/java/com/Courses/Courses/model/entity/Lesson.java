@@ -25,4 +25,9 @@ public class Lesson {
     private Course course;
 
     private LocalDateTime uploadedAt;
+
+    /**
+     * Trạng thái bài giảng: true = active, false = inactive
+     */
+    private Boolean active = true;
 }

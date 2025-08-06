@@ -8,12 +8,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CourseDto {
-    private Long id;
+    private Long CourseId;
     private String title;
     private String description;
     private boolean online;
     private java.time.LocalDate startDate;
     private java.time.LocalDate endDate;
     private Long teacherId;
+    private boolean active;
 }
-

@@ -1,0 +1,93 @@
+package com.Courses.Courses.controller;
+
+import com.Courses.Courses.model.dto.LessonDto;
+import com.Courses.Courses.model.request.LessonUpdateRequest;
+import com.Courses.Courses.service.LessonService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
+
+import java.io.IOException;
+import java.util.List;
+
+@Controller
+@RestController
+@RequestMapping("/api/lessons")
+public class LessonController {
+    @Autowired
+    private LessonService lessonService;
+
+    /**
+     * API upload bài học mới (file + thông tin)
+     * Chỉ nhận request, validate, gọi service xử lý nghiệp vụ
+     */
+    @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    public ResponseEntity<LessonDto> uploadLesson(
+            @RequestParam("title") String title,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("courseId") Long courseId
+    ) throws IOException {
+        LessonDto lessonDto = lessonService.createLesson(title, file, courseId);
+        return ResponseEntity.ok(lessonDto);
+    }
+
+    /**
+     * Lấy tất cả bài giảng (bao gồm cả active/inactive)
+     */
+    @GetMapping("/view/all")
+    public ResponseEntity<List<LessonDto>> getAllLessons() {
+        return ResponseEntity.ok(lessonService.getAllLessons());
+    }
+
+    /**
+     * Lấy tất cả bài giảng chỉ active
+     */
+    @GetMapping("/view/active")
+    public ResponseEntity<List<LessonDto>> getAllActiveLessons() {
+        return ResponseEntity.ok(lessonService.getAllActiveLessons());
+    }
+
+    /**
+     * Lấy chi tiết 1 bài giảng
+     */
+    @GetMapping("/view/{id}")
+    public ResponseEntity<LessonDto> getLessonById(@PathVariable Long id) {
+        return ResponseEntity.ok(lessonService.getLessonById(id));
+    }
+
+    /**
+     * Cập nhật thông tin bài giảng (title, contentUrl, courseId)
+     */
+    @PutMapping("/update/{id}")
+    public ResponseEntity<LessonDto> updateLesson(
+            @PathVariable Long id,
+            @Valid @RequestBody LessonUpdateRequest request
+    ) {
+        LessonDto lessonDto = lessonService.updateLesson(
+                id,
+                request.getTitle(),
+                request.getContentUrl(),
+                request.getCourseId()
+        );
+        return ResponseEntity.ok(lessonDto);
+    }
+
+    /**
+     * Đổi trạng thái active/inactive cho bài giảng
+     */
+    @PatchMapping("/update/{id}/active")
+    public ResponseEntity<?> setLessonActive(
+            @PathVariable Long id,
+            @RequestParam boolean active
+    ) {
+        LessonDto lessonDto = lessonService.setLessonActive(id, active);
+        String message = active ? "Bài giảng đã được kích hoạt." : "Bài giảng đã bị vô hiệu hóa.";
+        return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
+            put("message", message);
+            put("lesson", lessonDto);
+        }});
+    }
+}
