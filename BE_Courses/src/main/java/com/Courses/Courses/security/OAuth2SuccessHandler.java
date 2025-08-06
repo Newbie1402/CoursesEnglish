@@ -114,6 +114,7 @@ public class OAuth2SuccessHandler implements org.springframework.security.web.au
             user.setCreatedAt(LocalDateTime.now());
             user.setLastLoginAt(LocalDateTime.now());
             user.setIsOauth2(true);
+            user.setRoles(acceptedAccountOptional.get().getRoles());
             usersRepository.save(user);
         }
 
