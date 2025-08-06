@@ -1,12 +1,12 @@
-package com.Courses.Courses.JWT;
+package com.Courses.Courses.security;
 
-import com.Courses.Courses.enums.Role;
 import com.Courses.Courses.enums.Status;
 import com.Courses.Courses.model.entity.AcceptedAccount;
 import com.Courses.Courses.model.entity.Users;
 import com.Courses.Courses.model.response.ResponseData;
 import com.Courses.Courses.repository.AcceptedAccountRepository;
 import com.Courses.Courses.repository.UsersRepository;
+import com.Courses.Courses.security.jwt.JWTUtil;
 import com.Courses.Courses.service.AcceptedAccountService;
 import com.Courses.Courses.service.CustomUserDetailService;
 import com.Courses.Courses.service.GooglePeopleService;
@@ -25,7 +25,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 

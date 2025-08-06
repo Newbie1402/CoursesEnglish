@@ -1,4 +1,4 @@
-package com.Courses.Courses.JWT;
+package com.Courses.Courses.security.jwt;
 
 import org.springframework.stereotype.Service;
 

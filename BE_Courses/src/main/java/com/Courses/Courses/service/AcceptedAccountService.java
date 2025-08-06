@@ -1,7 +1,7 @@
 package com.Courses.Courses.service;
 
 import com.Courses.Courses.enums.Role;
-import com.Courses.Courses.model.dto.AcceptedAccountDTO;
+import com.Courses.Courses.model.dto.AcceptedAccountDto;
 import com.Courses.Courses.model.entity.AcceptedAccount;
 import com.Courses.Courses.model.request.AcceptedAccountRequest;
 import com.Courses.Courses.model.response.ResponseData;
@@ -20,7 +20,18 @@ public class AcceptedAccountService {
 
     private final AcceptedAccountRepository acceptedAccountRepository;
 
-    public ResponseEntity<ResponseData<AcceptedAccountDTO>> addAccount(AcceptedAccountRequest request) {
+    private static final Set<Role> ALLOWED_ROLES = Set.of(Role.TEACHER, Role.STUDENT);
+
+    public ResponseEntity<ResponseData<AcceptedAccountDto>> addAccount(AcceptedAccountRequest request) {
+        // Kiểm tra role hợp lệ, chỉ cho phép STUDENT và TEACHER
+        for (Role role : request.getRoles()) {
+            if (!ALLOWED_ROLES.contains(role)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                        new ResponseData<>(400, "Chỉ chấp nhận role STUDENT và TEACHER", null)
+                );
+            }
+        }
+
         if (acceptedAccountRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(
                     new ResponseData<>(409, "Email đã tồn tại trong danh sách được chấp nhận", null)
@@ -33,12 +44,20 @@ public class AcceptedAccountService {
                 .build();
 
         AcceptedAccount saved = acceptedAccountRepository.save(account);
-        AcceptedAccountDTO dto = toDTO(saved);
+        AcceptedAccountDto dto = toDTO(saved);
 
         return ResponseEntity.ok(new ResponseData<>(200, "Thêm tài khoản thành công", dto));
     }
 
-    public ResponseEntity<ResponseData<AcceptedAccountDTO>> updateAccount(Long id, AcceptedAccountRequest request) {
+    public ResponseEntity<ResponseData<AcceptedAccountDto>> updateAccount(Long id, AcceptedAccountRequest request) {
+        for (Role role : request.getRoles()) {
+            if (!ALLOWED_ROLES.contains(role)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                        new ResponseData<>(400, "Chỉ chấp nhận role STUDENT và TEACHER", null)
+                );
+            }
+        }
+
         Optional<AcceptedAccount> optional = acceptedAccountRepository.findById(id);
         if (optional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
@@ -66,8 +85,8 @@ public class AcceptedAccountService {
         return ResponseEntity.ok(new ResponseData<>(200, "Xoá thành công", null));
     }
 
-    private AcceptedAccountDTO toDTO(AcceptedAccount entity) {
-        return AcceptedAccountDTO.builder()
+    private AcceptedAccountDto toDTO(AcceptedAccount entity) {
+        return AcceptedAccountDto.builder()
                 .id(entity.getId())
                 .email(entity.getEmail())
                 .roles(entity.getRoles())

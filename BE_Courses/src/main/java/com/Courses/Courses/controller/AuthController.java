@@ -1,10 +1,9 @@
 package com.Courses.Courses.controller;
 
-import com.Courses.Courses.JWT.JWTUtil;
+import com.Courses.Courses.security.jwt.JWTUtil;
 import com.Courses.Courses.model.entity.Users;
 import com.Courses.Courses.repository.UsersRepository;
 import com.Courses.Courses.service.CustomUserDetailService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

@@ -11,7 +11,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AcceptedAccountDTO {
+public class AcceptedAccountDto {
     private Long id;
     private String email;
     private Set<Role> roles;

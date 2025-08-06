@@ -1,4 +1,4 @@
-package com.Courses.Courses.JWT;
+package com.Courses.Courses.security.jwt;
 import com.Courses.Courses.service.CustomUserDetailService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
