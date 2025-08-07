@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Request tạo mới bài kiểm tra (Exam)
@@ -28,8 +28,14 @@ public class ExamCreateRequest {
     private Long courseId;
 
     @NotNull(message = "Thời gian bắt đầu không được để trống")
-    private LocalDate startTime;
+    private LocalDateTime startTime;
 
     @NotNull(message = "Thời gian kết thúc không được để trống")
-    private LocalDate endTime;
+    private LocalDateTime endTime;
+
+    @NotNull(message = "Thời lượng làm bài không được để trống")
+    private Integer durationMinutes;
+
+    private String description;
+    private String password;
 }

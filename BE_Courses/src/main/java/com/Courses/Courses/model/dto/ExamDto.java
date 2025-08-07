@@ -3,17 +3,21 @@ package com.Courses.Courses.model.dto;
 import com.Courses.Courses.enums.ExamType;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ExamDto {
-    private Long id;
+    private Long examId;
     private String title;
     private ExamType type;
     private Long courseId;
-    private LocalDate startTime;
-    private LocalDate endTime;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+    private Integer durationMinutes;
+    private String description;
+    private String password;
+    private Boolean active;
 }

@@ -1,5 +1,6 @@
 package com.Courses.Courses.model.entity;
 
+import com.Courses.Courses.enums.QuestionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,13 +19,20 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    private QuestionType type;
+
     private String correctAnswer;
 
     @ElementCollection
     private List<String> options;
 
     private boolean isShufflable;
+
+    private Double maxScore;
 
     @ManyToOne
     private Exam exam;

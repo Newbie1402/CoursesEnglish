@@ -1,8 +1,6 @@
 package com.Courses.Courses.enums;
 
-public enum ExamType {
+public enum QuestionType {
     MULTIPLE_CHOICE,
-    MIXED,
-    WRITING
+    ESSAY
 }
-
