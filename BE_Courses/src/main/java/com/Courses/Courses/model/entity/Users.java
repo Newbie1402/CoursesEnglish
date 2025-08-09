@@ -56,6 +56,8 @@ public class Users {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    private String avatarPublicId;
+
     @Column(name = "is_oauth2")
     private Boolean isOauth2 = false;
 
