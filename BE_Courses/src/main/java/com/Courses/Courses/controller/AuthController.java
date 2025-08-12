@@ -1,18 +1,21 @@
 package com.Courses.Courses.controller;
 
+import com.Courses.Courses.model.response.ResponseData;
+import com.Courses.Courses.security.jwt.JWTBlacklistService;
 import com.Courses.Courses.security.jwt.JWTUtil;
 import com.Courses.Courses.model.entity.Users;
 import com.Courses.Courses.repository.UsersRepository;
 import com.Courses.Courses.service.CustomUserDetailService;
+import com.Courses.Courses.service.reCAPTCHAService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -22,50 +25,52 @@ public class AuthController {
     private final UsersRepository usersRepository;
     private final JWTUtil jwtService;
 
+    private final reCAPTCHAService recaptchaService;
+
     @Autowired
     private CustomUserDetailService customUserDetailService;
 
-    @GetMapping("/google-token")
-    public ResponseEntity<?> getGoogleToken(@AuthenticationPrincipal OAuth2User principal) {
-        if (principal == null) {
-            return ResponseEntity.badRequest().body("User not authenticated");
-        }
+    @Autowired
+    private JWTBlacklistService tokenBlackListService;
 
-        // Lấy thông tin từ Google
-        String email = principal.getAttribute("email");
-        String name = principal.getAttribute("name");
-        String picture = principal.getAttribute("picture");
+    @Autowired
+    private JWTUtil jwtUtil;
 
-        // Tìm hoặc tạo user mới
-        Optional<Users> optionalUser = usersRepository.findByEmail(email);
-        Users user;
-        if (optionalUser.isPresent()) {
-            user = optionalUser.get();
-        } else {
-            user = new Users();
-            user.setEmail(email);
-            user.setEmail(name);
-            user.setAvatarUrl(picture);
-            user.setIsOauth2(true); // bạn có thể thêm enum Provider nếu muốn
-            //user.setRoles("USER"); // Hoặc "CUSTOMER" tuỳ theo enum Role của bạn
-            usersRepository.save(user);
-        }
+    @PostMapping("/verify-captcha")
+    public ResponseEntity<ResponseData<Boolean>> verifyCaptcha(@RequestParam("token") String token) {
+        boolean captchaValid = recaptchaService.verifyCaptcha(token);
 
-        // Tạo JWT
-        UserDetails userDetails = customUserDetailService.loadUserByUsername(user.getEmail());
-        String token = jwtService.generateToken(userDetails);
+        ResponseData<Boolean> response = ResponseData.<Boolean>builder()
+                .StatusCode(captchaValid ? 200 : 400)
+                .Message(captchaValid ? "Captcha verification successful!" : "Invalid captcha verification!")
+                .data(captchaValid)
+                .build();
 
-        // Trả về token và thông tin user
-        return ResponseEntity.ok().body(
-                new AuthResponse(token, email, name, picture)
-        );
+        return ResponseEntity
+                .status(captchaValid ? 200 : 400)
+                .body(response);
     }
 
-    @GetMapping("/check")
-    public ResponseEntity<String> check() {
-        return ResponseEntity.ok("AuthController is up!");
+    @PostMapping("/logout")
+    public ResponseEntity<ResponseData<Void>> logout(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            ResponseData<Void> errorResponse = ResponseData.<Void>builder()
+                    .StatusCode(400)
+                    .Message("Thiếu hoặc sai định dạng Authorization header.")
+                    .data(null)
+                    .build();
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+        String jwt = authorizationHeader.substring(7);
+        tokenBlackListService.blacklistToken(jwt);
+        ResponseData<Void> successResponse = ResponseData.<Void>builder()
+                .StatusCode(200)
+                .Message("Đăng xuất thành công.")
+                .data(null)
+                .build();
+        return ResponseEntity.ok(successResponse);
     }
 
-    // Inner class cho response
-    private record AuthResponse(String token, String email, String name, String picture) {}
+
 }

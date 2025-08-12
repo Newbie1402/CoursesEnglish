@@ -1,4 +1,4 @@
-package com.Courses.Courses.config;
+package com.Courses.Courses.security.config;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
