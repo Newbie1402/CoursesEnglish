@@ -1,4 +1,4 @@
-package com.Courses.Courses.exception;
+package com.Courses.Courses.enums;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,6 +1,7 @@
 package com.Courses.Courses.controller;
 
-import com.Courses.Courses.exception.StatusApplication;
+import com.Courses.Courses.enums.Role;
+import com.Courses.Courses.enums.StatusApplication;
 import com.Courses.Courses.model.dto.ExamDto;
 import com.Courses.Courses.model.request.ExamCreateRequest;
 import com.Courses.Courses.model.request.ExamUpdateRequest;
@@ -8,13 +9,13 @@ import com.Courses.Courses.model.response.ResponseData;
 import com.Courses.Courses.service.ExamService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
 @RestController
 @RequestMapping("/api/exams")
 public class ExamController {
@@ -22,136 +23,118 @@ public class ExamController {
     private ExamService examService;
 
     /**
-     * Tạo mới bài kiểm tra
+     * Lấy danh sách tất cả bài kiểm tra (chỉ TEACHER và ADMIN)
      */
-    @PostMapping("/create")
-    public ResponseEntity<ResponseData<ExamDto>> createExam(@Valid @RequestBody ExamCreateRequest request) {
-        ExamDto examDto = examService.createExam(request);
-        return ResponseEntity.status(StatusApplication.SUCCESS.getCode()).body(
-                new ResponseData<>(
-                        StatusApplication.SUCCESS.getCode(),
-                        StatusApplication.SUCCESS.getMessage(),
-                        examDto
-                )
-        );
-    }
-
-    /**
-     * Lấy toàn bộ bài kiểm tra (bao gồm cả active/inactive)
-     */
-    @GetMapping("/view/all")
+    @GetMapping
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ResponseData<List<ExamDto>>> getAllExams() {
-        List<ExamDto> list = examService.getAllExams();
-        return ResponseEntity.status(StatusApplication.SUCCESS.getCode()).body(
-                new ResponseData<>(
-                        StatusApplication.SUCCESS.getCode(),
-                        StatusApplication.SUCCESS.getMessage(),
-                        list
-                )
+        List<ExamDto> exams = examService.getAllExams();
+        return ResponseEntity.ok(
+                new ResponseData<>(StatusApplication.SUCCESS.getCode(), StatusApplication.SUCCESS.getMessage(), exams)
         );
     }
 
     /**
-     * Lấy toàn bộ bài kiểm tra chỉ active
+     * Lấy danh sách bài kiểm tra đang hoạt động (mọi người)
      */
-    @GetMapping("/view/active")
+    @GetMapping("/active")
     public ResponseEntity<ResponseData<List<ExamDto>>> getAllActiveExams() {
-        List<ExamDto> list = examService.getAllActiveExams();
-        return ResponseEntity.status(StatusApplication.SUCCESS.getCode()).body(
-                new ResponseData<>(
-                        StatusApplication.SUCCESS.getCode(),
-                        StatusApplication.SUCCESS.getMessage(),
-                        list
-                )
+        List<ExamDto> exams = examService.getAllActiveExams();
+        return ResponseEntity.ok(
+                new ResponseData<>(StatusApplication.SUCCESS.getCode(), StatusApplication.SUCCESS.getMessage(), exams)
         );
     }
 
     /**
-     * Sửa thông tin bài kiểm tra
-     */
-    @PutMapping("/update")
-    public ResponseEntity<ResponseData<ExamDto>> updateExam(@Valid @RequestBody ExamUpdateRequest request) {
-        ExamDto examDto = examService.updateExam(request);
-        return ResponseEntity.status(StatusApplication.SUCCESS.getCode()).body(
-                new ResponseData<>(
-                        StatusApplication.SUCCESS.getCode(),
-                        StatusApplication.SUCCESS.getMessage(),
-                        examDto
-                )
-        );
-    }
-
-    /**
-     * Đổi trạng thái active/inactive cho bài kiểm tra
-     */
-    @PatchMapping("/active/{id}")
-    public ResponseEntity<ResponseData<ExamDto>> setExamActive(@PathVariable Long id, @RequestParam boolean active) {
-        ExamDto examDto = examService.setExamActive(id, active);
-        String message = active ? "Bài kiểm tra đã được kích hoạt." : "Bài kiểm tra đã được vô hiệu hóa.";
-        return ResponseEntity.status(StatusApplication.SUCCESS.getCode()).body(
-                new ResponseData<>(
-                        StatusApplication.SUCCESS.getCode(),
-                        message,
-                        examDto
-                )
-        );
-    }
-
-    /**
-     * Lấy chi tiết 1 bài kiểm tra
+     * Lấy chi tiết bài kiểm tra
      */
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<ExamDto>> getExamById(@PathVariable Long id) {
-        ExamDto examDto = examService.getExamById(id);
-        return ResponseEntity.status(StatusApplication.SUCCESS.getCode()).body(
-                new ResponseData<>(
-                        StatusApplication.SUCCESS.getCode(),
-                        StatusApplication.SUCCESS.getMessage(),
-                        examDto
-                )
+        ExamDto exam = examService.getExamById(id);
+        return ResponseEntity.ok(
+                new ResponseData<>(StatusApplication.SUCCESS.getCode(), StatusApplication.SUCCESS.getMessage(), exam)
         );
     }
 
     /**
-     * Endpoint cho học sinh bắt đầu làm bài kiểm tra
-     * Khi học sinh nhấn "Bắt đầu làm bài", gọi API này để lưu trạng thái vào Redis và cập nhật Submission
+     * Tạo bài kiểm tra mới (chỉ TEACHER)
+     */
+    @PostMapping
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ResponseData<ExamDto>> createExam(@Valid @RequestBody ExamCreateRequest request) {
+        ExamDto createdExam = examService.createExam(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ResponseData<>(StatusApplication.SUCCESS.getCode(), "Tạo bài kiểm tra thành công", createdExam)
+        );
+    }
+
+    /**
+     * Cập nhật bài kiểm tra (chỉ TEACHER)
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ResponseData<ExamDto>> updateExam(
+            @PathVariable Long id,
+            @Valid @RequestBody ExamUpdateRequest request) {
+        if (!id.equals(request.getId())) {
+            return ResponseEntity.badRequest().body(
+                    new ResponseData<>(400, "ID trong URL và body request không khớp", null)
+            );
+        }
+        ExamDto updatedExam = examService.updateExam(request);
+        return ResponseEntity.ok(
+                new ResponseData<>(StatusApplication.SUCCESS.getCode(), "Cập nhật bài kiểm tra thành công", updatedExam)
+        );
+    }
+
+    /**
+     * Kích hoạt/vô hiệu hóa bài kiểm tra (chỉ TEACHER)
+     */
+    @PatchMapping("/{id}/active")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<ResponseData<ExamDto>> setExamActive(
+            @PathVariable Long id,
+            @RequestParam boolean active) {
+        ExamDto exam = examService.setExamActive(id, active);
+        String message = active ? "Kích hoạt bài kiểm tra thành công" : "Vô hiệu hóa bài kiểm tra thành công";
+        return ResponseEntity.ok(
+                new ResponseData<>(StatusApplication.SUCCESS.getCode(), message, exam)
+        );
+    }
+
+    /**
+     * Học sinh bắt đầu làm bài kiểm tra (chỉ STUDENT)
      */
     @PostMapping("/{examId}/start")
-    public ResponseEntity<ResponseData<String>> startExam(@PathVariable Long examId, @RequestParam Long studentId) {
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ResponseData<Void>> startExam(
+            @PathVariable Long examId,
+            @RequestParam Long studentId,
+            @RequestParam(required = false) String password) {
         try {
-            examService.startExam(examId, studentId);
-            return ResponseEntity.status(StatusApplication.SUCCESS.getCode()).body(
-                    new ResponseData<>(
-                            StatusApplication.SUCCESS.getCode(),
-                            "Bắt đầu làm bài thành công!",
-                            null
-                    )
+            examService.startExam(examId, studentId, password);
+            return ResponseEntity.ok(
+                    new ResponseData<>(StatusApplication.SUCCESS.getCode(), "Bắt đầu làm bài thành công", null)
             );
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(
-                    new ResponseData<>(
-                            400,
-                            e.getMessage(),
-                            null
-                    )
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                    new ResponseData<>(400, e.getMessage(), null)
             );
         }
     }
 
     /**
-     * Endpoint kiểm tra học sinh còn làm bài được không
-     * Trả về true nếu còn làm bài, false nếu đã hết thời gian
+     * Kiểm tra học sinh còn làm bài được không (chỉ STUDENT)
      */
-    @GetMapping("/{examId}/doing")
-    public ResponseEntity<ResponseData<Boolean>> isStudentDoingExam(@PathVariable Long examId, @RequestParam Long studentId) {
-        boolean isDoing = examService.isStudentDoingExam(examId, studentId);
-        return ResponseEntity.status(StatusApplication.SUCCESS.getCode()).body(
-                new ResponseData<>(
-                        StatusApplication.SUCCESS.getCode(),
-                        isDoing ? "Học sinh còn thời gian làm bài." : "Học sinh đã hết thời gian làm bài.",
-                        isDoing
-                )
+    @GetMapping("/{examId}/check-status")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ResponseData<Boolean>> checkStudentExamStatus(
+            @PathVariable Long examId,
+            @RequestParam Long studentId) {
+        boolean isDoingExam = examService.isStudentDoingExam(examId, studentId);
+        String message = isDoingExam ? "Học sinh đang làm bài" : "Học sinh đã hết thời gian làm bài";
+        return ResponseEntity.ok(
+                new ResponseData<>(StatusApplication.SUCCESS.getCode(), message, isDoingExam)
         );
     }
-
 }

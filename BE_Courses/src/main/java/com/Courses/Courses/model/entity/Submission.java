@@ -27,6 +27,9 @@ public class Submission {
 
     private Double score;
 
+    // Điểm tối đa có thể đạt được cho bài nộp
+    private Double maxScore;
+
     @Column(columnDefinition = "TEXT")
     private String teacherFeedback;
 
@@ -36,6 +39,8 @@ public class Submission {
     private LocalDateTime startedAt;
     // Thời điểm deadline kết thúc bài kiểm tra cá nhân
     private LocalDateTime deadline;
+    // Thời điểm bài kiểm tra được chấm điểm xong
+    private LocalDateTime gradedAt;
 
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL)
     private List<SubmissionAnswer> answers;

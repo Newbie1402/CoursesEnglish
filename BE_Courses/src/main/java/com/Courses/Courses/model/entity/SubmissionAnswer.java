@@ -28,4 +28,7 @@ public class SubmissionAnswer {
     private Boolean isCorrect; // true / false / null (nếu là ESSAY)
 
     private Double score; // điểm riêng của câu hỏi
+
+    @Column(columnDefinition = "TEXT")
+    private String teacherFeedback; // phản hồi của giáo viên cho câu trả lời
 }
