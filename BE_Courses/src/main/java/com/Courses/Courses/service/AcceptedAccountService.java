@@ -23,7 +23,6 @@ public class AcceptedAccountService {
     private static final Set<Role> ALLOWED_ROLES = Set.of(Role.TEACHER, Role.STUDENT);
 
     public ResponseEntity<ResponseData<AcceptedAccountDto>> addAccount(AcceptedAccountRequest request) {
-        // Kiểm tra role hợp lệ, chỉ cho phép STUDENT và TEACHER
         for (Role role : request.getRoles()) {
             if (!ALLOWED_ROLES.contains(role)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
