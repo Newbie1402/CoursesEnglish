@@ -1,15 +1,14 @@
-import React from 'react'
-import TestTailwind from './components/TestTailwind'
-import AppRoutes from './routes'
-import PageTeacherDashboard from './pages/teacher/TeacherDashboard'
+import React from 'react';
+import { RouterProvider } from 'react-router-dom';
+import router from './routes';
+import { NotificationProvider } from './contexts/NotificationContext';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
-        <PageTeacherDashboard/>
-      <AppRoutes />
-    </div>
-  )
+    <NotificationProvider>
+      <RouterProvider router={router} />
+    </NotificationProvider>
+  );
 }
 
-export default App
+export default App;
