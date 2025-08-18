@@ -59,19 +59,16 @@ public class LessonController {
     }
 
     /**
-     * Cập nhật thông tin bài giảng (title, contentUrl, courseId)
+     * Cập nhật thông tin bài giảng (title, file mới, courseId)
      */
-    @PutMapping("/update/{id}")
+    @PutMapping(value = "/update/{id}", consumes = {"multipart/form-data"})
     public ResponseEntity<LessonDto> updateLesson(
             @PathVariable Long id,
-            @Valid @RequestBody LessonUpdateRequest request
-    ) {
-        LessonDto lessonDto = lessonService.updateLesson(
-                id,
-                request.getTitle(),
-                request.getContentUrl(),
-                request.getCourseId()
-        );
+            @RequestParam("title") String title,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "courseId", required = false) Long courseId
+    ) throws IOException {
+        LessonDto lessonDto = lessonService.updateLesson(id, title, file, courseId);
         return ResponseEntity.ok(lessonDto);
     }
 

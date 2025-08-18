@@ -72,14 +72,17 @@ public class LessonService {
     }
 
     /**
-     * Cập nhật thông tin bài giảng (title, contentUrl, courseId)
+     * Cập nhật thông tin bài giảng (title, file mới, courseId)
      */
     @Transactional
-    public LessonDto updateLesson(Long id, String title, String contentUrl, Long courseId) {
+    public LessonDto updateLesson(Long id, String title, MultipartFile file, Long courseId) throws IOException {
         Lesson lesson = lessonRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài giảng với id: " + id));
         lesson.setTitle(title);
-        lesson.setContentUrl(contentUrl);
+        if (file != null && !file.isEmpty()) {
+            String fileUrl = s3Service.uploadFile(file);
+            lesson.setContentUrl(fileUrl);
+        }
         if (courseId != null) {
             Course course = courseRepository.findById(courseId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + courseId));
