@@ -20,7 +20,7 @@ public class AppConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
                         .allowedOriginPatterns("*")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE","PATCH", "OPTIONS")
                         .allowCredentials(true);
             }
         };

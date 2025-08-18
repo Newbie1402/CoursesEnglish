@@ -59,7 +59,7 @@ public class ExamController {
     /**
      * Tạo bài kiểm tra mới (chỉ TEACHER)
      */
-    @PostMapping
+    @PostMapping("/create")
     @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<ResponseData<ExamDto>> createExam(@Valid @RequestBody ExamCreateRequest request) {
         ExamDto createdExam = examService.createExam(request);
