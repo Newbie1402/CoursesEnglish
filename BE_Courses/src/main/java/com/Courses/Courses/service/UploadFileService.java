@@ -1,6 +1,6 @@
 package com.Courses.Courses.service;
 
-import com.Courses.Courses.exception.StatusApplication;
+import com.Courses.Courses.enums.StatusApplication;
 import com.Courses.Courses.model.entity.Users;
 import com.Courses.Courses.model.response.ResponseData;
 import com.Courses.Courses.repository.UsersRepository;

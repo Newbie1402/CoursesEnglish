@@ -51,6 +51,22 @@ public class LessonController {
     }
 
     /**
+     * Lấy danh sách tất cả bài giảng thuộc một khóa học
+     */
+    @GetMapping("/course/{courseId}")
+    public ResponseEntity<List<LessonDto>> getLessonsByCourseId(@PathVariable Long courseId) {
+        return ResponseEntity.ok(lessonService.getLessonsByCourseId(courseId));
+    }
+
+    /**
+     * Lấy danh sách bài giảng đang active của một khóa học
+     */
+    @GetMapping("/course/{courseId}/active")
+    public ResponseEntity<List<LessonDto>> getActiveLessonsByCourseId(@PathVariable Long courseId) {
+        return ResponseEntity.ok(lessonService.getActiveLessonsByCourseId(courseId));
+    }
+
+    /**
      * Lấy chi tiết 1 bài giảng
      */
     @GetMapping("/view/{id}")
@@ -59,19 +75,16 @@ public class LessonController {
     }
 
     /**
-     * Cập nhật thông tin bài giảng (title, contentUrl, courseId)
+     * Cập nhật thông tin bài giảng (title, file mới, courseId)
      */
-    @PutMapping("/update/{id}")
+    @PutMapping(value = "/update/{id}", consumes = {"multipart/form-data"})
     public ResponseEntity<LessonDto> updateLesson(
             @PathVariable Long id,
-            @Valid @RequestBody LessonUpdateRequest request
-    ) {
-        LessonDto lessonDto = lessonService.updateLesson(
-                id,
-                request.getTitle(),
-                request.getContentUrl(),
-                request.getCourseId()
-        );
+            @RequestParam("title") String title,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "courseId", required = false) Long courseId
+    ) throws IOException {
+        LessonDto lessonDto = lessonService.updateLesson(id, title, file, courseId);
         return ResponseEntity.ok(lessonDto);
     }
 

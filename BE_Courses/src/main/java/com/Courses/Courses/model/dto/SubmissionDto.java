@@ -16,4 +16,7 @@ public class SubmissionDto {
     private Double score;
     private String teacherFeedback;
     private LocalDateTime submittedAt;
+    private LocalDateTime startedAt;
+    private LocalDateTime deadline;
+    private Double maxScore;
 }

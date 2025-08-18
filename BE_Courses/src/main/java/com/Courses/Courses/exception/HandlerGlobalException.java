@@ -1,5 +1,6 @@
 package com.Courses.Courses.exception;
 
+import com.Courses.Courses.enums.StatusApplication;
 import com.Courses.Courses.model.response.ResponseData;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
