@@ -10,5 +10,6 @@ Install plugins:
   Step 2: Run -> Edit Configurations
   Step 3: Click CoursesApplication -> Tick Enable Envfile
   Step 4: Tick enable .env in the below table 
-  Step 5: Click Apply and OK
+  Step 5: Click add button and select .env file
+  Step 6: Click Apply and OK
 ```
