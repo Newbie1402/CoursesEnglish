@@ -3,14 +3,11 @@ package com.Courses.Courses.security;
 import com.Courses.Courses.enums.Status;
 import com.Courses.Courses.model.entity.AcceptedAccount;
 import com.Courses.Courses.model.entity.Users;
-import com.Courses.Courses.model.response.ResponseData;
 import com.Courses.Courses.repository.AcceptedAccountRepository;
 import com.Courses.Courses.repository.UsersRepository;
 import com.Courses.Courses.security.jwt.JWTUtil;
-import com.Courses.Courses.service.AcceptedAccountService;
 import com.Courses.Courses.service.CustomUserDetailService;
 import com.Courses.Courses.service.GooglePeopleService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,6 +22,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -41,14 +40,8 @@ public class OAuth2SuccessHandler implements org.springframework.security.web.au
     @Autowired
     private final OAuth2AuthorizedClientService authorizedClientService;
 
-
     private final GooglePeopleService googlePeopleService;
     private final JWTUtil jwtService;
-    @Autowired
-    private ObjectMapper jacksonObjectMapper;
-
-    @Autowired
-    private AcceptedAccountService acceptedAccountService;
 
     @Autowired
     private AcceptedAccountRepository acceptedAccountRepository;
@@ -73,36 +66,20 @@ public class OAuth2SuccessHandler implements org.springframework.security.web.au
             e.printStackTrace();
         }
 
+        // check accepted account
         Optional<AcceptedAccount> acceptedAccountOptional = acceptedAccountRepository.findByEmail(email);
-
         if (acceptedAccountOptional.isEmpty()) {
-            ResponseData<String> errorResponse = ResponseData.<String>builder()
-                    .StatusCode(403)
-                    .Message("your account is not accepted yet")
-                    .data(null)
-                    .build();
-
-            String json = jacksonObjectMapper.writeValueAsString(errorResponse);
-
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write(json);
+            response.sendRedirect("http://localhost:5173/oauth2/error?reason=not_accepted");
             return;
         }
 
+        // create or update user
         Optional<Users> optionalUser = usersRepository.findByEmail(email);
         Users user;
-
         if (optionalUser.isPresent()) {
             user = optionalUser.get();
-
-            if (user.getFullName() == null && name != null) {
-                user.setFullName(name);
-            }
-            if (user.getPhoneNumber() == null && phone != null) {
-                user.setPhoneNumber(phone);
-            }
+            if (user.getFullName() == null && name != null) user.setFullName(name);
+            if (user.getPhoneNumber() == null && phone != null) user.setPhoneNumber(phone);
             user.setLastLoginAt(LocalDateTime.now());
             usersRepository.save(user);
         } else {
@@ -121,18 +98,9 @@ public class OAuth2SuccessHandler implements org.springframework.security.web.au
         UserDetails userDetails = customUserDetailService.loadUserByUsername(user.getEmail());
         String jwt = jwtService.generateToken(userDetails);
 
-        ResponseData<String> responseData = ResponseData.<String>builder()
-                .StatusCode(200)
-                .Message("Login successful")
-                .data(jwt)
-                .build();
+        String encodedToken = URLEncoder.encode(jwt, StandardCharsets.UTF_8);
+        String redirectUri = "http://localhost:5173/oauth2/redirect?token=" + encodedToken + "&userId=" + user.getId();
 
-        String json = jacksonObjectMapper.writeValueAsString(responseData);
-
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(json);
+        response.sendRedirect(redirectUri);
     }
-
-
 }
