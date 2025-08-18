@@ -39,6 +39,23 @@ public class CourseService {
         return courses.stream().map(this::toDto).toList();
     }
 
+    /**
+     * Lấy danh sách khoá học đang active theo ID của giáo viên
+     * @param teacherId ID của giáo viên
+     */
+    @Transactional(readOnly = true)
+    public List<CourseDto> getActiveCoursesForTeacher(Long teacherId) {
+        // Kiểm tra giáo viên có tồn tại không
+        teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giáo viên với id: " + teacherId));
+
+        // Lấy danh sách khoá học active của giáo viên
+        List<Course> courses = courseRepository.findByTeacherIdAndActiveTrue(teacherId);
+        return courses.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
     // Lấy thông tin khoá học theo id
     public CourseDto getCourseById(Long id) {
         Course course = courseRepository.findById(id)

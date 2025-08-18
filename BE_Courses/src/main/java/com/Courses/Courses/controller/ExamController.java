@@ -46,6 +46,24 @@ public class ExamController {
     }
 
     /**
+     * Lấy danh sách tất cả bài kiểm tra của giáo viên (chỉ TEACHER và ADMIN)
+     */
+    @GetMapping("/teacher/{teacherId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ResponseData<List<ExamDto>>> getExamsByTeacherId(@PathVariable Long teacherId) {
+        return examService.getExamsByTeacherId(teacherId);
+    }
+
+    /**
+     * Lấy danh sách bài kiểm tra đang active của giáo viên
+     */
+    @GetMapping("/teacher/{teacherId}/active")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ResponseData<List<ExamDto>>> getActiveExamsByTeacherId(@PathVariable Long teacherId) {
+        return examService.getActiveExamsByTeacherId(teacherId);
+    }
+
+    /**
      * Lấy chi tiết bài kiểm tra
      */
     @GetMapping("/{id}")

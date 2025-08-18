@@ -26,7 +26,7 @@ public class Submission {
     private Exam exam;
 
     private Double score;
-
+    
     // Điểm tối đa có thể đạt được cho bài nộp
     private Double maxScore;
 

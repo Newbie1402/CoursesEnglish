@@ -105,8 +105,34 @@ public class LessonService {
     }
 
     /**
-     * Chuyển đổi entity Lesson sang DTO LessonDto
+     * Lấy tất cả bài học của một khóa học (bao gồm cả active và inactive)
      */
+    @Transactional(readOnly = true)
+    public List<LessonDto> getLessonsByCourseId(Long courseId) {
+        // Kiểm tra khóa học tồn tại
+        courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với id: " + courseId));
+
+        return lessonRepository.findByCourseId(courseId).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy tất cả bài học đang active của một khóa học
+     */
+    @Transactional(readOnly = true)
+    public List<LessonDto> getActiveLessonsByCourseId(Long courseId) {
+        // Kiểm tra khóa học tồn tại
+        courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với id: " + courseId));
+
+        return lessonRepository.findByCourseIdAndActiveTrue(courseId).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+
     private LessonDto convertToDto(Lesson lesson) {
         if (lesson == null) return null;
         return LessonDto.builder()

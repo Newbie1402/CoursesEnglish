@@ -51,6 +51,22 @@ public class LessonController {
     }
 
     /**
+     * Lấy danh sách tất cả bài giảng thuộc một khóa học
+     */
+    @GetMapping("/course/{courseId}")
+    public ResponseEntity<List<LessonDto>> getLessonsByCourseId(@PathVariable Long courseId) {
+        return ResponseEntity.ok(lessonService.getLessonsByCourseId(courseId));
+    }
+
+    /**
+     * Lấy danh sách bài giảng đang active của một khóa học
+     */
+    @GetMapping("/course/{courseId}/active")
+    public ResponseEntity<List<LessonDto>> getActiveLessonsByCourseId(@PathVariable Long courseId) {
+        return ResponseEntity.ok(lessonService.getActiveLessonsByCourseId(courseId));
+    }
+
+    /**
      * Lấy chi tiết 1 bài giảng
      */
     @GetMapping("/view/{id}")

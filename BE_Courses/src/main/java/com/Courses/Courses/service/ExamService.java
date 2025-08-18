@@ -6,9 +6,14 @@ import com.Courses.Courses.model.dto.ExamDto;
 import com.Courses.Courses.model.entity.*;
 import com.Courses.Courses.model.request.ExamCreateRequest;
 import com.Courses.Courses.model.request.ExamUpdateRequest;
+import com.Courses.Courses.model.response.ResponseData;
 import com.Courses.Courses.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +27,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class ExamService {
+    private static final Logger log = LoggerFactory.getLogger(ExamService.class);
+
     @Autowired
     private ExamRepository examRepository;
     @Autowired
@@ -34,6 +41,8 @@ public class ExamService {
     private StudentRepository studentRepository;
     @Autowired
     private QuestionRepository questionRepository;
+    @Autowired
+    private TeacherRepository teacherRepository;
 
     /**
      * Tạo mới bài kiểm tra
@@ -296,6 +305,78 @@ public class ExamService {
         }
 
         submissionRepository.save(submission);
+    }
+
+    /**
+     * Lấy danh sách tất cả bài kiểm tra của giáo viên (bao gồm cả active/inactive)
+     */
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseData<List<ExamDto>>> getExamsByTeacherId(Long teacherId) {
+        try {
+            // Kiểm tra giáo viên có tồn tại không
+            Teacher teacher = teacherRepository.findById(teacherId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy giáo viên với id: " + teacherId));
+
+            log.info("Tìm kiếm bài kiểm tra cho giáo viên ID: {}", teacherId);
+
+            List<Exam> exams = examRepository.findByTeacherId(teacherId);
+            List<ExamDto> examDtos = exams.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(
+                    new ResponseData<>(
+                            StatusApplication.SUCCESS.getCode(),
+                            "Lấy danh sách " + examDtos.size() + " bài kiểm tra của giáo viên thành công",
+                            examDtos
+                    )
+            );
+        } catch (Exception e) {
+            log.error("Lỗi khi lấy bài kiểm tra theo giáo viên: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ResponseData<>(
+                            StatusApplication.INTERNAL_SERVER_ERROR.getCode(),
+                            "Lỗi khi lấy danh sách bài kiểm tra: " + e.getMessage(),
+                            null
+                    )
+            );
+        }
+    }
+
+    /**
+     * Lấy danh sách bài kiểm tra đang active của giáo viên
+     */
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseData<List<ExamDto>>> getActiveExamsByTeacherId(Long teacherId) {
+        try {
+            // Kiểm tra giáo viên có tồn tại không
+            Teacher teacher = teacherRepository.findById(teacherId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy giáo viên với id: " + teacherId));
+
+            log.info("Tìm kiếm bài kiểm tra active cho giáo viên ID: {}", teacherId);
+
+            List<Exam> exams = examRepository.findActiveByTeacherId(teacherId);
+            List<ExamDto> examDtos = exams.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(
+                    new ResponseData<>(
+                            StatusApplication.SUCCESS.getCode(),
+                            "Lấy danh sách " + examDtos.size() + " bài kiểm tra đang hoạt động của giáo viên thành công",
+                            examDtos
+                    )
+            );
+        } catch (Exception e) {
+            log.error("Lỗi khi lấy bài kiểm tra active theo giáo viên: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ResponseData<>(
+                            StatusApplication.INTERNAL_SERVER_ERROR.getCode(),
+                            "Lỗi khi lấy danh sách bài kiểm tra: " + e.getMessage(),
+                            null
+                    )
+            );
+        }
     }
 
     private ExamDto convertToDto(Exam exam) {
