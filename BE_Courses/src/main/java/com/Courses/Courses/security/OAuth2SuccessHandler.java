@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -45,6 +46,9 @@ public class OAuth2SuccessHandler implements org.springframework.security.web.au
 
     @Autowired
     private AcceptedAccountRepository acceptedAccountRepository;
+
+    @Value("${app.frontend.url:${APP_FRONTEND_URL}}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -99,7 +103,7 @@ public class OAuth2SuccessHandler implements org.springframework.security.web.au
         String jwt = jwtService.generateToken(userDetails);
 
         String encodedToken = URLEncoder.encode(jwt, StandardCharsets.UTF_8);
-        String redirectUri = "http://localhost:5173/oauth2/redirect?token=" + encodedToken + "&userId=" + user.getId();
+        String redirectUri = frontendUrl + "/oauth2/redirect?token=" + encodedToken + "&userId=" + user.getId();
 
         response.sendRedirect(redirectUri);
     }
