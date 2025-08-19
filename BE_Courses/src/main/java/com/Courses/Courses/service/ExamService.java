@@ -393,4 +393,76 @@ public class ExamService {
                 .active(exam.getActive())
                 .build();
     }
+
+    /**
+     * Lấy danh sách bài kiểm tra theo ID khóa học (cả active và inactive)
+     */
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseData<List<ExamDto>>> getExamsByCourseId(Long courseId) {
+        try {
+            // Kiểm tra khóa học có tồn tại không
+            Course course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với id: " + courseId));
+
+            log.info("Tìm kiếm bài kiểm tra cho khóa học ID: {}", courseId);
+
+            List<Exam> exams = examRepository.findByCourseId(courseId);
+            List<ExamDto> examDtos = exams.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(
+                    new ResponseData<>(
+                            StatusApplication.SUCCESS.getCode(),
+                            "Lấy danh sách " + examDtos.size() + " bài kiểm tra của khóa học thành công",
+                            examDtos
+                    )
+            );
+        } catch (Exception e) {
+            log.error("Lỗi khi lấy bài kiểm tra theo khóa học: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ResponseData<>(
+                            StatusApplication.INTERNAL_SERVER_ERROR.getCode(),
+                            "Lỗi khi lấy danh sách bài kiểm tra: " + e.getMessage(),
+                            null
+                    )
+            );
+        }
+    }
+
+    /**
+     * Lấy danh sách bài kiểm tra đang active theo ID khóa học
+     */
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseData<List<ExamDto>>> getActiveExamsByCourseId(Long courseId) {
+        try {
+            // Kiểm tra khóa học có tồn tại không
+            Course course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với id: " + courseId));
+
+            log.info("Tìm kiếm bài kiểm tra active cho khóa học ID: {}", courseId);
+
+            List<Exam> exams = examRepository.findByCourseIdAndActiveTrue(courseId);
+            List<ExamDto> examDtos = exams.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(
+                    new ResponseData<>(
+                            StatusApplication.SUCCESS.getCode(),
+                            "Lấy danh sách " + examDtos.size() + " bài kiểm tra đang hoạt động của khóa học thành công",
+                            examDtos
+                    )
+            );
+        } catch (Exception e) {
+            log.error("Lỗi khi lấy bài kiểm tra active theo khóa học: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ResponseData<>(
+                            StatusApplication.INTERNAL_SERVER_ERROR.getCode(),
+                            "Lỗi khi lấy danh sách bài kiểm tra: " + e.getMessage(),
+                            null
+                    )
+            );
+        }
+    }
 }
