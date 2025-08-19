@@ -16,4 +16,8 @@ public interface ExamRepository extends JpaRepository<Exam, Long> {
 
     @Query("SELECT e FROM Exam e JOIN e.course c WHERE c.teacher.id = :teacherId AND e.active = true")
     List<Exam> findActiveByTeacherId(@Param("teacherId") Long teacherId);
+
+    List<Exam> findByCourseId(Long courseId);
+
+    List<Exam> findByCourseIdAndActiveTrue(Long courseId);
 }

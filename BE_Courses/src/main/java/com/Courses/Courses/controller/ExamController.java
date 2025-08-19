@@ -64,6 +64,23 @@ public class ExamController {
     }
 
     /**
+     * Lấy danh sách tất cả bài kiểm tra của khóa học (chỉ TEACHER và ADMIN)
+     */
+    @GetMapping("/course/{courseId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ResponseData<List<ExamDto>>> getExamsByCourseId(@PathVariable Long courseId) {
+        return examService.getExamsByCourseId(courseId);
+    }
+
+    /**
+     * Lấy danh sách bài kiểm tra đang active của khóa học
+     */
+    @GetMapping("/course/{courseId}/active")
+    public ResponseEntity<ResponseData<List<ExamDto>>> getActiveExamsByCourseId(@PathVariable Long courseId) {
+        return examService.getActiveExamsByCourseId(courseId);
+    }
+
+    /**
      * Lấy chi tiết bài kiểm tra
      */
     @GetMapping("/{id}")
