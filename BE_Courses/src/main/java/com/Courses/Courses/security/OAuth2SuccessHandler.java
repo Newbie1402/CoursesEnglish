@@ -4,6 +4,8 @@ import com.Courses.Courses.enums.Status;
 import com.Courses.Courses.model.entity.AcceptedAccount;
 import com.Courses.Courses.model.entity.Users;
 import com.Courses.Courses.repository.AcceptedAccountRepository;
+import com.Courses.Courses.repository.StudentRepository;
+import com.Courses.Courses.repository.TeacherRepository;
 import com.Courses.Courses.repository.UsersRepository;
 import com.Courses.Courses.security.jwt.JWTUtil;
 import com.Courses.Courses.service.CustomUserDetailService;
@@ -42,6 +44,9 @@ public class OAuth2SuccessHandler implements org.springframework.security.web.au
 
     private final GooglePeopleService googlePeopleService;
     private final JWTUtil jwtService;
+
+    private final StudentRepository studentRepository;
+    private final TeacherRepository teacherRepository;
 
     @Autowired
     private AcceptedAccountRepository acceptedAccountRepository;
@@ -96,10 +101,22 @@ public class OAuth2SuccessHandler implements org.springframework.security.web.au
         }
 
         UserDetails userDetails = customUserDetailService.loadUserByUsername(user.getEmail());
-        String jwt = jwtService.generateToken(userDetails);
+        Long studentId = studentRepository.findStudentByUser_Id(user.getId()) != null
+                ? studentRepository.findStudentByUser_Id(user.getId()).getId()
+                : null;
 
+        Long teacherId = teacherRepository.findTeacherByUser_Id(user.getId()) != null
+                ? teacherRepository.findTeacherByUser_Id(user.getId()).getId()
+                : null;
+
+        String jwt = jwtService.generateToken(userDetails);
         String encodedToken = URLEncoder.encode(jwt, StandardCharsets.UTF_8);
-        String redirectUri = "http://localhost:5173/oauth2/redirect?token=" + encodedToken + "&userId=" + user.getId();
+
+        String redirectUri = "http://localhost:5173/oauth2/redirect"
+                + "?token=" + encodedToken
+                + "&userId=" + user.getId()
+                + "&studentId=" + (studentId != null ? studentId : "null")
+                + "&teacherId=" + (teacherId != null ? teacherId : "null");
 
         response.sendRedirect(redirectUri);
     }
