@@ -53,6 +53,17 @@ public class KafkaConfig {
                 .build();
     }
 
+    @Bean
+    public NewTopic quizChoiceTrackingTopic() {
+        return TopicBuilder.name("quiz.choice.tracking.v1")
+                .partitions(12)
+                .replicas(1)
+                .config("cleanup.policy", "delete")
+                .config("retention.ms", "2592000000") // Lưu trữ 30 ngày
+                .config("segment.bytes", "1073741824")
+                .build();
+    }
+
     /**
      * KafkaTemplate dùng để gửi sự kiện giám sát
      */

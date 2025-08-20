@@ -1,6 +1,5 @@
 package com.Courses.Courses.service;
 
-import com.Courses.Courses.enums.QuestionType;
 import com.Courses.Courses.enums.StatusApplication;
 import com.Courses.Courses.model.dto.SubmissionDto;
 import com.Courses.Courses.model.entity.Exam;
@@ -330,9 +329,7 @@ public class SubmissionService {
         );
     }
 
-    /**
-     * Convert entity sang DTO
-     */
+
     private SubmissionDto convertToDto(Submission submission) {
         return SubmissionDto.builder()
                 .id(submission.getId())
