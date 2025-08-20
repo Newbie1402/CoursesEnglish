@@ -107,14 +107,22 @@ public class StudentService {
 
 
     private StudentDto toDto(Student student) {
+        Users user = student.getUser();
         return StudentDto.builder()
                 .studentId(student.getId())
-                .userId(student.getUser() != null ? student.getUser().getId() : null)
+                .userId(user != null ? user.getId() : null)
                 .fatherName(student.getFatherName())
                 .fatherPhone(student.getFatherPhone())
                 .motherName(student.getMotherName())
                 .motherPhone(student.getMotherPhone())
                 .application(student.getApplication())
+                .fullName(user != null ? user.getFullName() : null)
+                .email(user != null ? user.getEmail() : null)
+                .phoneNumber(user != null ? user.getPhoneNumber() : null)
+                .gender(user != null ? user.getGender() : null)
+                .dateOfBirth(user != null ? user.getDateOfBirth() : null)
+                .address(user != null ? user.getAddress() : null)
+                .avatarUrl(user != null ? user.getAvatarUrl() : null)
                 .build();
     }
 }
