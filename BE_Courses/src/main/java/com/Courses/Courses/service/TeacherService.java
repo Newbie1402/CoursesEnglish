@@ -102,12 +102,20 @@ public class TeacherService {
 
 
     private TeacherDto toDto(Teacher teacher) {
+        Users user = teacher.getUser();
         return TeacherDto.builder()
                 .teacherId(teacher.getId())
-                .userId(teacher.getUser() != null ? teacher.getUser().getId() : null)
+                .userId(user != null ? user.getId() : null)
                 .bio(teacher.getBio())
                 .specialization(teacher.getSpecialization())
                 .experienceYears(teacher.getExperienceYears())
+                .fullName(user != null ? user.getFullName() : null)
+                .email(user != null ? user.getEmail() : null)
+                .phoneNumber(user != null ? user.getPhoneNumber() : null)
+                .gender(user != null ? user.getGender() : null)
+                .dateOfBirth(user != null ? user.getDateOfBirth() : null)
+                .address(user != null ? user.getAddress() : null)
+                .avatarUrl(user != null ? user.getAvatarUrl() : null)
                 .build();
     }
 }
