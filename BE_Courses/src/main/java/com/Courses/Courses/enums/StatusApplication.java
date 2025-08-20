@@ -15,7 +15,9 @@ public enum StatusApplication {
     UNAUTHORIZED(401, "Unauthorized"),
     FORBIDDEN(403, "Forbidden"),
     NOT_FOUND(404, "Not Found"),
+    ERROR(500, "Error"),
     INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
+    CONFLICT(409, "Conflict"),
 
     // Validation errors
     VALIDATION_FAILED(422, "Validation Failed");
