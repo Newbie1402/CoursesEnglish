@@ -2,16 +2,32 @@ import { createBrowserRouter } from 'react-router-dom';
 import React from "react";
 import MainLayout from '@/layouts/MainLayout';
 import TeacherDashboard from '@/pages/teacher/TeacherDashboard';
-import CourseList from '@/pages/teacher/CourseList';
-import CourseDetail from '@/pages/teacher/CourseDetail';
-import CourseForm from '@/pages/teacher/CourseForm';
+import CourseList from '@/pages/teacher/course/CourseList.jsx';
+import CourseDetail from '@/pages/teacher/course/CourseDetail.jsx';
+import CourseCreate from '@/pages/teacher/course/CourseCreate.jsx';
+import Login from '@/pages/login/Login.jsx';
+import LoginCallback from '@/pages/login/LoginCallback.jsx';
+import AssignmentCreate from '@/pages/teacher/assignments/AssignmentCreate.jsx';
+import AdminLayout from '@/pages/admin/AdminLayout';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminUserList from '@/pages/admin/AdminUserList';
+import AdminUserDetail from '@/pages/admin/AdminUserDetail';
+import AdminCourseList from '@/pages/admin/AdminCourseList';
+import AdminCourseDetail from '@/pages/admin/AdminCourseDetail';
+import AdminExamList from '@/pages/admin/AdminExamList';
+import AdminExamDetail from '@/pages/admin/AdminExamDetail';
+import AdminNotificationList from '@/pages/admin/AdminNotificationList';
+import AdminReport from '@/pages/admin/AdminReport';
+import PrivateRoute from '@/components/auth/PrivateRoute';
+import AuthRedirect from '@/pages/login/AuthRedirect.jsx';
+import Forbidden403 from '@/pages/login/Forbidden403.jsx';
 
 // Tạo lazy loading cho các routes phụ
-const LessonList = React.lazy(() => import('@/pages/teacher/lessons/LessonList'));
 const AssignmentList = React.lazy(() => import('@/pages/teacher/assignments/AssignmentList'));
 const StudentList = React.lazy(() => import('@/pages/teacher/students/StudentList'));
 const Reports = React.lazy(() => import('@/pages/teacher/reports/Reports'));
 const Settings = React.lazy(() => import('@/pages/teacher/settings/Settings'));
+const AssignmentAddQuestions = React.lazy(() => import('@/pages/teacher/assignments/AssignmentAddQuestions'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -22,7 +38,11 @@ const LoadingFallback = () => (
 const router = createBrowserRouter([
   {
     path: '/teacher',
-    element: <MainLayout />,
+    element: (
+      <PrivateRoute allowedRoles={['ROLE_TEACHER']}>
+        <MainLayout />
+      </PrivateRoute>
+    ),
     children: [
       {
         index: true,
@@ -41,7 +61,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'new',
-            element: <CourseForm />
+            element: <CourseCreate />
           },
           {
             path: ':courseId',
@@ -49,17 +69,9 @@ const router = createBrowserRouter([
           },
           {
             path: ':courseId/edit',
-            element: <CourseForm />
+            element: <CourseCreate />
           }
         ]
-      },
-      {
-        path: 'lessons',
-        element: (
-          <React.Suspense fallback={<LoadingFallback />}>
-            <LessonList />
-          </React.Suspense>
-        ),
       },
       {
         path: 'assignments',
@@ -69,6 +81,14 @@ const router = createBrowserRouter([
           </React.Suspense>
         ),
       },
+        {
+            path: 'assignments/new',
+            element: (
+                <React.Suspense fallback={<LoadingFallback />}>
+                    <AssignmentCreate />
+                </React.Suspense>
+            ),
+        },
       {
         path: 'students',
         element: (
@@ -94,7 +114,58 @@ const router = createBrowserRouter([
         ),
       }
     ]
-  }
+  },
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/login/callback',
+    element: <LoginCallback />,
+  },
+  {
+    path: '/oauth2/redirect',
+    element: <LoginCallback />,
+  },
+  {
+    path: '/admin',
+    element: (
+      <PrivateRoute allowedRoles={['ROLE_ADMIN']}>
+        <AdminLayout />
+      </PrivateRoute>
+    ),
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: 'users', element: <AdminUserList /> },
+      { path: 'users/:userId', element: <AdminUserDetail /> },
+      { path: 'courses', element: <AdminCourseList /> },
+      { path: 'courses/:courseId', element: <AdminCourseDetail /> },
+      { path: 'exams', element: <AdminExamList /> },
+      { path: 'exams/:examId', element: <AdminExamDetail /> },
+      { path: 'notifications', element: <AdminNotificationList /> },
+      { path: 'reports', element: <AdminReport /> },
+    ]
+  },
+  {
+    path: '/',
+    element: <AuthRedirect />,
+  },
+  {
+    path: '*',
+    element: <AuthRedirect />,
+  },
+  {
+    path: '/user',
+    element: (
+      <PrivateRoute allowedRoles={['ROLE_USER']}>
+        <div>User Home</div>
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: '/403',
+    element: <Forbidden403 />,
+  },
 ]);
 
 export default router;

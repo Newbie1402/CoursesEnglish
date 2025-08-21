@@ -3,39 +3,49 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { Button } from '@/components/ui/button/Button';
 import { Input } from '@/components/ui/input/Input';
 import { Select } from '@/components/ui/select/Select';
-import { FaPlus, FaSearch, FaCheck, FaClock } from 'react-icons/fa';
+import { FaSearch, FaCheck, FaClock } from 'react-icons/fa';
+import useAssignmentService from '../../../services/hooks/useAssignmentService';
+import useCourseService from '../../../services/hooks/useCourseService';
+import { useNavigate } from 'react-router-dom';
 
 const AssignmentList = () => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filterStatus, setFilterStatus] = React.useState('all');
+  const [courseDetails, setCourseDetails] = React.useState({});
+  const navigate = useNavigate();
+  const { getActiveExamsByTeacher } = useAssignmentService();
+  const { getCourseDetail } = useCourseService();
+  const teacherId = localStorage.getItem('teacherId');
+  const { data: activeExams = [] } = getActiveExamsByTeacher(teacherId);
 
-  const assignments = [
-    {
-      id: 1,
-      title: 'Bài tập về thì hiện tại đơn',
-      course: 'Tiếng Anh Giao Tiếp Cơ Bản',
-      dueDate: '2024-03-20',
-      submissions: 15,
-      totalStudents: 30,
-      status: 'active'
-    },
-    {
-      id: 2,
-      title: 'Practice IELTS Reading',
-      course: 'Luyện Thi IELTS 6.5+',
-      dueDate: '2024-03-18',
-      submissions: 25,
-      totalStudents: 25,
-      status: 'completed'
-    }
-  ];
+  React.useEffect(() => {
+    const fetchCourseDetails = async () => {
+      const details = {};
+      for (const exam of activeExams) {
+        const courseDetail = await getCourseDetail(exam.courseId);
+        details[exam.courseId] = courseDetail?.data?.title || `Khóa học ID: ${exam.courseId}`;
+      }
+      setCourseDetails(details);
+    };
+
+    fetchCourseDetails();
+  }, [activeExams, getCourseDetail]);
+
+  const assignments = activeExams.map((exam) => ({
+    id: exam.examId,
+    title: exam.title,
+    course: courseDetails[exam.courseId] || `Khóa học ID: ${exam.courseId}`,
+    dueDate: exam.endTime,
+    submissions: 0,
+    totalStudents: 0,
+    status: exam.active ? 'active' : 'inactive',
+  }));
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Quản lý bài tập</h1>
-        <Button>
-          <FaPlus className="mr-2" />
+        <Button onClick={() => navigate('/teacher/assignments/new')}>
           Tạo bài tập mới
         </Button>
       </div>

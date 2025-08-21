@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils';
 import NavigationMenu from '@/components/dashboard/NavigationMenu';
 import ProfileCard from '@/components/dashboard/ProfileCard';
 import NotificationBadge from '@/components/ui/notification/NotificationBadge';
-import ProfileDropdown from '@/components/ui/profile/ProfileDropdown';
+import ProfileDropdownTeacher from '@/components/ui/profile/ProfileDropdownTeacher.jsx';
+import useTeacherService from '@/services/hooks/useTeacherService.js';
 
 // Mock data cho user đang đăng nhập
 const mockTeacher = {
@@ -21,7 +22,6 @@ const mockTeacher = {
 const ROUTE_NAMES = {
   '/teacher/dashboard': 'Dashboard',
   '/teacher/courses': 'Khóa học',
-  '/teacher/lessons': 'Bài học',
   '/teacher/assignments': 'Bài tập',
   '/teacher/students': 'Học viên',
   '/teacher/reports': 'Báo cáo',
@@ -53,6 +53,32 @@ const MainLayout = () => {
 
   // Lấy tên trang từ route hiện tại
   const currentPageName = ROUTE_NAMES[location.pathname] || 'Dashboard';
+
+  // Lấy thông tin giảng viên từ API
+  const teacherId = localStorage.getItem('teacherId');
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const { getTeacherInfo, teacherInfo, loading } = useTeacherService(BASE_URL);
+  const [profile, setProfile] = React.useState({
+    fullName: '',
+    email: '',
+    specialization: '',
+    avatar: ''
+  });
+
+  React.useEffect(() => {
+    if (teacherId) {
+      getTeacherInfo(teacherId).then((data) => {
+        if (data) {
+          setProfile({
+            fullName: data.fullName || '',
+            email: data.email || '',
+            specialization: data.specialization || '',
+            avatar: data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName || 'GV')}`
+          });
+        }
+      });
+    }
+  }, [teacherId]);
 
   // Đóng sidebar khi route thay đổi trên mobile
   React.useEffect(() => {
@@ -158,7 +184,14 @@ const MainLayout = () => {
               <NotificationBadge />
 
               {/* Profile Dropdown */}
-              <ProfileDropdown teacher={mockTeacher} />
+              <ProfileDropdownTeacher
+                teacher={{
+                  name: profile.fullName || 'Giảng viên',
+                  email: profile.email,
+                  avatar: profile.avatar,
+                  role: profile.specialization || 'Giảng viên tiếng Anh'
+                }}
+              />
             </div>
           </div>
         </div>
@@ -189,7 +222,14 @@ const MainLayout = () => {
       >
         <div className="flex flex-col h-full overflow-y-auto scrollbar-hide">
           <div className="p-4 lg:p-6 border-b border-gray-100">
-            <ProfileCard teacher={mockTeacher} />
+            <ProfileCard teacher={
+                {
+                    name: profile.fullName || 'Giảng viên',
+                    email: profile.email,
+                    avatar: profile.avatar,
+                    role: profile.specialization || 'Giảng viên tiếng Anh'
+                }
+            } />
           </div>
           <div className="flex-1 p-4">
             <NavigationMenu />
