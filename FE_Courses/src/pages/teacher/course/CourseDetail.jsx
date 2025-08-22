@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaEdit, FaTrash, FaPlus, FaUserGraduate, FaBook, FaClipboardList } from 'react-icons/fa';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card/Card.jsx';
-import { formatDate } from "@/lib/utils.js";
+import {formatDate, getProgress} from "@/lib/utils.js";
 import useCourseService from "@/services/hooks/useCourseService.js";
 import CourseUpdate from './CourseUpdate.jsx';
 import { useToast } from '@/components/ui/toast/Toast.jsx';
@@ -56,23 +56,6 @@ const CourseDetail = () => {
     const startDate = new Date(start);
     const endDate = new Date(end);
     return Math.max(0, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1);
-  };
-
-  // Hàm tính tiến độ mới: (ngày hiện tại / ngày kết thúc) * 100
-  const getProgress = (start, end) => {
-    if (!start || !end) return 0;
-    const now = new Date();
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    if (now < startDate) return 0;
-    if (now >= endDate) return 100;
-    // Số ngày đã qua kể từ startDate
-    const daysPassed = Math.ceil((now - startDate) / (1000 * 60 * 60 * 24));
-    // Tổng số ngày từ startDate đến endDate
-    const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-    // Tiến độ = (ngày hiện tại / ngày kết thúc) * 100
-    const progress = Math.floor((daysPassed / totalDays) * 100);
-    return Math.max(0, Math.min(progress, 100));
   };
 
   const handleEdit = () => setShowUpdateModal(true);
@@ -299,7 +282,11 @@ const CourseDetail = () => {
                     <div className="p-6 text-center text-gray-500">Chưa có bài kiểm tra nào cho khóa học này.</div>
                   ) : (
                     examsByCourse.map((exam) => (
-                      <tr key={exam.examId}>
+                      <tr
+                        key={exam.examId}
+                        className="cursor-pointer hover:bg-gray-100"
+                        onClick={() => navigate(`/teacher/assignments/${exam.examId}`)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap font-medium">{exam.title}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{exam.type}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{new Date(exam.startTime).toLocaleString('vi-VN')}</td>

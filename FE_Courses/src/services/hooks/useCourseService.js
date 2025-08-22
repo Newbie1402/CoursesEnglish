@@ -43,7 +43,11 @@ const fetchStudentsByCourse = async (courseId) => {
 const useCourseService = () => {
   const queryClient = useQueryClient();
 
-  // Danh sách khóa học
+  /**
+   * Hook lấy danh sách khóa học của giảng viên
+   * @param {string} teacherId - ID của giảng viên
+   * @returns {object} - Query object chứa danh sách khóa học
+   */
   const getCourseList = (teacherId) =>
     useQuery({
       queryKey: ['courses', teacherId],
@@ -53,7 +57,11 @@ const useCourseService = () => {
       retry: 1,
     });
 
-  // Chi tiết khóa học
+  /**
+   * Hook lấy chi tiết khóa học
+   * @param {string} courseId - ID của khóa học
+   * @returns {object} - Query object chứa thông tin chi tiết khóa học
+   */
   const getCourseDetail = (courseId) =>
     useQuery({
       queryKey: ['course-detail', courseId],
@@ -62,7 +70,11 @@ const useCourseService = () => {
       retry: 1,
     });
 
-  // Danh sách học viên theo khóa học
+  /**
+   * Hook lấy danh sách học viên theo khóa học
+   * @param {string} courseId - ID của khóa học
+   * @returns {object} - Query object chứa danh sách học viên
+   */
   const getStudentListByCourse = (courseId) =>
     useQuery({
       queryKey: ['students', courseId],
@@ -70,7 +82,10 @@ const useCourseService = () => {
       enabled: !!courseId,
     });
 
-  // Tạo mới khóa học
+  /**
+   * Hook tạo mới khóa học
+   * @returns {object} - Mutation object để tạo khóa học
+   */
   const createCourse = useMutation({
     mutationFn: createCourseApi,
     onSuccess: () => {
@@ -78,7 +93,10 @@ const useCourseService = () => {
     },
   });
 
-  // Cập nhật khóa học
+  /**
+   * Hook cập nhật khóa học
+   * @returns {object} - Mutation object để cập nhật khóa học
+   */
   const updateCourse = useMutation({
     mutationFn: updateCourseApi,
     onSuccess: (data, variables) => {
@@ -87,7 +105,10 @@ const useCourseService = () => {
     },
   });
 
-  // Xóa khóa học
+  /**
+   * Hook xóa khóa học
+   * @returns {object} - Mutation object để xóa khóa học
+   */
   const deleteCourse = useMutation({
     mutationFn: deleteCourseApi,
     onSuccess: (_, courseId) => {
@@ -106,4 +127,5 @@ const useCourseService = () => {
   };
 };
 
+export { fetchStudentsByCourse }
 export default useCourseService;

@@ -41,6 +41,10 @@ const AssignmentList = () => {
     status: exam.active ? 'active' : 'inactive',
   }));
 
+  const handleViewDetails = (examId) => {
+    navigate(`/teacher/assignments/${examId}`);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -122,10 +126,11 @@ const AssignmentList = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm">
-                      Chấm điểm
-                    </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetails(assignment.id)}
+                    >
                       Chi tiết
                     </Button>
                   </div>

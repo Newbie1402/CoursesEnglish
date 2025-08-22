@@ -12,7 +12,7 @@ const fetchLessons = async ({ courseId }) => {
     response = await axios.get(`${BASE_URL}/api/lessons/view/active`);
   }
   const lessons = Array.isArray(response.data) ? response.data : [];
-  return lessons.filter(lesson => lesson.active === true);
+  return lessons.filter(lesson => lesson.active === true); // Chỉ lấy các bài học có active = true
 };
 
 // Tạo mới bài học
@@ -55,14 +55,21 @@ const deleteLessonApi = async (lessonId) => {
 const useLessonService = () => {
   const queryClient = useQueryClient();
 
-  // Danh sách bài học
+  /**
+   * Hook lấy danh sách bài học
+   * @param {string} courseId - ID của khóa học (tùy chọn)
+   * @returns {object} - Query object chứa danh sách bài học
+   */
   const getLessonList = (courseId) =>
     useQuery({
       queryKey: ['lessons', { courseId }],
       queryFn: () => fetchLessons({ courseId }),
     });
 
-  // Tạo mới bài học
+  /**
+   * Hook tạo mới bài học
+   * @returns {object} - Mutation object để tạo bài học
+   */
   const createLesson = useMutation({
     mutationFn: createLessonApi,
     onSuccess: () => {
@@ -70,7 +77,10 @@ const useLessonService = () => {
     },
   });
 
-  // Cập nhật bài học
+  /**
+   * Hook cập nhật bài học
+   * @returns {object} - Mutation object để cập nhật bài học
+   */
   const updateLesson = useMutation({
     mutationFn: updateLessonApi,
     onSuccess: () => {
@@ -85,11 +95,14 @@ const useLessonService = () => {
     },
   });
 
-  // Xóa bài học
+  /**
+   * Hook xóa bài học
+   * @returns {object} - Mutation object để xóa bài học
+   */
   const deleteLesson = useMutation({
     mutationFn: deleteLessonApi,
     onSuccess: () => {
-      queryClient.invalidateQueries(['lessons']);
+      queryClient.invalidateQueries(['lessons']); // Làm mới danh sách bài học sau khi xóa
     },
   });
 

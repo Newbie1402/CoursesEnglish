@@ -8,6 +8,7 @@ import CourseCreate from '@/pages/teacher/course/CourseCreate.jsx';
 import Login from '@/pages/login/Login.jsx';
 import LoginCallback from '@/pages/login/LoginCallback.jsx';
 import AssignmentCreate from '@/pages/teacher/assignments/AssignmentCreate.jsx';
+import AssignmentAddQuestions from "@/pages/teacher/assignments/AssignmentAddQuestions.jsx";
 import AdminLayout from '@/pages/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import AdminUserList from '@/pages/admin/AdminUserList';
@@ -27,7 +28,7 @@ const AssignmentList = React.lazy(() => import('@/pages/teacher/assignments/Assi
 const StudentList = React.lazy(() => import('@/pages/teacher/students/StudentList'));
 const Reports = React.lazy(() => import('@/pages/teacher/reports/Reports'));
 const Settings = React.lazy(() => import('@/pages/teacher/settings/Settings'));
-const AssignmentAddQuestions = React.lazy(() => import('@/pages/teacher/assignments/AssignmentAddQuestions'));
+const AssignmentDetail = React.lazy(() => import('@/pages/teacher/assignments/AssignmentDetail'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -86,6 +87,22 @@ const router = createBrowserRouter([
             element: (
                 <React.Suspense fallback={<LoadingFallback />}>
                     <AssignmentCreate />
+                </React.Suspense>
+            ),
+        },
+        {
+            path: 'assignments/:examId/add-questions',
+            element: (
+                <React.Suspense fallback={<LoadingFallback />}>
+                    <AssignmentAddQuestions />
+                </React.Suspense>
+            ),
+        },
+        {
+            path: 'assignments/:examId',
+            element: (
+                <React.Suspense fallback={<LoadingFallback />}>
+                    <AssignmentDetail />
                 </React.Suspense>
             ),
         },

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
 import { Select } from '@/components/ui/select/Select';
-import { Toast } from '@/components/ui/toast/Toast';
+import { useToast } from '@/components/ui/toast/Toast';
+import useAssignmentService from '@/services/hooks/useAssignmentService';
 
 const questionSchema = z.object({
   content: z.string().min(1, 'Nhập nội dung câu hỏi'),
@@ -24,15 +25,16 @@ const TABS = [
 
 const AssignmentAddQuestions = () => {
   const { examId } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('manual');
-  const [toast, setToast] = useState(null);
-  const { createQuestion, loading } = useCreateQuestion();
+  const { addToast } = useToast();
+  const { useCreateQuestion } = useAssignmentService();
+  const { mutate: addQuestion, isLoading: loading } = useCreateQuestion();
 
   const {
     register,
     handleSubmit,
     control,
-    reset,
     formState: { errors },
     watch,
   } = useForm({
@@ -54,17 +56,26 @@ const AssignmentAddQuestions = () => {
 
   const type = watch('type');
 
-  const onSubmit = async (data) => {
-    try {
-      await createQuestion({
-        ...data,
-        examId: Number(examId),
-      });
-      setToast({ type: 'success', message: 'Thêm câu hỏi thành công!' });
-      reset();
-    } catch (err) {
-      setToast({ type: 'error', message: 'Thêm câu hỏi thất bại!' });
-    }
+  const onSubmit = (data) => {
+    console.log('Submitting question data:', data);
+    addQuestion(
+      { ...data, examId: Number(examId) },
+      {
+        onSuccess: (response) => {
+          console.log('Question added successfully:', response);
+          addToast(response.message, 'success');
+        },
+        onError: (error) => {
+          console.error('Error adding question:', error);
+          addToast('Thêm câu hỏi thất bại!', 'error');
+        },
+      }
+    );
+  };
+
+  const handleConfirm = () => {
+    addToast('Hoàn tất thêm câu hỏi!', 'success');
+    navigate('/teacher/assignments'); // Điều hướng về danh sách bài kiểm tra
   };
 
   return (
@@ -147,10 +158,14 @@ const AssignmentAddQuestions = () => {
           <p>Tính năng upload file Word sẽ sớm được bổ sung.</p>
         </div>
       )}
-      {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />}
+      <div className="flex justify-end mt-6">
+        <Button variant="primary" onClick={handleConfirm}>
+          Hoàn tất
+        </Button>
+      </div>
+      {/* {toast && <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />} */}
     </div>
   );
 };
 
 export default AssignmentAddQuestions;
-
