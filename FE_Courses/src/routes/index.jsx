@@ -22,6 +22,16 @@ import AdminReport from '@/pages/admin/AdminReport';
 import PrivateRoute from '@/components/auth/PrivateRoute';
 import AuthRedirect from '@/pages/login/AuthRedirect.jsx';
 import Forbidden403 from '@/pages/login/Forbidden403.jsx';
+import StudentLayout from '@/layouts/StudentLayout';
+import AttendanceList from '@/pages/student/attendance/AttendanceList';
+import MyCourses from '@/pages/student/courses/MyCourses';
+import StudentDashboard from '@/pages/student/dashboard/StudentDashboard';
+import ExamList from '@/pages/student/exams/ExamList';
+import ExamDetail from '@/pages/student/exams/ExamDetail';
+import ExamResult from '@/pages/student/exams/ExamResult';
+import TeacherFeedbackForm from '@/pages/student/feedback/TeacherFeedbackForm';
+import GradeOverview from '@/pages/student/grades/GradeOverview';
+import NotificationCenter from '@/pages/student/notifications/NotificationCenter';
 
 // Tạo lazy loading cho các routes phụ
 const AssignmentList = React.lazy(() => import('@/pages/teacher/assignments/AssignmentList'));
@@ -161,6 +171,28 @@ const router = createBrowserRouter([
       { path: 'exams/:examId', element: <AdminExamDetail /> },
       { path: 'notifications', element: <AdminNotificationList /> },
       { path: 'reports', element: <AdminReport /> },
+    ]
+  },
+  {
+    path: '/student',
+    element: (
+      <PrivateRoute allowedRoles={['ROLE_STUDENT']}>
+        <StudentLayout />
+      </PrivateRoute>
+    ),
+    children: [
+      { index: true, element: <StudentDashboard /> },
+      { path: 'dashboard', element: <StudentDashboard /> },
+      { path: 'courses', element: <MyCourses /> },
+      { path: 'attendance', element: <AttendanceList /> },
+      { path: 'exams', children: [
+        { index: true, element: <ExamList /> },
+        { path: ':examId', element: <ExamDetail /> },
+        { path: ':examId/result', element: <ExamResult /> },
+      ] },
+      { path: 'grades', element: <GradeOverview /> },
+      { path: 'notifications', element: <NotificationCenter /> },
+      { path: 'feedback', element: <TeacherFeedbackForm /> },
     ]
   },
   {

@@ -15,8 +15,8 @@ const AuthRedirect = () => {
       navigate('/admin', { replace: true });
     } else if (Array.isArray(roles) && (roles.includes('TEACHER') || roles.includes('ROLE_TEACHER'))) {
       navigate('/teacher', { replace: true });
-    } else if (Array.isArray(roles) && (roles.includes('USER') || roles.includes('ROLE_USER'))) {
-      navigate('/user', { replace: true });
+    } else if (Array.isArray(roles) && (roles.includes('STUDENT') || roles.includes('ROLE_STUDENT'))) {
+      navigate('/student', { replace: true });
     } else {
       // Không có role hợp lệ, logout và về login
       logout && logout();

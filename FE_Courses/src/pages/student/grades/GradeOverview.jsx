@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getMyGrades } from "../../../services/studentService";
+import { getMyGrades } from "@/services/studentService.js";
 import {
   Card,
   CardHeader,

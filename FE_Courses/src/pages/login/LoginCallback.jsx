@@ -43,7 +43,7 @@ const LoginCallback = () => {
         // Kiểm tra nếu thiếu thông tin studentId/teacherId (giữ logic cũ cho student)
         if (roles.includes('ROLE_STUDENT') && studentId === 'null') {
           addToast('Vui lòng cập nhật thông tin cá nhân để tiếp tục!', 'warning');
-          setTimeout(() => navigate('/user/update-profile'), 1500);
+          setTimeout(() => navigate('/student'), 1500);
           return;
         }
         // Điều hướng theo role
@@ -55,7 +55,7 @@ const LoginCallback = () => {
           setTimeout(() => navigate('/teacher'), 1000);
         } else {
           addToast('Đăng nhập thành công!', 'success');
-          setTimeout(() => navigate('/user'), 1000);
+          setTimeout(() => navigate('/student'), 1000);
         }
       } catch (e) {
         addToast('Token không hợp lệ!', 'error');
@@ -81,7 +81,7 @@ const LoginCallback = () => {
               setTimeout(() => navigate('/teacher'), 1000);
             } else {
               addToast('Đăng nhập thành công!', 'success');
-              setTimeout(() => navigate('/user'), 1000);
+              setTimeout(() => navigate('/student'), 1000);
             }
           } catch (e) {
             addToast('Token không hợp lệ!', 'error');

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getNotifications } from "../../../services/studentService";
+import { getNotifications } from "@/services/studentService.js";
 import NotificationItem from "../../../components/student/NotificationItem";
 
 const NotificationCenter = () => {
