@@ -29,6 +29,9 @@ jobs:
 
       - name: Build with Maven
         run: mvn clean compile
+        working-directory: BE_Courses
 
       - name: Run tests with test profile
         run: mvn test -Dspring.profiles.active=test
+        working-directory: BE_Courses
+
