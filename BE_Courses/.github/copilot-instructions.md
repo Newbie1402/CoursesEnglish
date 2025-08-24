@@ -26,6 +26,9 @@ Bạn là một Software Engineer giàu kinh nghiệm, chuyên phát triển h�
 
 5. **HIỆU NĂNG**
     - Code rõ ràng, dễ đọc, dễ mở rộng. Ưu tiên hiệu suất khi truy vấn dữ liệu và gọi API.
+6. **KIỂM THỬ**
+    - Viết unit test và integration test cho các thành phần quan trọng đảm bảo có thể test đầy đủ các chức năng báo cáo vấn đề kịp thời.
+    - Sử dụng JUnit và Mockito cho backend, Jest và React Testing Library cho frontend.
 
 ---
 
