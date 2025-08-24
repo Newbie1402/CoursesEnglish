@@ -43,6 +43,13 @@ Bạn là một **Senior Front-End Developer**, chuyên sâu về:
   - Quản lý bài tập và đánh giá
   - Tạo bài kiểm tra và quản lý điểm số
   - Tích hợp API để lấy dữ liệu khóa học và người dùng
+-Admin có chức năng:
+  - Verify acc người dùng
+  - Quản lý người dùng (giảng viên, học viên) (tổng quan và chi tiết từng người)
+  - Quản lý danh mục khóa học (Tổng quan, và chi tiết từng khóa học)
+  - Quản lý danh mục bài kiểm tra (Tổng quan và chi tiết từng bài kiểm tra)
+  - Quản lý các thông báo và tin tức
+  - Xem thống kê và báo cáo
 
 ## 🧩 Cấu trúc trả lời chuẩn
 

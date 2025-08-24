@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaUserCircle, FaCog, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
 
-const ProfileDropdown = ({ teacher }) => {
+const ProfileDropdownStudent = ({ student }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef(null);
   const navigate = useNavigate();
@@ -24,12 +24,12 @@ const ProfileDropdown = ({ teacher }) => {
     {
       icon: FaUserCircle,
       label: 'Trang cá nhân',
-      onClick: () => navigate('/teacher/profile')
+      onClick: () => navigate('/student/profile')
     },
     {
       icon: FaCog,
       label: 'Cài đặt',
-      onClick: () => navigate('/teacher/settings')
+      onClick: () => navigate('/student/settings')
     },
     {
       icon: FaSignOutAlt,
@@ -53,7 +53,7 @@ const ProfileDropdown = ({ teacher }) => {
       >
         <FaUserCircle className="w-5 h-5 text-gray-700" />
         <span className="hidden sm:block text-sm font-medium text-gray-700">
-          {teacher.name}
+          {student?.name || "Student"}
         </span>
         <FaChevronDown
           className={cn(
@@ -72,8 +72,8 @@ const ProfileDropdown = ({ teacher }) => {
           "z-50"
         )}>
           <div className="px-4 py-2 border-b border-gray-100">
-            <p className="text-sm font-medium text-gray-900">{teacher.name}</p>
-            <p className="text-xs text-gray-500">{teacher.email}</p>
+            <p className="text-sm font-medium text-gray-900">{student?.name || "Student Name"}</p>
+            <p className="text-xs text-gray-500">{student?.email || "student@email.com"}</p>
           </div>
 
           <div className="py-2">
@@ -105,4 +105,4 @@ const ProfileDropdown = ({ teacher }) => {
   );
 };
 
-export default ProfileDropdown;
+export default ProfileDropdownStudent;

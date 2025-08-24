@@ -23,11 +23,6 @@ const navigationItems = [
     path: '/teacher/courses'
   },
   {
-    label: 'Bài học',
-    icon: FaGraduationCap,
-    path: '/teacher/lessons'
-  },
-  {
     label: 'Bài tập',
     icon: FaClipboardList,
     path: '/teacher/assignments'
