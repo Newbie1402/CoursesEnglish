@@ -21,8 +21,14 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Show Java version
+        run: java -version
+
+      - name: Show Maven version
+        run: mvn -version
+
       - name: Build with Maven
         run: mvn clean compile
 
-      - name: Run tests
+      - name: Run tests with test profile
         run: mvn test -Dspring.profiles.active=test
