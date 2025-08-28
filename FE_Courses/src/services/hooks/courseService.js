@@ -1,0 +1,12 @@
+import axios from "axios";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+export const getCourseDetails = async (courseId) => {
+    try {
+        const res = await axios.get(`${BASE_URL}/api/courses/view/${courseId}`);
+        return res?.data || null; // Trả về null nếu không có dữ liệu
+    } catch (err) {
+        console.error(`Error fetching details for course ID ${courseId}:`, err);
+        return null; // Trả về null nếu có lỗi
+    }
+};

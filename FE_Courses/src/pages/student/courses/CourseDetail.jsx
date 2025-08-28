@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { getCourseDetail } from "../../../services/studentService";
+import { getCourseDetail } from "../../../services/hooks/studentService.js";
 import ExamCard from "../../../components/student/ExamCard";
 
 const CourseDetail = () => {

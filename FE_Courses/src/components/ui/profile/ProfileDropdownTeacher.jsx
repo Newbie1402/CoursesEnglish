@@ -1,6 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaCog, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
+import {
+  FaCog,
+  FaSignOutAlt,
+  FaChevronDown,
+  FaUser,
+  FaChartBar,
+  FaBell,
+  FaQuestionCircle,
+  FaCrown,
+  FaGraduationCap
+} from 'react-icons/fa';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/toast/Toast';
@@ -30,53 +40,119 @@ const ProfileDropdownTeacher = ({ teacher }) => {
     try {
       await axios.post(`${BASE_URL}/api/auth/logout`);
     } catch (error) {
-      // Có thể log lỗi nếu cần
+      console.error('Logout error:', error);
     } finally {
       logout();
-      addToast('Đăng xuất thành công!', 'success');
+      addToast('Đăng xuất thành công! Hẹn gặp lại 👋', 'success');
       navigate('/login');
     }
   };
 
-  const menuItems = [
+  const menuGroups = [
     {
-      icon: FaUserCircle,
-      label: 'Trang cá nhân',
-      onClick: () => navigate('/teacher/profile')
+      title: 'Tài khoản',
+      items: [
+        {
+          icon: FaUser,
+          label: 'Trang cá nhân',
+          description: 'Xem và chỉnh sửa thông tin',
+          onClick: () => navigate('/teacher/profile'),
+          color: 'text-blue-500',
+          bgColor: 'bg-blue-50',
+          hoverColor: 'hover:bg-blue-100'
+        },
+        {
+          icon: FaCog,
+          label: 'Cài đặt',
+          description: 'Tùy chỉnh tài khoản',
+          onClick: () => navigate('/teacher/settings'),
+          color: 'text-gray-500',
+          bgColor: 'bg-gray-50',
+          hoverColor: 'hover:bg-gray-100'
+        }
+      ]
     },
     {
-      icon: FaCog,
-      label: 'Cài đặt',
-      onClick: () => navigate('/teacher/settings')
-    },
-    {
-      icon: FaSignOutAlt,
-      label: 'Đăng xuất',
-      onClick: handleLogout,
-      className: 'text-red-600 hover:bg-red-50'
+      title: 'Công cụ',
+      items: [
+        {
+          icon: FaChartBar,
+          label: 'Thống kê',
+          description: 'Xem báo cáo chi tiết',
+          onClick: () => navigate('/teacher/reports'),
+          color: 'text-green-500',
+          bgColor: 'bg-green-50',
+          hoverColor: 'hover:bg-green-100'
+        },
+        {
+          icon: FaBell,
+          label: 'Thông báo',
+          description: 'Quản lý thông báo',
+          onClick: () => navigate('/teacher/notifications'),
+          color: 'text-yellow-500',
+          bgColor: 'bg-yellow-50',
+          hoverColor: 'hover:bg-yellow-100',
+          badge: 3
+        },
+        {
+          icon: FaQuestionCircle,
+          label: 'Trợ giúp',
+          description: 'Hướng dẫn sử dụng',
+          onClick: () => navigate('/teacher/help'),
+          color: 'text-purple-500',
+          bgColor: 'bg-purple-50',
+          hoverColor: 'hover:bg-purple-100'
+        }
+      ]
     }
   ];
 
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* Profile Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center gap-2 p-2",
-          "rounded-lg hover:bg-gray-100",
-          "transition-colors duration-150"
+          "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200",
+          "hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+          "border border-gray-200 bg-white shadow-sm",
+          isOpen && "bg-gray-100 ring-2 ring-blue-500 ring-offset-2"
         )}
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <FaUserCircle className="w-5 h-5 text-gray-700" />
-        <span className="hidden sm:block text-sm font-medium text-gray-700">
-          {teacher.name}
-        </span>
+        {/* Avatar */}
+        <div className="relative">
+          {teacher?.avatar ? (
+            <img
+              src={teacher.avatar}
+              alt={teacher.name}
+              className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <FaGraduationCap className="text-white text-sm" />
+            </div>
+          )}
+          {/* Online indicator */}
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+        </div>
+
+        {/* User Info */}
+        <div className="hidden sm:flex flex-col items-start min-w-0">
+          <span className="text-sm font-medium text-gray-900 truncate">
+            {teacher?.name || 'Giảng viên'}
+          </span>
+          <span className="text-xs text-gray-500 truncate">
+            {teacher?.role || 'Giáo viên'}
+          </span>
+        </div>
+
+        {/* Dropdown Icon */}
         <FaChevronDown
           className={cn(
-            "w-4 h-4 text-gray-500 transition-transform duration-200 hidden sm:block",
-            isOpen && "transform rotate-180"
+            "w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0",
+            isOpen && "rotate-180"
           )}
         />
       </button>
@@ -84,39 +160,141 @@ const ProfileDropdownTeacher = ({ teacher }) => {
       {/* Dropdown Menu */}
       {isOpen && (
         <div className={cn(
-          "absolute right-0 mt-2 w-48 py-2",
-          "bg-white rounded-lg shadow-lg border border-gray-100",
-          "animate-in fade-in slide-in-from-top-1 duration-200",
-          "z-50"
+          "absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50",
+          "animate-in fade-in slide-in-from-top-2 duration-200"
         )}>
-          <div className="px-4 py-2 border-b border-gray-100">
-            <p className="text-sm font-medium text-gray-900">{teacher.name}</p>
-            <p className="text-xs text-gray-500">{teacher.email}</p>
+          {/* Profile Header */}
+          <div className="px-4 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-purple-50">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                {teacher?.avatar ? (
+                  <img
+                    src={teacher.avatar}
+                    alt={teacher.name}
+                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <FaGraduationCap className="text-white text-lg" />
+                  </div>
+                )}
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-semibold text-gray-900 truncate">
+                  {teacher?.name || 'Giảng viên'}
+                </h3>
+                <p className="text-sm text-gray-600 truncate">
+                  {teacher?.email || 'teacher@example.com'}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-1">
+                    <FaCrown className="text-yellow-500 text-xs" />
+                    <span className="text-xs text-gray-500">
+                      {teacher?.role || 'Giảng viên'}
+                    </span>
+                  </div>
+                  <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                    Đang hoạt động
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="py-2">
-            {menuItems.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setIsOpen(false);
-                    item.onClick();
-                  }}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-4 py-2",
-                    "text-sm text-gray-700",
-                    "hover:bg-gray-50 transition-colors duration-150",
-                    item.className
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+          {/* Quick Stats */}
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              Thống kê nhanh
+            </h4>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-lg font-bold text-blue-600">12</p>
+                <p className="text-xs text-gray-500">Khóa học</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold text-green-600">248</p>
+                <p className="text-xs text-gray-500">Học viên</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold text-orange-600">4.8</p>
+                <p className="text-xs text-gray-500">Đánh giá</p>
+              </div>
+            </div>
           </div>
+
+          {/* Menu Groups */}
+          {menuGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className="py-2">
+              <h4 className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                {group.title}
+              </h4>
+              {group.items.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setIsOpen(false);
+                      item.onClick();
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3 transition-all duration-150 group",
+                      item.hoverColor,
+                      "hover:shadow-sm"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-200",
+                      item.bgColor,
+                      "group-hover:scale-110"
+                    )}>
+                      <Icon className={cn("w-4 h-4", item.color)} />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">
+                          {item.label}
+                        </span>
+                        {item.badge && (
+                          <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {item.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-2"></div>
+
+          {/* Logout Button */}
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              handleLogout();
+            }}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-all duration-150 group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+              <FaSignOutAlt className="w-4 h-4 text-red-500" />
+            </div>
+            <div className="flex-1 text-left">
+              <span className="text-sm font-medium text-red-600 group-hover:text-red-700">
+                Đăng xuất
+              </span>
+              <p className="text-xs text-red-400">
+                Thoát khỏi tài khoản
+              </p>
+            </div>
+          </button>
         </div>
       )}
     </div>

@@ -304,10 +304,6 @@ const CourseDetail = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">Danh sách học viên</h2>
-              <button className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
-                <FaPlus className="mr-2" />
-                Thêm học viên
-              </button>
             </div>
             {/* Danh sách học viên */}
             <div className="overflow-x-auto bg-white rounded-lg shadow">
@@ -337,7 +333,7 @@ const CourseDetail = () => {
                         <td className="px-6 py-4 whitespace-nowrap">{idx + 1}</td>
                         <td className="px-6 py-4 whitespace-nowrap font-medium">{student.fullName}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{student.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{student.phone}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{student.phoneNumber}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{student.enrolledAt ? new Date(student.enrolledAt).toLocaleDateString('vi-VN') : '-'}</td>
                       </tr>
                     ))}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getExamResult } from "../../../services/studentService";
+import { getExamResult } from "../../../services/hooks/studentService.js";
 
 const ExamResult = () => {
   const { id } = useParams();

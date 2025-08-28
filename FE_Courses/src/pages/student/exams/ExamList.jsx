@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getMyExams } from "../../../services/studentService";
+import { getMyExams } from "../../../services/hooks/studentService.js";
 import ExamCard from "../../../components/student/ExamCard";
 import { useNavigate } from "react-router-dom";
 

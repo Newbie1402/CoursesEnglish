@@ -5,14 +5,26 @@ import {
   FaPlusCircle,
   FaBook,
   FaClipboardList,
-  FaUserGraduate
+  FaUserGraduate,
+  FaChartLine,
+  FaCalendarAlt,
+  FaClock,
+  FaEye,
+  FaUsers,
+  FaTrophy,
+  FaArrowUp,
+  FaArrowDown,
+  FaCheckCircle,
+  FaStar,
+  FaGraduationCap,
+  FaLightbulb,
+  FaRocket,
+  FaHeart,
+  FaPlus
 } from "react-icons/fa";
-import DashboardStats from "@/components/dashboard/DashboardStats";
-import RecentCourses from "@/components/dashboard/RecentCourses";
-import NotificationList from "@/components/dashboard/NotificationList";
 import useTeacherService from '@/services/hooks/useTeacherService.js';
 import useCourseService, { fetchStudentsByCourse } from '@/services/hooks/useCourseService';
-import useLessonService, { fetchLessons } from '@/services/hooks/useLessonService';
+import { fetchLessons } from '@/services/hooks/useLessonService';
 import useAssignmentService from '@/services/hooks/useAssignmentService';
 import {getProgress} from "@/lib/utils.js";
 
@@ -20,10 +32,11 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const teacherId = localStorage.getItem('teacherId');
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const { getTeacherInfo, teacherInfo, loading } = useTeacherService(BASE_URL);
+  const { getTeacherInfo } = useTeacherService(BASE_URL);
   const { getCourseList } = useCourseService();
-  const { getLessonList } = useLessonService();
-  const { getQuestionsByExam, getActiveExamsByTeacher } = useAssignmentService();
+  const { getActiveExamsByTeacher } = useAssignmentService();
+
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [profile, setProfile] = useState({
     fullName: '',
     email: '',
@@ -31,11 +44,19 @@ const TeacherDashboard = () => {
   });
   const [totalLessons, setTotalLessons] = useState(0);
   const [totalStudents, setTotalStudents] = useState(0);
-  const [recentCoursesWithStudents, setRecentCoursesWithStudents] = useState([]);
   const [recentCoursesWithDetails, setRecentCoursesWithDetails] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const { data: courses = [] } = getCourseList(teacherId);
   const { data: activeExams = [] } = getActiveExamsByTeacher(teacherId);
+
+  // Real-time clock
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (teacherId) {
@@ -55,18 +76,16 @@ const TeacherDashboard = () => {
         try {
           const allLessons = await Promise.all(
             courses.map(async (course) => {
-              const lessons = await fetchLessons({ courseId: course.courseId });
-              return lessons;
+              return await fetchLessons({ courseId: course.courseId });
             })
           );
 
-          // Loại bỏ các bài học bị trùng lặp dựa trên ID
           const uniqueLessons = new Set();
           allLessons.flat().forEach((lesson) => {
             if (lesson.lessonId) {
               uniqueLessons.add(lesson.lessonId);
             } else {
-              console.warn("Lesson without ID detected:", lesson); // Debug log
+              console.warn("Lesson without ID detected:", lesson);
             }
           });
 
@@ -90,28 +109,6 @@ const TeacherDashboard = () => {
             })
           );
           setTotalStudents(studentCounts.reduce((acc, count) => acc + count, 0));
-        } catch (error) {
-          console.error("Error fetching students for courses:", error);
-        }
-      };
-      fetchStudentsForCourses();
-    }
-  }, [courses]);
-
-  useEffect(() => {
-    if (courses.length > 0) {
-      const fetchStudentsForCourses = async () => {
-        try {
-          const updatedCourses = await Promise.all(
-            courses.map(async (course) => {
-              const students = await fetchStudentsByCourse(course.courseId).then((data) => data.length).catch(() => 0);
-              return {
-                ...course,
-                students,
-              };
-            })
-          );
-          setRecentCoursesWithStudents(updatedCourses);
         } catch (error) {
           console.error("Error fetching students for courses:", error);
         }
@@ -148,33 +145,48 @@ const TeacherDashboard = () => {
     navigate('/teacher/courses/new');
   };
 
-  const { data: lessons = [] } = getLessonList();
-
+  // Enhanced stats with trends and colors
   const stats = useMemo(() => {
     return [
       {
         label: "Khóa học",
         value: courses.length,
-        icon: <FaBook className="text-blue-500 text-2xl" />,
-        bg: "bg-blue-100",
+        change: "+12%",
+        trend: "up",
+        icon: FaBook,
+        color: "from-blue-500 to-blue-600",
+        bgColor: "bg-blue-50",
+        textColor: "text-blue-600"
       },
       {
         label: "Bài học",
         value: totalLessons,
-        icon: <FaClipboardList className="text-green-500 text-2xl" />,
-        bg: "bg-green-100",
+        change: "+8%",
+        trend: "up",
+        icon: FaClipboardList,
+        color: "from-green-500 to-green-600",
+        bgColor: "bg-green-50",
+        textColor: "text-green-600"
       },
       {
         label: "Bài tập",
         value: activeExams.length,
-        icon: <FaClipboardList className="text-yellow-500 text-2xl" />,
-        bg: "bg-yellow-100",
+        change: "+24%",
+        trend: "up",
+        icon: FaTrophy,
+        color: "from-yellow-500 to-yellow-600",
+        bgColor: "bg-yellow-50",
+        textColor: "text-yellow-600"
       },
       {
         label: "Học viên",
         value: totalStudents,
-        icon: <FaUserGraduate className="text-purple-500 text-2xl" />,
-        bg: "bg-purple-100",
+        change: "+15%",
+        trend: "up",
+        icon: FaUserGraduate,
+        color: "from-purple-500 to-purple-600",
+        bgColor: "bg-purple-50",
+        textColor: "text-purple-600"
       },
     ];
   }, [courses, totalLessons, activeExams, totalStudents]);
@@ -193,61 +205,383 @@ const TeacherDashboard = () => {
       }));
   }, [recentCoursesWithDetails]);
 
+  const recentActivities = [
+    {
+      id: 1,
+      type: 'lesson',
+      message: 'Bài học "React Hooks" đã được cập nhật',
+      time: '10 phút trước',
+      icon: FaBook,
+      color: 'text-blue-500'
+    },
+    {
+      id: 2,
+      type: 'student',
+      message: '5 học viên mới đăng ký khóa JavaScript',
+      time: '1 giờ trước',
+      icon: FaUsers,
+      color: 'text-green-500'
+    },
+    {
+      id: 3,
+      type: 'exam',
+      message: '12 bài thi đã được nộp và cần chấm điểm',
+      time: '2 giờ trước',
+      icon: FaClipboardList,
+      color: 'text-orange-500'
+    },
+    {
+      id: 4,
+      type: 'achievement',
+      message: 'Bạn đã đạt 95% tỷ lệ hài lòng từ học viên',
+      time: '1 ngày trước',
+      icon: FaTrophy,
+      color: 'text-yellow-500'
+    }
+  ];
+
+  const quickActions = [
+    {
+      title: 'Tạo bài học',
+      description: 'Thêm bài học mới',
+      icon: FaPlus,
+      color: 'bg-blue-500 hover:bg-blue-600',
+      action: () => navigate('/teacher/lessons/new')
+    },
+    {
+      title: 'Xem điểm số',
+      description: 'Quản lý điểm',
+      icon: FaChartLine,
+      color: 'bg-green-500 hover:bg-green-600',
+      action: () => navigate('/teacher/grades')
+    },
+    {
+      title: 'Lập lịch',
+      description: 'Quản lý thời khóa biểu',
+      icon: FaCalendarAlt,
+      color: 'bg-purple-500 hover:bg-purple-600',
+      action: () => navigate('/teacher/schedule')
+    },
+    {
+      title: 'Báo cáo',
+      description: 'Xem thống kê',
+      icon: FaChartLine,
+      color: 'bg-orange-500 hover:bg-orange-600',
+      action: () => navigate('/teacher/reports')
+    }
+  ];
+
   const mockNotifications = [
     {
       id: 1,
       message: "Bạn có 2 bài tập cần chấm điểm",
       time: "2 giờ trước",
-      type: "task"
+      type: "task",
+      priority: "high"
     },
     {
       id: 2,
       message: "Khóa học mới đã được tạo thành công!",
       time: "1 ngày trước",
-      type: "success"
+      type: "success",
+      priority: "normal"
+    },
+    {
+      id: 3,
+      message: "Nhắc nhở: Họp giảng viên vào 3PM hôm nay",
+      time: "3 giờ trước",
+      type: "reminder",
+      priority: "medium"
     }
   ];
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Chào buổi sáng";
+    if (hour < 17) return "Chào buổi chiều";
+    return "Chào buổi tối";
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500">
-            {loading ? 'Đang tải...' : `Xin chào, ${profile.fullName || 'Giảng viên'}!`}
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <button
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              aria-label="Thông báo"
-            >
-              <FaBell className="w-5 h-5 text-gray-600" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                2
-              </span>
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Enhanced Header */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            {/* Welcome Section */}
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                <FaGraduationCap className="text-white text-2xl" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-1">
+                  {getGreeting()}, {profile.fullName || 'Giảng viên'}! 👋
+                </h1>
+                <p className="text-gray-600 flex items-center space-x-2">
+                  <FaClock className="text-sm" />
+                  <span>{currentTime.toLocaleString('vi-VN')}</span>
+                  <span className="text-green-500">●</span>
+                  <span>Đang hoạt động</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Header Actions */}
+            <div className="flex items-center space-x-4">
+              {/* Notifications */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-3 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
+                >
+                  <FaBell className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
+                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                    {mockNotifications.length}
+                  </span>
+                </button>
+
+                {/* Notifications Dropdown */}
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                    <div className="p-4 border-b border-gray-100">
+                      <h3 className="font-semibold text-gray-900">Thông báo</h3>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {mockNotifications.map((notification) => (
+                        <div key={notification.id} className="p-4 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+                          <div className="flex items-start space-x-3">
+                            <div className={`p-2 rounded-lg ${
+                              notification.priority === 'high' ? 'bg-red-100' :
+                              notification.priority === 'medium' ? 'bg-yellow-100' : 'bg-blue-100'
+                            }`}>
+                              <FaBell className={`text-sm ${
+                                notification.priority === 'high' ? 'text-red-500' :
+                                notification.priority === 'medium' ? 'text-yellow-500' : 'text-blue-500'
+                              }`} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-900">{notification.message}</p>
+                              <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-4 border-t border-gray-100">
+                      <button className="w-full text-center text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        Xem tất cả thông báo
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Create Course Button */}
+              <button
+                onClick={handleCreateCourse}
+                className="flex items-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+              >
+                <FaPlusCircle className="w-4 h-4" />
+                <span>Tạo khóa học</span>
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleCreateCourse}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-          >
-            <FaPlusCircle className="w-4 h-4" />
-            <span>Tạo khóa học</span>
-          </button>
+        </div>
+
+        {/* Enhanced Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            const TrendIcon = stat.trend === 'up' ? FaArrowUp : FaArrowDown;
+
+            return (
+              <div
+                key={index}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 group"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`${stat.bgColor} p-3 rounded-xl group-hover:scale-110 transition-transform duration-200`}>
+                    <Icon className={`text-2xl ${stat.textColor}`} />
+                  </div>
+                  <div className={`flex items-center space-x-1 ${
+                    stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    <TrendIcon className="text-xs" />
+                    <span className="text-sm font-medium">{stat.change}</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-gray-900 mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-sm text-gray-600">{stat.label}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Recent Activities & Quick Actions */}
+          <div className="xl:col-span-2 space-y-8">
+            {/* Recent Activities */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                  <FaLightbulb className="text-yellow-500" />
+                  <span>Hoạt động gần đây</span>
+                </h3>
+                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1">
+                  <FaEye />
+                  <span>Xem tất cả</span>
+                </button>
+              </div>
+              <div className="space-y-4">
+                {recentActivities.map((activity, index) => {
+                  const Icon = activity.icon;
+                  return (
+                    <div key={activity.id} className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors">
+                      <div className="relative">
+                        <div className="p-3 bg-gray-100 rounded-xl">
+                          <Icon className={`${activity.color} text-lg`} />
+                        </div>
+                        {index !== recentActivities.length - 1 && (
+                          <div className="absolute top-12 left-1/2 transform -translate-x-1/2 w-px h-8 bg-gray-200"></div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{activity.message}</p>
+                        <p className="text-xs text-gray-500">{activity.time}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Enhanced Recent Courses */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                  <FaRocket className="text-purple-500" />
+                  <span>Khóa học gần đây</span>
+                </h3>
+                <button
+                  onClick={() => navigate('/teacher/courses')}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+                >
+                  <FaEye />
+                  <span>Xem tất cả</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {recentCourses.slice(0, 4).map((course) => (
+                  <div key={course.id} className="p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 group cursor-pointer">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {course.name}
+                      </h4>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        course.progress >= 80 ? 'bg-green-100 text-green-600' :
+                        course.progress >= 50 ? 'bg-yellow-100 text-yellow-600' :
+                        'bg-blue-100 text-blue-600'
+                      }`}>
+                        {course.progress}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-gray-500">
+                      <span className="flex items-center space-x-1">
+                        <FaBook className="text-xs" />
+                        <span>{course.lessons} bài học</span>
+                      </span>
+                      <span className="flex items-center space-x-1">
+                        <FaUsers className="text-xs" />
+                        <span>{course.students} học viên</span>
+                      </span>
+                    </div>
+                    <div className="mt-3 w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${course.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-8">
+            {/* Quick Actions */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center space-x-2">
+                <FaRocket className="text-orange-500" />
+                <span>Thao tác nhanh</span>
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {quickActions.map((action, index) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={index}
+                      onClick={action.action}
+                      className={`${action.color} text-white p-4 rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg group text-center`}
+                    >
+                      <Icon className="text-xl mb-2 mx-auto group-hover:scale-110 transition-transform" />
+                      <p className="text-xs font-medium">{action.title}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Performance Insights */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center space-x-2">
+                <FaHeart className="text-red-500" />
+                <span>Hiệu suất tuần này</span>
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <FaCheckCircle className="text-green-500" />
+                    <span className="text-sm font-medium text-gray-900">Tỷ lệ hoàn thành</span>
+                  </div>
+                  <span className="text-green-600 font-semibold">87%</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <FaStar className="text-blue-500" />
+                    <span className="text-sm font-medium text-gray-900">Đánh giá trung bình</span>
+                  </div>
+                  <span className="text-blue-600 font-semibold">4.8/5</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <FaUsers className="text-purple-500" />
+                    <span className="text-sm font-medium text-gray-900">Tương tác học viên</span>
+                  </div>
+                  <span className="text-purple-600 font-semibold">92%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Motivational Quote */}
+            <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white">
+              <div className="text-center">
+                <FaLightbulb className="text-3xl mb-4 mx-auto opacity-80" />
+                <p className="text-sm mb-2 opacity-90">Câu nói truyền cảm hứng hôm nay</p>
+                <p className="font-medium mb-3">
+                  "Giáo dục là vũ khí mạnh nhất bạn có thể sử dụng để thay đổi thế giới."
+                </p>
+                <p className="text-xs opacity-75">- Nelson Mandela</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Stats Grid */}
-      <DashboardStats stats={stats} />
-
-      {/* Recent Courses */}
-      <RecentCourses courses={recentCourses} />
-
-      {/* Notifications */}
-      <NotificationList notifications={mockNotifications} />
     </div>
   );
 };

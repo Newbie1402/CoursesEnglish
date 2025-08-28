@@ -1,23 +1,22 @@
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  FaBars, FaUserCircle, FaTimes, FaHome, FaBook, FaClipboardList, FaCog, FaPlus
+  FaBars,
+  FaTimes,
+  FaHome,
+  FaBook,
+  FaClipboardList,
+  FaCog,
+  FaPlus,
+  FaSearch,
+  FaBell,
+  FaGraduationCap,
+  FaChevronRight
 } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
 import NavigationMenu from '@/components/dashboard/NavigationMenu';
-import ProfileCard from '@/components/dashboard/ProfileCard';
-import NotificationBadge from '@/components/ui/notification/NotificationBadge';
 import ProfileDropdownTeacher from '@/components/ui/profile/ProfileDropdownTeacher.jsx';
 import useTeacherService from '@/services/hooks/useTeacherService.js';
-
-// Mock data cho user đang đăng nhập
-const mockTeacher = {
-  id: 1,
-  name: "Nguyễn Văn A",
-  avatar: "https://ui-avatars.com/api/?name=Nguyen+Van+A",
-  role: "Giảng viên tiếng Anh",
-  email: "teacher@example.com"
-};
 
 const ROUTE_NAMES = {
   '/teacher/dashboard': 'Dashboard',
@@ -32,24 +31,47 @@ const MobileNavItem = ({ icon: Icon, label, isActive, onClick }) => (
   <button
     onClick={onClick}
     className={cn(
-      "flex flex-col items-center justify-center flex-1 py-2 px-3",
-      "text-xs font-medium transition-colors",
-      isActive ? "text-blue-600" : "text-gray-600"
+      "flex flex-col items-center justify-center flex-1 py-2 px-3 rounded-xl mx-1",
+      "text-xs font-medium transition-all duration-200 transform",
+      "relative overflow-hidden group",
+      isActive
+        ? "text-white bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg scale-105"
+        : "text-gray-600 hover:text-blue-600 hover:bg-blue-50 hover:scale-105"
     )}
   >
-    <Icon className={cn(
-      "w-5 h-5 mb-1",
-      isActive ? "text-blue-600" : "text-gray-600"
+    {/* Background animation */}
+    <div className={cn(
+      "absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 transition-opacity duration-300",
+      "group-hover:opacity-10"
     )} />
-    <span>{label}</span>
+
+    <Icon className={cn(
+      "w-5 h-5 mb-1 z-10 transition-transform duration-200",
+      isActive ? "text-white transform scale-110" : "group-hover:scale-110"
+    )} />
+    <span className="z-10 relative">{label}</span>
+
+    {/* Active indicator */}
+    {isActive && (
+      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-white rounded-full" />
+    )}
   </button>
 );
 
 const MainLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const [currentTime, setCurrentTime] = React.useState(new Date());
   const location = useLocation();
   const navigate = useNavigate();
   const headerRef = React.useRef(null);
+
+  // Real-time clock
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Lấy tên trang từ route hiện tại
   const currentPageName = ROUTE_NAMES[location.pathname] || 'Dashboard';
@@ -57,7 +79,7 @@ const MainLayout = () => {
   // Lấy thông tin giảng viên từ API
   const teacherId = localStorage.getItem('teacherId');
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const { getTeacherInfo, teacherInfo, loading } = useTeacherService(BASE_URL);
+  const { getTeacherInfo } = useTeacherService(BASE_URL);
   const [profile, setProfile] = React.useState({
     fullName: '',
     email: '',
@@ -73,7 +95,7 @@ const MainLayout = () => {
             fullName: data.fullName || '',
             email: data.email || '',
             specialization: data.specialization || '',
-            avatar: data.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName || 'GV')}`
+            avatar: data.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName || 'GV')}`
           });
         }
       });
@@ -87,7 +109,6 @@ const MainLayout = () => {
         setIsSidebarOpen(false);
       }
     };
-
     handleRouteChange();
   }, [location]);
 
@@ -112,27 +133,34 @@ const MainLayout = () => {
     { path: '/teacher/settings', icon: FaCog, label: 'Cài đặt' },
   ];
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Chào buổi sáng";
+    if (hour < 17) return "Chào buổi chiều";
+    return "Chào buổi tối";
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50/95">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
       {/* Header */}
       <header
         ref={headerRef}
         className={cn(
-          "fixed top-0 left-0 right-0 bg-white z-40",
-          "border-b border-gray-200 shadow-sm",
-          "transition-all duration-200"
+          "fixed top-0 left-0 right-0 z-40",
+          "bg-white/80 backdrop-blur-lg border-b border-gray-200/50",
+          "shadow-sm transition-all duration-200"
         )}
       >
-        <div className="h-14 lg:h-16">
-          <div className="flex h-full items-center justify-between px-3 lg:px-4 max-w-[1920px] mx-auto">
+        <div className="h-16 lg:h-18">
+          <div className="flex h-full items-center justify-between px-4 lg:px-6 max-w-[1920px] mx-auto">
             {/* Left side */}
-            <div className="flex items-center gap-3 lg:gap-4">
+            <div className="flex items-center gap-4 lg:gap-6">
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className={cn(
-                  "lg:hidden p-2 rounded-lg transition-colors",
-                  "hover:bg-gray-100 active:bg-gray-200",
-                  "focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  "lg:hidden p-3 rounded-xl transition-all duration-200",
+                  "hover:bg-gray-100 active:bg-gray-200 hover:scale-105",
+                  "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 )}
                 aria-label={isSidebarOpen ? "Đóng menu" : "Mở menu"}
               >
@@ -143,15 +171,23 @@ const MainLayout = () => {
                 )}
               </button>
 
-              {/* Breadcrumb */}
-              <div className="hidden sm:flex items-center">
-                <h1 className="text-lg lg:text-xl font-semibold text-gray-800">
-                  Course Management
-                </h1>
-                <span className="mx-2 text-gray-400">/</span>
-                <span className="text-sm lg:text-base text-gray-600 font-medium">
-                  {currentPageName}
-                </span>
+              {/* Brand & Breadcrumb */}
+              <div className="flex items-center">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <FaGraduationCap className="text-white text-xl" />
+                  </div>
+                  <div className="hidden sm:block">
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      EduManager
+                    </h1>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <span>Dashboard</span>
+                      <FaChevronRight className="mx-2 text-xs" />
+                      <span className="text-gray-700 font-medium">{currentPageName}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Mobile Title */}
@@ -160,19 +196,53 @@ const MainLayout = () => {
               </h1>
             </div>
 
+            {/* Center - Search Bar (Desktop) */}
+            <div className="hidden lg:flex flex-1 max-w-md mx-8">
+              <div className="relative w-full">
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm khóa học, bài học..."
+                  className={cn(
+                    "w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200",
+                    "bg-white/80 backdrop-blur-sm",
+                    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                    "text-sm placeholder-gray-400 transition-all duration-200"
+                  )}
+                />
+              </div>
+            </div>
+
             {/* Right side */}
-            <div className="flex items-center gap-2 lg:gap-4">
+            <div className="flex items-center gap-3 lg:gap-4">
+              {/* Time Display */}
+              <div className="hidden lg:flex flex-col items-end text-xs">
+                <span className="text-gray-600 font-medium">
+                  {currentTime.toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+                <span className="text-gray-400">
+                  {currentTime.toLocaleDateString('vi-VN', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+
               {/* Quick Actions */}
-              <div className="hidden sm:flex items-center mr-2">
+              <div className="hidden sm:flex items-center">
                 <button
                   onClick={() => navigate('/teacher/courses/new')}
                   className={cn(
-                    "inline-flex items-center gap-2 px-3 py-1.5",
-                    "text-sm text-gray-700 font-medium",
-                    "rounded-lg border border-gray-200",
-                    "hover:bg-gray-50 active:bg-gray-100",
-                    "hover:border-gray-300",
-                    "transition-all duration-150"
+                    "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl",
+                    "bg-gradient-to-r from-blue-500 to-purple-600 text-white",
+                    "hover:from-blue-600 hover:to-purple-700",
+                    "transform hover:scale-105 transition-all duration-200",
+                    "shadow-lg hover:shadow-xl",
+                    "text-sm font-medium"
                   )}
                 >
                   <FaPlus className="w-4 h-4" />
@@ -181,7 +251,14 @@ const MainLayout = () => {
               </div>
 
               {/* Notifications */}
-              <NotificationBadge />
+              <div className="relative">
+                <button className="relative p-3 rounded-xl hover:bg-gray-100 transition-all duration-200 group">
+                  <FaBell className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+                    3
+                  </span>
+                </button>
+              </div>
 
               {/* Profile Dropdown */}
               <ProfileDropdownTeacher
@@ -202,8 +279,7 @@ const MainLayout = () => {
         <div
           className={cn(
             "fixed inset-0 bg-black/50 backdrop-blur-sm lg:hidden z-30",
-            "transition-opacity duration-300",
-            "animate-in fade-in"
+            "transition-all duration-300 animate-in fade-in"
           )}
           onClick={() => setIsSidebarOpen(false)}
           aria-hidden="true"
@@ -213,26 +289,55 @@ const MainLayout = () => {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-14 lg:top-16 bottom-16 lg:bottom-0 w-[280px] bg-white border-r border-gray-200",
-          "transform transition-transform duration-300 ease-in-out z-40",
-          "lg:w-64 lg:transform-none lg:translate-x-0",
+          "fixed left-0 top-16 lg:top-18 bottom-16 lg:bottom-0 w-80 lg:w-72",
+          "bg-white/90 backdrop-blur-lg border-r border-gray-200/50",
+          "transform transition-all duration-300 ease-in-out z-40",
+          "lg:transform-none lg:translate-x-0 shadow-xl lg:shadow-sm",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full",
           "overflow-hidden"
         )}
       >
-        <div className="flex flex-col h-full overflow-y-auto scrollbar-hide">
-          <div className="p-4 lg:p-6 border-b border-gray-100">
-            <ProfileCard teacher={
-                {
-                    name: profile.fullName || 'Giảng viên',
-                    email: profile.email,
-                    avatar: profile.avatar,
-                    role: profile.specialization || 'Giảng viên tiếng Anh'
-                }
-            } />
+        <div className="flex flex-col h-full">
+          {/* Profile Section */}
+          <div className="p-6 border-b border-gray-100/50 bg-gradient-to-br from-blue-50 to-purple-50">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <img
+                  src={profile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.fullName || 'GV')}`}
+                  alt={profile.fullName}
+                  className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-lg"
+                />
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                  {getGreeting()}! 👋
+                </h3>
+                <p className="text-sm text-gray-600 truncate">
+                  {profile.fullName || 'Giảng viên'}
+                </p>
+                <p className="text-xs text-gray-400 truncate">
+                  {profile.specialization || 'Chuyên ngành giảng dạy'}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="flex-1 p-4">
+
+          {/* Navigation */}
+          <div className="flex-1 p-4 overflow-y-auto">
             <NavigationMenu />
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 border-t border-gray-100/50 bg-gray-50/50">
+            <div className="text-center">
+              <p className="text-xs text-gray-500">
+                EduManager v2.0
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                © 2025 Course Management
+              </p>
+            </div>
           </div>
         </div>
       </aside>
@@ -240,18 +345,18 @@ const MainLayout = () => {
       {/* Main Content */}
       <main
         className={cn(
-          "pt-14 lg:pt-16 pb-16 lg:pb-0 min-h-screen transition-all duration-300 ease-in-out",
-          "lg:pl-64"
+          "pt-16 lg:pt-18 pb-20 lg:pb-6 min-h-screen transition-all duration-300 ease-in-out",
+          "lg:pl-72"
         )}
       >
-        <div className="px-4 py-4 lg:py-6 max-w-[1920px] mx-auto">
+        <div className="px-4 lg:px-6 py-6 max-w-[1920px] mx-auto">
           <Outlet />
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-        <div className="flex items-center justify-around h-16">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-gray-200/50 z-40">
+        <div className="flex items-center justify-between px-2 py-2 h-16">
           {mobileNavItems.map((item) => (
             <MobileNavItem
               key={item.path}

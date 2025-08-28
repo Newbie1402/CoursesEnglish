@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getMyCourses } from "../../../services/studentService";
+import { getMyCourses } from "../../../services/hooks/studentService.js";
 import CourseCard from "../../../components/student/CourseCard";
 
 const MyCourses = () => {

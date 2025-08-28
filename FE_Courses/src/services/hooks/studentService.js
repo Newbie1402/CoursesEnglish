@@ -1,6 +1,29 @@
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL_STUDENT;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// Lấy tất cả học viên
+export const getAllStudent = async () => {
+  try {
+    const res = await axios.get(`${BASE_URL}/api/student/view/all`);
+    return res.data?.data || [];
+  } catch (err) {
+    console.error("Error fetching all students:", err);
+    throw err;
+  }
+};
+
+// Lấy chi tiết học viên
+export const getStudentDetail = async (studentId) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/api/student/view/${studentId}`);
+    return res.data?.data || null;
+  } catch (err) {
+    console.error(`Error fetching student detail for ID ${studentId}:`, err);
+    throw err;
+  }
+};
 
 // Lấy danh sách khóa học
 export const getMyCourses = async (studentId) => {

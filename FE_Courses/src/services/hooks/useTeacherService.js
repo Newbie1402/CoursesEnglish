@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-const useTeacherService = (BASE_URL) => {
+const useTeacherService = (BASE_URL = import.meta.env.VITE_API_BASE_URL) => {
   const [teacherInfo, setTeacherInfo] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -106,6 +106,25 @@ const useTeacherService = (BASE_URL) => {
     }
   };
 
+  /**
+   * Lấy danh sách tất cả giảng viên
+   * @returns {Promise<object|null>} - Danh sách giảng viên hoặc null nếu thất bại
+   */
+  const getAllTeacher = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${BASE_URL}/api/teacher/view/all`);
+      if (res.data?.statusCode === 200) {
+        return res.data.data;
+      }
+      return null;
+    } catch (err) {
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     teacherInfo,
     loading,
@@ -114,8 +133,12 @@ const useTeacherService = (BASE_URL) => {
     updateTeacherInfo,
     setTeacherInfo,
     setLoading,
-    updateUserProfile
+    updateUserProfile,
+    getAllTeacher
   };
 };
 
 export default useTeacherService;
+
+export class getAllTeacher {
+}

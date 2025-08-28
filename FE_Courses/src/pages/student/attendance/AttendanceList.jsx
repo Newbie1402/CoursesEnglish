@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getAttendance } from "../../../services/studentService";
+import { getAttendance } from "../../../services/hooks/studentService.js";
 
 const AttendanceList = () => {
   const { studentId } = useParams();

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { sendTeacherFeedback } from "@/services/studentService.js";
+import { sendTeacherFeedback } from "@/services/hooks/studentService.js";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card/Card";
 import { Button } from "@/components/ui/button/Button";
 import { Textarea } from "@/components/ui/textarea/Textarea";
