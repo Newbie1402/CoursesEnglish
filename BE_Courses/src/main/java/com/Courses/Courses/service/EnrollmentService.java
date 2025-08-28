@@ -45,6 +45,9 @@ public class EnrollmentService {
     @Autowired
     private CourseRepository courseRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     /**
      * Đăng ký học sinh vào khóa học
      * @param request Thông tin đăng ký
@@ -100,7 +103,25 @@ public class EnrollmentService {
 
             Enrollment saved = enrollmentRepository.save(enrollment);
             EnrollmentDto enrollmentDto = toDto(saved);
-            log.info("Đăng ký thành công học sinh (ID: {}) vào khóa học (ID: {})", request.getStudentId(), request.getCourseId());
+            log.info("Đăng ký thành công học sinh (ID: {}) vào khóa học (ID: {})",
+                    request.getStudentId(), request.getCourseId());
+
+            // Gửi thông báo cho học sinh về việc đăng ký thành công
+            Long userId = student.getUser().getId();
+            String title = "Đăng ký khóa học thành công";
+            String message = String.format("Bạn đã được đăng ký vào khóa học \"%s\" thành công. "
+                    + "Khóa học bắt đầu từ %s đến %s.",
+                    course.getTitle(),
+                    course.getStartDate().toString(),
+                    course.getEndDate().toString());
+
+            notificationService.createAndSendNotification(
+                userId,
+                title,
+                message,
+                "ENROLLMENT",
+                course.getId()
+            );
 
             return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ResponseData<>(

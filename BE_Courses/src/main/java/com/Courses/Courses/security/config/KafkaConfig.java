@@ -1,6 +1,7 @@
 package com.Courses.Courses.security.config;
 
 import com.Courses.Courses.model.dto.MonitoringEventDto;
+import com.Courses.Courses.model.event.NotificationEvent;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -60,6 +61,20 @@ public class KafkaConfig {
                 .replicas(1)
                 .config("cleanup.policy", "delete")
                 .config("retention.ms", "2592000000") // Lưu trữ 30 ngày
+                .config("segment.bytes", "1073741824")
+                .build();
+    }
+
+    /**
+     * Topic cho thông báo realtime
+     */
+    @Bean
+    public NewTopic notificationTopic() {
+        return TopicBuilder.name("user-notifications")
+                .partitions(3)
+                .replicas(1)
+                .config("cleanup.policy", "delete")
+                .config("retention.ms", "25920000000") // Giữ lại 30 ngày
                 .config("segment.bytes", "1073741824")
                 .build();
     }
