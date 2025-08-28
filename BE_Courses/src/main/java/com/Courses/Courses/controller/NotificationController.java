@@ -104,7 +104,10 @@ public class NotificationController {
             @RequestHeader("Authorization") String authHeader,
             @PathVariable Long id) {
         try {
-            NotificationDto notification = notificationService.markAsRead(id);
+            String token = authHeader.substring(7);
+            Long userId = extractUserIdFromToken(token);
+
+            NotificationDto notification = notificationService.markAsRead(id, userId);
 
             return ResponseEntity.ok(
                 new ResponseData<>(

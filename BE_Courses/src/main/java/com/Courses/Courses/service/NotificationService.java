@@ -92,11 +92,19 @@ public class NotificationService {
 
     /**
      * Đánh dấu một thông báo là đã đọc
+     * @param notificationId ID của thông báo
+     * @param currentUserId ID của người dùng hiện tại để kiểm tra quyền
+     * @return DTO của thông báo sau khi cập nhật
      */
     @Transactional
-    public NotificationDto markAsRead(Long notificationId) {
+    public NotificationDto markAsRead(Long notificationId, Long currentUserId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông báo với ID: " + notificationId));
+
+        // Kiểm tra quyền - người dùng chỉ được đánh dấu thông báo của chính họ
+        if (!notification.getUser().getId().equals(currentUserId)) {
+            throw new RuntimeException("Bạn không có quyền đánh dấu thông báo này");
+        }
 
         notification.setRead(true);
         notification = notificationRepository.save(notification);
