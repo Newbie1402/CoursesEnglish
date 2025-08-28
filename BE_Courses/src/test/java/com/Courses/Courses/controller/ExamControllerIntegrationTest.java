@@ -86,8 +86,8 @@ public class ExamControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/exams")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is(200)))
-                .andExpect(jsonPath("$.message", is("SUCCESS")))
+                .andExpect(jsonPath("$.statusCode", is(200)))
+                .andExpect(jsonPath("$.message", is("Success")))
                 .andExpect(jsonPath("$.data", hasSize(greaterThanOrEqualTo(1))))
                 .andExpect(jsonPath("$.data[0].id", notNullValue()))
                 .andExpect(jsonPath("$.data[0].title", is("Bài kiểm tra test")));
@@ -99,8 +99,8 @@ public class ExamControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/exams/active")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is(200)))
-                .andExpect(jsonPath("$.message", is("SUCCESS")))
+                .andExpect(jsonPath("$.statusCode", is(200)))
+                .andExpect(jsonPath("$.message", is("Success")))
                 .andExpect(jsonPath("$.data", hasSize(greaterThanOrEqualTo(1))))
                 .andExpect(jsonPath("$.data[0].title", is("Bài kiểm tra test")));
     }
@@ -111,8 +111,8 @@ public class ExamControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/exams/course/" + testCourse.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is(200)))
-                .andExpect(jsonPath("$.message", is("SUCCESS")))
+                .andExpect(jsonPath("$.statusCode", is(200)))
+                .andExpect(jsonPath("$.message", is("Success")))
                 .andExpect(jsonPath("$.data", hasSize(greaterThanOrEqualTo(1))))
                 .andExpect(jsonPath("$.data[0].title", is("Bài kiểm tra test")));
     }
@@ -123,8 +123,8 @@ public class ExamControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/exams/course/" + testCourse.getId() + "/active")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is(200)))
-                .andExpect(jsonPath("$.message", is("SUCCESS")))
+                .andExpect(jsonPath("$.statusCode", is(200)))
+                .andExpect(jsonPath("$.message", is("Success")))
                 .andExpect(jsonPath("$.data", hasSize(greaterThanOrEqualTo(1))))
                 .andExpect(jsonPath("$.data[0].title", is("Bài kiểm tra test")));
     }
@@ -135,8 +135,8 @@ public class ExamControllerIntegrationTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/exams/" + testExam.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is(200)))
-                .andExpect(jsonPath("$.message", is("SUCCESS")))
+                .andExpect(jsonPath("$.statusCode", is(200)))
+                .andExpect(jsonPath("$.message", is("Success")))
                 .andExpect(jsonPath("$.data.id", is(testExam.getId().intValue())))
                 .andExpect(jsonPath("$.data.title", is("Bài kiểm tra test")))
                 .andExpect(jsonPath("$.data.type", is("MULTIPLE_CHOICE")));
@@ -161,8 +161,8 @@ public class ExamControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status", is(200)))
-                .andExpect(jsonPath("$.message", is("SUCCESS")))
+                .andExpect(jsonPath("$.statusCode", is(200)))
+                .andExpect(jsonPath("$.message", is("Success")))
                 .andExpect(jsonPath("$.data.title", is("Bài kiểm tra mới")))
                 .andExpect(jsonPath("$.data.type", is("WRITING")))
                 .andExpect(jsonPath("$.data.durationMinutes", is(60)));
@@ -195,8 +195,8 @@ public class ExamControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is(200)))
-                .andExpect(jsonPath("$.message", is("SUCCESS")))
+                .andExpect(jsonPath("$.statusCode", is(200)))
+                .andExpect(jsonPath("$.message", is("Success")))
                 .andExpect(jsonPath("$.data.title", is("Bài kiểm tra đã cập nhật")))
                 .andExpect(jsonPath("$.data.type", is("WRITING")))
                 .andExpect(jsonPath("$.data.durationMinutes", is(180)));
@@ -207,38 +207,6 @@ public class ExamControllerIntegrationTest {
         assertEquals("Bài kiểm tra đã cập nhật", updatedExam.getTitle());
         assertEquals(ExamType.WRITING, updatedExam.getType());
     }
-
-//    @Test
-//    @WithMockUser(roles = {"TEACHER"})
-//    void testDeleteExam() throws Exception {
-//        // Thực thi request xóa exam
-//        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.delete("/api/exams/delete/" + testExam.getId())
-//                        .contentType(MediaType.APPLICATION_JSON))
-//                .andReturn();
-//
-//        int status = result.getResponse().getStatus();
-//        String content = result.getResponse().getContentAsString();
-//        System.out.println("Status: " + status);
-//        System.out.println("Content: " + content);
-//
-//        // Nếu status != 200 thì fail ngay và log ra nội dung lỗi
-//        assertEquals(200, status, "API xóa exam trả về lỗi: " + content);
-//
-//        // Parse json nếu muốn kiểm tra sâu hơn
-//        // JsonNode root = new ObjectMapper().readTree(content);
-//        // assertEquals(200, root.path("status").asInt());
-//        // assertEquals("SUCCESS", root.path("message").asText());
-//
-//        // Kiểm tra DB
-//        Exam deletedExam = examRepository.findById(testExam.getId()).orElse(null);
-//        if (deletedExam != null) {
-//            // Nếu soft delete thì trường active phải = false
-//            assertFalse(deletedExam.getActive(), "Exam vẫn còn active sau khi xóa (soft delete)");
-//        } else {
-//            // Nếu hard delete thì không còn exam trong DB nữa
-//            assertTrue(examRepository.findById(testExam.getId()).isEmpty(), "Exam vẫn còn trong DB sau khi xóa (hard delete)");
-//        }
-//    }
 
 
     @Test

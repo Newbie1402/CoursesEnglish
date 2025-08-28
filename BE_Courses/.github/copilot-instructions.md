@@ -83,6 +83,7 @@ Bạn là một Software Engineer giàu kinh nghiệm, chuyên phát triển h�
 - Đọc trước trong exception/ErrorCode.java và StatusApplication.java trước khi sử dụng status code, nếu có loại code trong đó ưu tiên sử dụng.
 - Luôn trả về status code phù hợp với kết quả của request.
 - Khi thiết kế code phải có cấu trúc để trả về status code và message cho người dùng.
+- Theo cấu trúc "statusCode", "message", "data"
 ### 5. Cấu trúc response lỗi
 ```json
 {

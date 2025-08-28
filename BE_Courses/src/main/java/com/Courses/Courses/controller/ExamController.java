@@ -29,9 +29,11 @@ public class ExamController {
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ResponseData<List<ExamDto>>> getAllExams() {
         List<ExamDto> exams = examService.getAllExams();
-        return ResponseEntity.ok(
-                new ResponseData<>(StatusApplication.SUCCESS.getCode(), StatusApplication.SUCCESS.getMessage(), exams)
-        );
+        ResponseData<List<ExamDto>> response = new ResponseData<>();
+        response.setStatusCode(StatusApplication.SUCCESS.getCode());
+        response.setMessage("Success");
+        response.setData(exams);
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -40,9 +42,11 @@ public class ExamController {
     @GetMapping("/active")
     public ResponseEntity<ResponseData<List<ExamDto>>> getAllActiveExams() {
         List<ExamDto> exams = examService.getAllActiveExams();
-        return ResponseEntity.ok(
-                new ResponseData<>(StatusApplication.SUCCESS.getCode(), StatusApplication.SUCCESS.getMessage(), exams)
-        );
+        ResponseData<List<ExamDto>> response = new ResponseData<>();
+        response.setStatusCode(StatusApplication.SUCCESS.getCode());
+        response.setMessage("Success");
+        response.setData(exams);
+        return ResponseEntity.ok(response);
     }
 
     /**

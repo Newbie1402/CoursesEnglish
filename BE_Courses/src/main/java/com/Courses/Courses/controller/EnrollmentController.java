@@ -1,5 +1,6 @@
 package com.Courses.Courses.controller;
 
+import com.Courses.Courses.enums.StatusApplication;
 import com.Courses.Courses.model.dto.EnrollmentDto;
 import com.Courses.Courses.model.dto.StudentCourseDto;
 import com.Courses.Courses.model.request.EnrollmentRequest;
@@ -7,6 +8,7 @@ import com.Courses.Courses.model.response.ResponseData;
 import com.Courses.Courses.service.EnrollmentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/enrollments")
+@CrossOrigin
 public class EnrollmentController {
 
     @Autowired
