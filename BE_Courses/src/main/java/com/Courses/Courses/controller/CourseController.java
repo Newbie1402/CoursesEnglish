@@ -2,6 +2,7 @@ package com.Courses.Courses.controller;
 
 import com.Courses.Courses.model.dto.CourseDto;
 import com.Courses.Courses.model.request.CourseCreateRequest;
+import com.Courses.Courses.model.request.CourseUpdateRequest;
 import com.Courses.Courses.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,7 @@ public class CourseController {
      * Sửa thông tin khoá học
      */
     @PutMapping("/update/{id}")
-    public ResponseEntity<CourseDto> updateCourse(@PathVariable Long id, @Valid @RequestBody CourseCreateRequest request) {
+    public ResponseEntity<CourseDto> updateCourse(@PathVariable Long id, @Valid @RequestBody CourseUpdateRequest request) {
         CourseDto updated = courseService.updateCourse(id, request);
         return ResponseEntity.ok(updated);
     }

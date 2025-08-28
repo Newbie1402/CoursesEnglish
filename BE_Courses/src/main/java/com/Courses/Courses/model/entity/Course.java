@@ -42,4 +42,7 @@ public class Course {
 
     @OneToMany(mappedBy = "course")
     private List<Exam> exams;
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CourseSchedule> schedules;
 }

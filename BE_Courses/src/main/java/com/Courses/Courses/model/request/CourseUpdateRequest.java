@@ -2,10 +2,13 @@ package com.Courses.Courses.model.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 /**
  * Request cập nhật khoá học
@@ -35,4 +38,8 @@ public class CourseUpdateRequest {
 
     @NotNull(message = "ID giáo viên không được để trống")
     private Long teacherId;
+
+    @NotNull(message = "Lịch học không được để trống")
+    @Size(min = 1, message = "Phải có ít nhất một lịch học")
+    private List<CourseScheduleRequest> schedules;
 }

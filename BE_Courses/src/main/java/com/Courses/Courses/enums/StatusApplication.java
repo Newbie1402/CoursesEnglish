@@ -19,6 +19,8 @@ public enum StatusApplication {
     INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
     CONFLICT(409, "Conflict"),
 
+    SCHEDULE_CONFLICT(409, "Schedule Conflict"),
+
     // Validation errors
     VALIDATION_FAILED(422, "Validation Failed");
 

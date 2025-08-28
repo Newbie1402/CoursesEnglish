@@ -1,15 +1,21 @@
 package com.Courses.Courses.service;
 
 import com.Courses.Courses.model.dto.CourseDto;
+import com.Courses.Courses.model.dto.CourseScheduleDto;
 import com.Courses.Courses.model.entity.Course;
+import com.Courses.Courses.model.entity.CourseSchedule;
 import com.Courses.Courses.model.entity.Teacher;
 import com.Courses.Courses.model.request.CourseCreateRequest;
+import com.Courses.Courses.model.request.CourseScheduleRequest;
+import com.Courses.Courses.model.request.CourseUpdateRequest;
 import com.Courses.Courses.repository.CourseRepository;
+import com.Courses.Courses.repository.CourseScheduleRepository;
 import com.Courses.Courses.repository.TeacherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,6 +25,8 @@ public class CourseService {
     private CourseRepository courseRepository;
     @Autowired
     private TeacherRepository teacherRepository;
+    @Autowired
+    private CourseScheduleRepository courseScheduleRepository;
 
     // Lấy danh sách tất cả khoá học đang active
     public List<CourseDto> getAllCourses() {
@@ -66,7 +74,7 @@ public class CourseService {
 
     // Sửa thông tin khoá học
     @Transactional
-    public CourseDto updateCourse(Long id, CourseCreateRequest request) {
+    public CourseDto updateCourse(Long id, CourseUpdateRequest request) {
         Course course = courseRepository.findById(id)
                 .filter(Course::isActive)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + id));
@@ -78,6 +86,21 @@ public class CourseService {
         Teacher teacher = teacherRepository.findById(request.getTeacherId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giáo viên với id: " + request.getTeacherId()));
         course.setTeacher(teacher);
+
+        // Xóa các lịch học cũ
+        course.getSchedules().clear();
+
+        // Thêm các lịch học mới
+        List<CourseSchedule> schedules = new ArrayList<>();
+        for (CourseScheduleRequest scheduleRequest : request.getSchedules()) {
+            CourseSchedule schedule = new CourseSchedule();
+            schedule.setCourse(course);
+            schedule.setDayOfWeek(scheduleRequest.getDayOfWeek());
+            schedule.setTimeSlot(scheduleRequest.getTimeSlot());
+            schedules.add(schedule);
+        }
+        course.setSchedules(schedules);
+
         courseRepository.save(course);
         return toDto(course);
     }
@@ -110,12 +133,28 @@ public class CourseService {
         course.setEndDate(request.getEndDate());
         course.setTeacher(teacher);
         course.setActive(true);
+
+        // Lưu khóa học trước để có ID
         courseRepository.save(course);
+
+        // Tạo các lịch học
+        List<CourseSchedule> schedules = new ArrayList<>();
+        for (CourseScheduleRequest scheduleRequest : request.getSchedules()) {
+            CourseSchedule schedule = new CourseSchedule();
+            schedule.setCourse(course);
+            schedule.setDayOfWeek(scheduleRequest.getDayOfWeek());
+            schedule.setTimeSlot(scheduleRequest.getTimeSlot());
+            schedules.add(schedule);
+        }
+        course.setSchedules(schedules);
+
+        courseRepository.save(course);
+
         return toDto(course);
     }
 
     private CourseDto toDto(Course course) {
-        return CourseDto.builder()
+        CourseDto dto = CourseDto.builder()
                 .CourseId(course.getId())
                 .title(course.getTitle())
                 .description(course.getDescription())
@@ -124,6 +163,20 @@ public class CourseService {
                 .endDate(course.getEndDate())
                 .teacherId(course.getTeacher() != null ? course.getTeacher().getId() : null)
                 .active(course.isActive())
+                .schedules(new ArrayList<>())
                 .build();
+        if (course.getSchedules() != null) {
+            List<CourseScheduleDto> scheduleDtos = course.getSchedules().stream()
+                    .map(schedule -> CourseScheduleDto.builder()
+                            .id(schedule.getId())
+                            .dayOfWeek(schedule.getDayOfWeek())
+                            .timeSlot(schedule.getTimeSlot())
+                            .timeRange(schedule.getTimeSlot() != null ? schedule.getTimeSlot().getTimeRange() : null)
+                            .build())
+                    .collect(Collectors.toList());
+            dto.setSchedules(scheduleDtos);
+        }
+
+        return dto;
     }
 }

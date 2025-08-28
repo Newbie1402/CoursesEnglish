@@ -1,14 +1,19 @@
 package com.Courses.Courses.service;
 
+import com.Courses.Courses.enums.DayOfWeek;
 import com.Courses.Courses.enums.StatusApplication;
+import com.Courses.Courses.model.dto.CourseScheduleDto;
 import com.Courses.Courses.model.dto.EnrollmentDto;
 import com.Courses.Courses.model.dto.StudentCourseDto;
 import com.Courses.Courses.model.entity.Course;
+import com.Courses.Courses.model.entity.CourseSchedule;
 import com.Courses.Courses.model.entity.Enrollment;
 import com.Courses.Courses.model.entity.Student;
+import com.Courses.Courses.model.entity.Teacher;
 import com.Courses.Courses.model.entity.Users;
 import com.Courses.Courses.model.request.EnrollmentRequest;
 import com.Courses.Courses.model.response.ResponseData;
+import com.Courses.Courses.model.response.ScheduleConflictResponse;
 import com.Courses.Courses.repository.CourseRepository;
 import com.Courses.Courses.repository.EnrollmentRepository;
 import com.Courses.Courses.repository.StudentRepository;
@@ -21,7 +26,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -70,31 +78,105 @@ public class EnrollmentService {
                     return new RuntimeException("Không tìm thấy khóa học đang hoạt động với ID: " + request.getCourseId());
                 });
 
+            // Kiểm tra xung đột lịch học
+            List<ScheduleConflictResponse> conflictSchedules = checkScheduleConflict(student.getId(), course);
+            if (!conflictSchedules.isEmpty()) {
+                log.warn("Phát hiện lịch học trùng cho học sinh (ID: {}) khi đăng ký khóa học (ID: {})",
+                    request.getStudentId(), request.getCourseId());
+
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                    new ResponseData<EnrollmentDto>(
+                        StatusApplication.SCHEDULE_CONFLICT.getCode(),
+                        "Phát hiện lịch học bị trùng. Vui lòng kiểm tra lịch học!",
+                        null
+                    )
+                );
+            }
+
             Enrollment enrollment = new Enrollment();
             enrollment.setStudent(student);
             enrollment.setCourse(course);
             enrollment.setEnrolledAt(LocalDateTime.now());
 
             Enrollment saved = enrollmentRepository.save(enrollment);
+            EnrollmentDto enrollmentDto = toDto(saved);
             log.info("Đăng ký thành công học sinh (ID: {}) vào khóa học (ID: {})", request.getStudentId(), request.getCourseId());
 
             return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ResponseData<>(
                     StatusApplication.SUCCESS.getCode(),
                     "Đăng ký học sinh vào khóa học thành công",
-                    toDto(saved)
+                    enrollmentDto
                 )
             );
         } catch (Exception e) {
             log.error("Lỗi khi đăng ký học sinh vào khóa học: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                new ResponseData<>(
+                new ResponseData<EnrollmentDto>(
                     StatusApplication.INTERNAL_SERVER_ERROR.getCode(),
                     "Lỗi khi đăng ký học sinh: " + e.getMessage(),
                     null
                 )
             );
         }
+    }
+
+    /**
+     * Kiểm tra xung đột lịch học cho học sinh
+     * @param studentId ID của học sinh
+     * @param newCourse Khóa học mới muốn đăng ký
+     * @return Danh sách các xung đột lịch học (nếu có)
+     */
+    private List<ScheduleConflictResponse> checkScheduleConflict(Long studentId, Course newCourse) {
+        List<Enrollment> existingEnrollments = enrollmentRepository.findByStudentId(studentId);
+
+        if (existingEnrollments.isEmpty() || newCourse.getSchedules() == null || newCourse.getSchedules().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<ScheduleConflictResponse> conflicts = new ArrayList<>();
+
+        // Lưu trữ lịch học của khóa học mới theo cặp [dayOfWeek, timeSlot]
+        Map<String, CourseSchedule> newSchedules = new HashMap<>();
+        for (CourseSchedule schedule : newCourse.getSchedules()) {
+            String key = schedule.getDayOfWeek() + "_" + schedule.getTimeSlot();
+            newSchedules.put(key, schedule);
+        }
+
+        // Kiểm tra với mỗi khóa học đã đăng ký
+        for (Enrollment enrollment : existingEnrollments) {
+            Course existingCourse = enrollment.getCourse();
+
+            // Bỏ qua các khóa học không còn active
+            if (!existingCourse.isActive()) {
+                continue;
+            }
+
+            // Kiểm tra từng lịch học của khóa học hiện có
+            if (existingCourse.getSchedules() != null) {
+                for (CourseSchedule existingSchedule : existingCourse.getSchedules()) {
+                    String key = existingSchedule.getDayOfWeek() + "_" + existingSchedule.getTimeSlot();
+
+                    // Nếu có trùng lịch
+                    if (newSchedules.containsKey(key)) {
+                        CourseSchedule conflictSchedule = newSchedules.get(key);
+
+                        ScheduleConflictResponse conflict = new ScheduleConflictResponse();
+                        conflict.setDayOfWeek(existingSchedule.getDayOfWeek());
+                        conflict.setTimeSlot(existingSchedule.getTimeSlot());
+                        conflict.setTimeRange(existingSchedule.getTimeSlot().getTimeRange());
+                        conflict.setExistingCourseId(existingCourse.getId());
+                        conflict.setExistingCourseTitle(existingCourse.getTitle());
+                        conflict.setNewCourseId(newCourse.getId());
+                        conflict.setNewCourseTitle(newCourse.getTitle());
+
+                        conflicts.add(conflict);
+                    }
+                }
+            }
+        }
+
+        return conflicts;
     }
 
     /**
@@ -149,13 +231,37 @@ public class EnrollmentService {
     }
 
     private EnrollmentDto toDto(Enrollment enrollment) {
-        return EnrollmentDto.builder()
+        Course course = enrollment.getCourse();
+        Teacher teacher = course.getTeacher();
+
+        EnrollmentDto dto = EnrollmentDto.builder()
             .id(enrollment.getId())
             .studentId(enrollment.getStudent().getId())
             .studentName(enrollment.getStudent().getUser().getFullName())
-            .courseId(enrollment.getCourse().getId())
-            .courseName(enrollment.getCourse().getTitle())
+            .courseId(course.getId())
+            .courseName(course.getTitle())
+            .courseDescription(course.getDescription())
+            .courseOnline(course.isOnline())
+            .courseStartDate(course.getStartDate())
+            .courseEndDate(course.getEndDate())
+            .teacherId(teacher != null ? teacher.getId() : null)
+            .teacherName(teacher != null && teacher.getUser() != null ?
+                        teacher.getUser().getFullName() : null)
             .enrolledAt(enrollment.getEnrolledAt())
             .build();
+        if (course.getSchedules() != null && !course.getSchedules().isEmpty()) {
+            List<CourseScheduleDto> scheduleDtos = course.getSchedules().stream()
+                .map(schedule -> CourseScheduleDto.builder()
+                    .id(schedule.getId())
+                    .dayOfWeek(schedule.getDayOfWeek())
+                    .timeSlot(schedule.getTimeSlot())
+                    .timeRange(schedule.getTimeSlot() != null ?
+                               schedule.getTimeSlot().getTimeRange() : null)
+                    .build())
+                .collect(Collectors.toList());
+            dto.setSchedules(scheduleDtos);
+        }
+
+        return dto;
     }
 }

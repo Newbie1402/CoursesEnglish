@@ -2,6 +2,8 @@ package com.Courses.Courses.model.dto;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,4 +18,5 @@ public class CourseDto {
     private java.time.LocalDate endDate;
     private Long teacherId;
     private boolean active;
+    private List<CourseScheduleDto> schedules;
 }
