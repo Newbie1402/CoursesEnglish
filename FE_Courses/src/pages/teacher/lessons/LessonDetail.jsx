@@ -196,12 +196,6 @@ const LessonDetail = ({ open, onClose, lesson, onSuccess }) => {
                   <p className="text-blue-100 text-sm">Quản lý nội dung bài học</p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center hover:bg-opacity-30 transition-all duration-200"
-              >
-                <FaTimes className="w-5 h-5" />
-              </button>
             </div>
           </div>
         </div>

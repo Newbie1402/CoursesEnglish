@@ -27,7 +27,7 @@ import { Button } from '@/components/ui/button/Button';
 import { Input } from '@/components/ui/input/Input';
 import { Select } from '@/components/ui/select/Select';
 import useAssignmentService from '../../../services/hooks/useAssignmentService';
-import useCourseService from '../../../services/hooks/useCourseService';
+import { getCourseDetails } from "@/services/hooks/courseService.js";
 import { cn } from '@/lib/utils';
 
 const AssignmentList = () => {
@@ -39,7 +39,6 @@ const AssignmentList = () => {
   const [courseDetails, setCourseDetails] = useState({});
   const navigate = useNavigate();
   const { getActiveExamsByTeacher } = useAssignmentService();
-  const { getCourseDetail } = useCourseService();
   const teacherId = localStorage.getItem('teacherId');
   const { data: activeExams = [] } = getActiveExamsByTeacher(teacherId);
 
@@ -47,9 +46,9 @@ const AssignmentList = () => {
     const fetchCourseDetails = async () => {
       const details = {};
       for (const exam of activeExams) {
-        const courseDetail = await getCourseDetail(exam.courseId);
+        const courseDetail = await getCourseDetails(exam.courseId);
         details[exam.courseId] = {
-          title: courseDetail?.data?.title || `Khóa học ID: ${exam.courseId}`,
+          title: courseDetail?.title || `Khóa học ID: ${exam.courseId}`,
           id: exam.courseId
         };
       }
@@ -57,7 +56,7 @@ const AssignmentList = () => {
     };
 
     fetchCourseDetails();
-  }, [activeExams, getCourseDetail]);
+  }, [activeExams, getCourseDetails]);
 
   const assignments = useMemo(() => {
     return activeExams.map((exam) => ({
@@ -579,4 +578,3 @@ const AssignmentList = () => {
 };
 
 export default AssignmentList;
-

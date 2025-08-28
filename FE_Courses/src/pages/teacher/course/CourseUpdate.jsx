@@ -2,10 +2,22 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import {
+  FaBook,
+  FaFileAlt,
+  FaLaptop,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaUser,
+  FaSave,
+  FaTimes,
+  FaEdit,
+  FaExclamationCircle,
+  FaSpinner
+} from 'react-icons/fa';
 import useCourseService from '@/services/hooks/useCourseService';
 import Modal from '@/components/ui/modal/Modal.jsx';
 import { useToast } from '@/components/ui/toast/Toast.jsx';
-import { formatDate } from "@/lib/utils.js";
 
 const courseSchema = z.object({
   title: z.string().min(3, 'Tên khóa học phải có ít nhất 3 ký tự'),
@@ -54,7 +66,7 @@ const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
           onClose();
           if (onSuccess) onSuccess();
         },
-        onError: (err) => {
+        onError: () => {
           addToast('Cập nhật thất bại!', 'error');
         }
       }
@@ -62,45 +74,234 @@ const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
   };
 
   return (
-    <Modal isOpen={open} onClose={onClose} title="Cập nhật khóa học">
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Tên khóa học</label>
-          <input type="text" {...form.register('title')} className="mt-1 block w-full border rounded px-3 py-2" />
-          {form.formState.errors.title && <p className="text-red-500 text-xs mt-1">{form.formState.errors.title.message}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Mô tả</label>
-          <textarea {...form.register('description')} className="mt-1 block w-full border rounded px-3 py-2" rows={3} />
-          {form.formState.errors.description && <p className="text-red-500 text-xs mt-1">{form.formState.errors.description.message}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Học online</label>
-          <input type="checkbox" {...form.register('online')} className="ml-2" defaultChecked={form.getValues('online')} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
-            <input type="date" {...form.register('startDate')} className="mt-1 block w-full border rounded px-3 py-2" />
-            {form.formState.errors.startDate && <p className="text-red-500 text-xs mt-1">{form.formState.errors.startDate.message}</p>}
+    <Modal isOpen={open} onClose={onClose} title="">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl mx-auto overflow-hidden">
+        {/* Header với gradient background */}
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 relative overflow-hidden">
+          <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+          <div className="relative z-10 px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <FaEdit className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">Cập nhật khóa học</h2>
+                  <p className="text-blue-100 text-sm">Chỉnh sửa thông tin khóa học của bạn</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center text-white hover:bg-opacity-30 transition-all duration-200 backdrop-blur-sm"
+              >
+                <FaTimes className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Ngày kết thúc</label>
-            <input type="date" {...form.register('endDate')} className="mt-1 block w-full border rounded px-3 py-2" />
-            {form.formState.errors.endDate && <p className="text-red-500 text-xs mt-1">{form.formState.errors.endDate.message}</p>}
-          </div>
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -translate-y-16 translate-x-16"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-5 rounded-full translate-y-12 -translate-x-12"></div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">ID Giảng viên</label>
-          <input type="number" {...form.register('teacherId')} className="mt-1 block w-full border rounded px-3 py-2" disabled />
+
+        {/* Form Content */}
+        <div className="p-8">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+            {/* Course Basic Info Section */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                  <FaBook className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Thông tin cơ bản</h3>
+              </div>
+
+              <div className="space-y-6">
+                {/* Course Title */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                    <FaBook className="w-4 h-4 text-blue-500" />
+                    Tên khóa học
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      {...form.register('title')}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                      placeholder="Nhập tên khóa học..."
+                    />
+                    {form.formState.errors.title && (
+                      <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
+                        <FaExclamationCircle className="w-4 h-4" />
+                        <span>{form.formState.errors.title.message}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Course Description */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                    <FaFileAlt className="w-4 h-4 text-blue-500" />
+                    Mô tả khóa học
+                  </label>
+                  <div className="relative">
+                    <textarea
+                      {...form.register('description')}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm resize-none"
+                      placeholder="Nhập mô tả chi tiết về khóa học..."
+                    />
+                    {form.formState.errors.description && (
+                      <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
+                        <FaExclamationCircle className="w-4 h-4" />
+                        <span>{form.formState.errors.description.message}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Course Settings Section */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                  <FaLaptop className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Cài đặt khóa học</h3>
+              </div>
+
+              {/* Online Mode Toggle */}
+              <div className="mb-6">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      {...form.register('online')}
+                      className="sr-only"
+                    />
+                    <div className={`w-12 h-6 rounded-full transition-all duration-200 ${
+                      form.watch('online') 
+                        ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
+                        : 'bg-gray-300'
+                    }`}>
+                      <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-200 ${
+                        form.watch('online') ? 'translate-x-6' : 'translate-x-0.5'
+                      } translate-y-0.5`}></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {form.watch('online') ? <FaLaptop className="w-4 h-4 text-blue-500" /> : <FaMapMarkerAlt className="w-4 h-4 text-gray-500" />}
+                    <span className="text-sm font-medium text-gray-700">
+                      {form.watch('online') ? 'Học trực tuyến' : 'Học tại lớp'}
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Date Range */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                    <FaCalendarAlt className="w-4 h-4 text-green-500" />
+                    Ngày bắt đầu
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      {...form.register('startDate')}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                    />
+                    {form.formState.errors.startDate && (
+                      <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
+                        <FaExclamationCircle className="w-4 h-4" />
+                        <span>{form.formState.errors.startDate.message}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                    <FaCalendarAlt className="w-4 h-4 text-green-500" />
+                    Ngày kết thúc
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      {...form.register('endDate')}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm"
+                    />
+                    {form.formState.errors.endDate && (
+                      <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
+                        <FaExclamationCircle className="w-4 h-4" />
+                        <span>{form.formState.errors.endDate.message}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Teacher Info Section */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <FaUser className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Thông tin giảng viên</h3>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                  <FaUser className="w-4 h-4 text-purple-500" />
+                  ID Giảng viên
+                </label>
+                <input
+                  type="number"
+                  {...form.register('teacherId')}
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed shadow-sm"
+                />
+                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <FaExclamationCircle className="w-3 h-3" />
+                  ID giảng viên không thể thay đổi
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 justify-end pt-6 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
+                disabled={isLoading}
+              >
+                <FaTimes className="w-4 h-4" />
+                Hủy bỏ
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none font-medium shadow-lg"
+              >
+                {isLoading ? (
+                  <>
+                    <FaSpinner className="w-4 h-4 animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : (
+                  <>
+                    <FaSave className="w-4 h-4" />
+                    Lưu thay đổi
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
-        <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="px-4 py-2 rounded bg-gray-200 text-gray-700">Hủy</button>
-          <button type="submit" disabled={isLoading} className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">
-            {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
-          </button>
-        </div>
-      </form>
+      </div>
     </Modal>
   );
 };
