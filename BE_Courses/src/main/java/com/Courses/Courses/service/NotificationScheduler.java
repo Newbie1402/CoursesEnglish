@@ -13,6 +13,7 @@ import java.util.List;
 @Component
 public class NotificationScheduler {
     private static final Logger log = LoggerFactory.getLogger(NotificationScheduler.class);
+    private static final int MAX_RETRY_COUNT = 3;
 
     @Autowired
     private NotificationService notificationService;
@@ -30,7 +31,7 @@ public class NotificationScheduler {
             log.info("Bắt đầu xử lý các thông báo chưa gửi...");
 
             // Lấy tất cả thông báo chưa gửi có số lần thử < 3
-            List<NotificationDto> pendingNotifications = notificationService.getPendingNotificationsForUser(null);
+            List<NotificationDto> pendingNotifications = notificationService.getAllPendingNotifications(MAX_RETRY_COUNT);
 
             for (NotificationDto notification : pendingNotifications) {
                 try {

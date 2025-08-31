@@ -43,6 +43,8 @@ public class ExamService {
     private QuestionRepository questionRepository;
     @Autowired
     private TeacherRepository teacherRepository;
+    @Autowired
+    private NotificationService notificationService;
 
     /**
      * Tạo mới bài kiểm tra
@@ -50,7 +52,8 @@ public class ExamService {
     @Transactional
     public ExamDto createExam(ExamCreateRequest request) {
         Course course = courseRepository.findById(request.getCourseId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + request.getCourseId()));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với ID: " + request.getCourseId()));
+
         Exam exam = new Exam();
         exam.setTitle(request.getTitle());
         exam.setType(request.getType());
@@ -61,8 +64,14 @@ public class ExamService {
         exam.setDescription(request.getDescription());
         exam.setPassword(request.getPassword());
         exam.setActive(true);
-        examRepository.save(exam);
-        return convertToDto(exam);
+        Exam savedExam = examRepository.save(exam);
+        notificationService.notifyExamCreated(
+                course.getTeacher().getId(),
+                savedExam.getId(),
+                savedExam.getTitle()
+        );
+
+        return convertToDto(savedExam);
     }
 
     /**
@@ -101,8 +110,14 @@ public class ExamService {
         exam.setDurationMinutes(request.getDurationMinutes());
         exam.setDescription(request.getDescription());
         exam.setPassword(request.getPassword());
-        examRepository.save(exam);
-        return convertToDto(exam);
+        Exam updatedExam = examRepository.save(exam);
+        notificationService.notifyExamUpdated(
+                updatedExam.getCourse().getTeacher().getId(),
+                updatedExam.getId(),
+                updatedExam.getTitle()
+        );
+
+        return convertToDto(updatedExam);
     }
 
     /**
@@ -245,6 +260,14 @@ public class ExamService {
         redisTemplate.delete(redisKey);
 
         submissionRepository.save(submission);
+        notificationService.notifyExamResult(
+                submission.getExam().getCourse().getTeacher().getId(),
+                submission.getExam().getId(),
+                submission.getExam().getTitle(),
+                submission.getStudent().getUser().getFullName(),
+                totalScore
+        );
+
         return totalScore;
     }
 
@@ -264,14 +287,11 @@ public class ExamService {
         answer.setScore(score);
         answer.setTeacherFeedback(feedback);
 
-        // Nếu điểm lớn hơn 0, đánh dấu là đúng
         if (score > 0) {
             answer.setIsCorrect(true);
         } else {
             answer.setIsCorrect(false);
         }
-
-        // Cập nhật tổng điểm cho bài nộp
         Submission submission = answer.getSubmission();
         updateSubmissionTotalScore(submission);
     }
@@ -313,7 +333,6 @@ public class ExamService {
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseData<List<ExamDto>>> getExamsByTeacherId(Long teacherId) {
         try {
-            // Kiểm tra giáo viên có tồn tại không
             Teacher teacher = teacherRepository.findById(teacherId)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy giáo viên với id: " + teacherId));
 
@@ -377,21 +396,6 @@ public class ExamService {
                     )
             );
         }
-    }
-
-    private ExamDto convertToDto(Exam exam) {
-        return ExamDto.builder()
-                .examId(exam.getId())
-                .title(exam.getTitle())
-                .type(exam.getType())
-                .courseId(exam.getCourse() != null ? exam.getCourse().getId() : null)
-                .startTime(exam.getStartTime())
-                .endTime(exam.getEndTime())
-                .durationMinutes(exam.getDurationMinutes())
-                .description(exam.getDescription())
-                .password(exam.getPassword())
-                .active(exam.getActive())
-                .build();
     }
 
     /**
@@ -464,5 +468,20 @@ public class ExamService {
                     )
             );
         }
+    }
+
+    private ExamDto convertToDto(Exam exam) {
+        return ExamDto.builder()
+                .examId(exam.getId())
+                .title(exam.getTitle())
+                .type(exam.getType())
+                .courseId(exam.getCourse() != null ? exam.getCourse().getId() : null)
+                .startTime(exam.getStartTime())
+                .endTime(exam.getEndTime())
+                .durationMinutes(exam.getDurationMinutes())
+                .description(exam.getDescription())
+                .password(exam.getPassword())
+                .active(exam.getActive())
+                .build();
     }
 }

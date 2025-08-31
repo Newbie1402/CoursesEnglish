@@ -20,10 +20,15 @@ import java.util.stream.Collectors;
 public class LessonService {
     @Autowired
     private S3Service s3Service;
+
     @Autowired
     private LessonRepository lessonRepository;
+
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     /**
      * Xử lý upload file, lưu bài học mới và trả về LessonDto
@@ -40,6 +45,13 @@ public class LessonService {
         lesson.setUploadedAt(LocalDateTime.now());
         lesson.setCourse(course);
         lessonRepository.save(lesson);
+        notificationService.notifyLessonCreated(
+                course.getTeacher().getId(),
+                lesson.getId(),
+                lesson.getTitle(),
+                course.getTitle()
+        );
+
         return convertToDto(lesson);
     }
 

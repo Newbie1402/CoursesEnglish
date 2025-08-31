@@ -23,10 +23,15 @@ import java.util.stream.Collectors;
 public class CourseService {
     @Autowired
     private CourseRepository courseRepository;
+
     @Autowired
     private TeacherRepository teacherRepository;
+
     @Autowired
     private CourseScheduleRepository courseScheduleRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     // Lấy danh sách tất cả khoá học đang active
     public List<CourseDto> getAllCourses() {
@@ -102,6 +107,13 @@ public class CourseService {
         course.setSchedules(schedules);
 
         courseRepository.save(course);
+
+        notificationService.notifyCourseUpdated(
+                course.getTeacher().getId(),
+                course.getId(),
+                course.getTitle()
+        );
+
         return toDto(course);
     }
 
@@ -149,8 +161,66 @@ public class CourseService {
         course.setSchedules(schedules);
 
         courseRepository.save(course);
+        notificationService.notifyCourseCreated(
+                teacher.getId(),
+                course.getId(),
+                course.getTitle()
+        );
 
         return toDto(course);
+    }
+
+    /**
+     * Xóa khóa học (soft delete - đánh dấu không hoạt động)
+     * @param courseId ID khóa học
+     */
+    @Transactional
+    public void deleteCourse(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với ID: " + courseId));
+        Long teacherId = course.getTeacher().getId();
+        String courseName = course.getTitle();
+        course.setActive(false);
+        courseRepository.save(course);
+        notificationService.notifyCourseDeleted(teacherId, courseName);
+    }
+
+    /**
+     * Ghi danh học viên vào khóa học
+     * @param courseId ID khóa học
+     * @param studentId ID học viên
+     * @param studentName Tên học viên
+     */
+    @Transactional
+    public void enrollStudent(Long courseId, Long studentId, String studentName) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với ID: " + courseId));
+
+        notificationService.notifyStudentEnrolled(
+                course.getTeacher().getId(),
+                course.getId(),
+                course.getTitle(),
+                studentName
+        );
+    }
+
+    /**
+     * Xử lý phản hồi mới về khóa học
+     * @param courseId ID khóa học
+     * @param studentId ID học viên
+     * @param studentName Tên học viên
+     * @param feedback Nội dung phản hồi
+     */
+    @Transactional
+    public void processFeedback(Long courseId, Long studentId, String studentName, String feedback) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với ID: " + courseId));
+        notificationService.notifyCourseFeedback(
+                course.getTeacher().getId(),
+                course.getId(),
+                course.getTitle(),
+                studentName
+        );
     }
 
     private CourseDto toDto(Course course) {
