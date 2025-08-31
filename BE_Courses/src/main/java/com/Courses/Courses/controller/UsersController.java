@@ -1,6 +1,7 @@
 package com.Courses.Courses.controller;
 
 import com.Courses.Courses.model.dto.UsersDto;
+import com.Courses.Courses.model.request.DeactivateUserRequest;
 import com.Courses.Courses.model.request.UserUpdateRequest;
 import com.Courses.Courses.model.response.ResponseData;
 import com.Courses.Courses.service.UsersService;
@@ -33,8 +34,10 @@ public class UsersController {
      */
     @PutMapping("/{id}/deactivate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseData<String>> deactivateUser(@PathVariable Long id) {
-        return usersService.deactivateUser(id);
+    public ResponseEntity<ResponseData<String>> deactivateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody DeactivateUserRequest request) {
+        return usersService.deactivateUser(id, request.getReason(), request.getDeactivatedByUsername());
     }
 
     /**
@@ -42,7 +45,9 @@ public class UsersController {
      */
     @PutMapping("/{id}/activate")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ResponseData<String>> activateUser(@PathVariable Long id) {
-        return usersService.activateUser(id);
+    public ResponseEntity<ResponseData<String>> activateUser(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "admin") String activatedByUsername) {
+        return usersService.activateUser(id, activatedByUsername);
     }
 }

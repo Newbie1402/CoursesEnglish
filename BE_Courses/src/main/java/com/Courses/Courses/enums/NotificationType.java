@@ -39,7 +39,22 @@ public enum NotificationType {
     STUDENT_EXAM_CREATED("STUDENT_EXAM_CREATED", "Bài kiểm tra mới trong khóa học bạn tham gia"),
     STUDENT_EXAM_UPDATED("STUDENT_EXAM_UPDATED", "Bài kiểm tra trong khóa học bạn tham gia đã được cập nhật"),
     STUDENT_EXAM_DELETED("STUDENT_EXAM_DELETED", "Bài kiểm tra trong khóa học bạn tham gia đã bị xóa"),
-    STUDENT_EXAM_RESULT("STUDENT_EXAM_RESULT", "Kết quả bài kiểm tra của bạn đã có");
+    STUDENT_EXAM_RESULT("STUDENT_EXAM_RESULT", "Kết quả bài kiểm tra của bạn đã có"),
+
+    // Thông báo cho Quản trị viên - Quản lý người dùng
+    ADMIN_NEW_ACCOUNT("ADMIN_NEW_ACCOUNT", "Tài khoản mới được xác thực"),
+    ADMIN_ACCOUNT_LOCKED("ADMIN_ACCOUNT_LOCKED", "Tài khoản bị khóa"),
+    ADMIN_ACCOUNT_UNLOCKED("ADMIN_ACCOUNT_UNLOCKED", "Tài khoản được mở khóa"),
+
+    // Thông báo cho Quản trị viên - Quản lý khóa học
+    ADMIN_COURSE_CREATED("ADMIN_COURSE_CREATED", "Khóa học mới được tạo"),
+    ADMIN_COURSE_UPDATED("ADMIN_COURSE_UPDATED", "Khóa học được chỉnh sửa"),
+    ADMIN_COURSE_DELETED("ADMIN_COURSE_DELETED", "Khóa học bị xóa"),
+
+    // Thông báo cho Quản trị viên - Quản lý bài kiểm tra
+    ADMIN_EXAM_CREATED("ADMIN_EXAM_CREATED", "Bài kiểm tra mới được tạo"),
+    ADMIN_EXAM_UPDATED("ADMIN_EXAM_UPDATED", "Bài kiểm tra được chỉnh sửa"),
+    ADMIN_EXAM_DELETED("ADMIN_EXAM_DELETED", "Bài kiểm tra bị xóa");
 
     private final String code;
     private final String description;

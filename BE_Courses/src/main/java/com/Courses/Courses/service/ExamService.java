@@ -49,6 +49,9 @@ public class ExamService {
     @Autowired
     private StudentNotificationService studentNotificationService;
 
+    @Autowired
+    private AdminNotificationService adminNotificationService;
+
     /**
      * Tạo mới bài kiểm tra
      */
@@ -72,6 +75,12 @@ public class ExamService {
                 course.getTeacher().getId(),
                 savedExam.getId(),
                 savedExam.getTitle()
+        );
+        adminNotificationService.notifyExamCreated(
+                savedExam.getId(),
+                savedExam.getTitle(),
+                course.getTitle(),
+                course.getTeacher().getUser().getFullName()
         );
 
         return convertToDto(savedExam);
@@ -105,6 +114,13 @@ public class ExamService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài kiểm tra với id: " + request.getId()));
         Course course = courseRepository.findById(request.getCourseId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + request.getCourseId()));
+        String oldTitle = exam.getTitle();
+        String changes = "";
+
+        if (!oldTitle.equals(request.getTitle())) {
+            changes = "Tiêu đề từ \"" + oldTitle + "\" thành \"" + request.getTitle() + "\"";
+        }
+
         exam.setTitle(request.getTitle());
         exam.setType(request.getType());
         exam.setCourse(course);
@@ -119,6 +135,13 @@ public class ExamService {
                 updatedExam.getId(),
                 updatedExam.getTitle()
         );
+        adminNotificationService.notifyExamUpdated(
+                updatedExam.getId(),
+                updatedExam.getTitle(),
+                course.getTitle(),
+                course.getTeacher().getUser().getFullName(),
+                changes
+        );
 
         return convertToDto(updatedExam);
     }
@@ -130,9 +153,20 @@ public class ExamService {
     public ExamDto setExamActive(Long id, boolean active) {
         Exam exam = examRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bài kiểm tra với id: " + id));
+
         exam.setActive(active);
-        examRepository.save(exam);
-        return convertToDto(exam);
+        Exam savedExam = examRepository.save(exam);
+        if (!active) {
+            Course course = exam.getCourse();
+            adminNotificationService.notifyExamDeleted(
+                exam.getTitle(),
+                course.getTitle(),
+                course.getTeacher().getUser().getFullName(),
+                "Vô hiệu hóa bài kiểm tra"
+            );
+        }
+
+        return convertToDto(savedExam);
     }
 
     /**

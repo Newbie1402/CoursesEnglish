@@ -20,6 +20,9 @@ public class UsersService {
     @Autowired
     private UsersRepository usersRepository;
 
+    @Autowired
+    private AdminNotificationService adminNotificationService;
+
     /**
      * Cập nhật thông tin cá nhân của người dùng
      */
@@ -76,9 +79,12 @@ public class UsersService {
 
     /**
      * Vô hiệu hóa tài khoản người dùng
+     * @param id ID của người dùng
+     * @param reason Lý do khóa tài khoản
+     * @param deactivatedByUsername Tên người khóa tài khoản
      */
     @Transactional
-    public ResponseEntity<ResponseData<String>> deactivateUser(Long id) {
+    public ResponseEntity<ResponseData<String>> deactivateUser(Long id, String reason, String deactivatedByUsername) {
         Optional<Users> optionalUser = usersRepository.findById(id);
 
         if (optionalUser.isEmpty()) {
@@ -93,6 +99,13 @@ public class UsersService {
         Users user = optionalUser.get();
         user.setStatus(Status.INACTIVE);
         usersRepository.save(user);
+        adminNotificationService.notifyAccountLocked(
+            id,
+            user.getEmail(),
+            user.getFullName(),
+            reason,
+            deactivatedByUsername
+        );
 
         return ResponseEntity.ok(new ResponseData<>(
                 StatusApplication.SUCCESS.getCode(),
@@ -103,9 +116,11 @@ public class UsersService {
 
     /**
      * Kích hoạt lại tài khoản người dùng
+     * @param id ID của người dùng
+     * @param activatedByUsername Tên người mở khóa tài khoản
      */
     @Transactional
-    public ResponseEntity<ResponseData<String>> activateUser(Long id) {
+    public ResponseEntity<ResponseData<String>> activateUser(Long id, String activatedByUsername) {
         Optional<Users> optionalUser = usersRepository.findById(id);
 
         if (optionalUser.isEmpty()) {
@@ -120,6 +135,12 @@ public class UsersService {
         Users user = optionalUser.get();
         user.setStatus(Status.ACTIVE);
         usersRepository.save(user);
+        adminNotificationService.notifyAccountUnlocked(
+            id,
+            user.getEmail(),
+            user.getFullName(),
+            activatedByUsername
+        );
 
         return ResponseEntity.ok(new ResponseData<>(
                 StatusApplication.SUCCESS.getCode(),

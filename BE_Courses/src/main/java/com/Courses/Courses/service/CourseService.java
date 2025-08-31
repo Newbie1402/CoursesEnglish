@@ -36,6 +36,9 @@ public class CourseService {
     @Autowired
     private StudentNotificationService studentNotificationService;
 
+    @Autowired
+    private AdminNotificationService adminNotificationService;
+
     // Lấy danh sách tất cả khoá học đang active
     public List<CourseDto> getAllCourses() {
         List<Course> courses = courseRepository.findAll();
@@ -87,17 +90,17 @@ public class CourseService {
                 .filter(Course::isActive)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + id));
 
+        String teacherName = course.getTeacher().getUser().getFullName();
+
         course.setTitle(request.getTitle());
         course.setDescription(request.getDescription());
         course.setOnline(request.getOnline());
         course.setStartDate(request.getStartDate());
         course.setEndDate(request.getEndDate());
-
         Teacher teacher = teacherRepository.findById(request.getTeacherId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giáo viên với id: " + request.getTeacherId()));
         course.setTeacher(teacher);
         course.getSchedules().clear();
-
         for (CourseScheduleRequest scheduleRequest : request.getSchedules()) {
             CourseSchedule schedule = new CourseSchedule();
             schedule.setCourse(course);
@@ -106,15 +109,22 @@ public class CourseService {
             course.getSchedules().add(schedule);
         }
 
-        courseRepository.save(course);
+        Course updatedCourse = courseRepository.save(course);
 
         teacherNotificationService.notifyCourseUpdated(
-                course.getTeacher().getId(),
-                course.getId(),
-                course.getTitle()
+                updatedCourse.getTeacher().getId(),
+                updatedCourse.getId(),
+                updatedCourse.getTitle()
         );
 
-        return toDto(course);
+        adminNotificationService.notifyCourseUpdated(
+                updatedCourse.getId(),
+                updatedCourse.getTitle(),
+                teacherName,
+                "Cập nhật thông tin và lịch học"
+        );
+
+        return toDto(updatedCourse);
     }
 
 
@@ -129,7 +139,7 @@ public class CourseService {
 
 
     /**
-     * Thêm mới khoá học
+     * Thêm mới khoá h��c
      * @param request Thông tin tạo khoá học
      * @return CourseDto
      */
@@ -147,10 +157,8 @@ public class CourseService {
         course.setTeacher(teacher);
         course.setActive(true);
 
-        // Lưu khóa học trước để có ID
         courseRepository.save(course);
 
-        // Tạo các lịch học
         List<CourseSchedule> schedules = new ArrayList<>();
         for (CourseScheduleRequest scheduleRequest : request.getSchedules()) {
             CourseSchedule schedule = new CourseSchedule();
@@ -161,39 +169,23 @@ public class CourseService {
         }
         course.setSchedules(schedules);
 
-        courseRepository.save(course);
+        Course savedCourse = courseRepository.save(course);
         teacherNotificationService.notifyCourseCreated(
                 teacher.getId(),
-                course.getId(),
-                course.getTitle()
+                savedCourse.getId(),
+                savedCourse.getTitle()
         );
 
-        return toDto(course);
-    }
+        adminNotificationService.notifyCourseCreated(
+                savedCourse.getId(),
+                savedCourse.getTitle(),
+                teacher.getUser().getFullName()
+        );
 
-    /**
-     * Xóa khóa học (soft delete - đánh dấu không hoạt động)
-     * @param courseId ID khóa học
-     */
-    @Transactional
-    public void deleteCourse(Long courseId) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với ID: " + courseId));
-        Long teacherId = course.getTeacher().getId();
-        String courseName = course.getTitle();
-        course.setActive(false);
-        courseRepository.save(course);
-        teacherNotificationService.notifyCourseDeleted(teacherId, courseName);
+        return toDto(savedCourse);
     }
 
 
-    /**
-     * Xử lý phản hồi mới về khóa học
-     * @param courseId ID khóa học
-     * @param studentId ID học viên
-     * @param studentName Tên học viên
-     * @param feedback Nội dung phản hồi
-     */
     @Transactional
     public void processFeedback(Long courseId, Long studentId, String studentName, String feedback) {
         Course course = courseRepository.findById(courseId)

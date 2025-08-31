@@ -7,6 +7,7 @@ import com.Courses.Courses.model.request.AcceptedAccountRequest;
 import com.Courses.Courses.model.response.ResponseData;
 import com.Courses.Courses.repository.AcceptedAccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,9 @@ import java.util.Set;
 public class AcceptedAccountService {
 
     private final AcceptedAccountRepository acceptedAccountRepository;
+
+    @Autowired
+    private AdminNotificationService adminNotificationService;
 
     private static final Set<Role> ALLOWED_ROLES = Set.of(Role.TEACHER, Role.STUDENT);
 
@@ -44,6 +48,12 @@ public class AcceptedAccountService {
 
         AcceptedAccount saved = acceptedAccountRepository.save(account);
         AcceptedAccountDto dto = toDTO(saved);
+
+        adminNotificationService.notifyNewAccountVerified(
+                saved.getId(),
+                saved.getEmail(),
+                "Người dùng mới"
+        );
 
         return ResponseEntity.ok(new ResponseData<>(200, "Thêm tài khoản thành công", dto));
     }
