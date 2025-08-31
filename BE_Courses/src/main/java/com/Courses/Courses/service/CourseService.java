@@ -31,7 +31,10 @@ public class CourseService {
     private CourseScheduleRepository courseScheduleRepository;
 
     @Autowired
-    private NotificationService notificationService;
+    private TeacherNotificationService teacherNotificationService;
+
+    @Autowired
+    private StudentNotificationService studentNotificationService;
 
     // Lấy danh sách tất cả khoá học đang active
     public List<CourseDto> getAllCourses() {
@@ -83,32 +86,29 @@ public class CourseService {
         Course course = courseRepository.findById(id)
                 .filter(Course::isActive)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + id));
+
         course.setTitle(request.getTitle());
         course.setDescription(request.getDescription());
         course.setOnline(request.getOnline());
         course.setStartDate(request.getStartDate());
         course.setEndDate(request.getEndDate());
+
         Teacher teacher = teacherRepository.findById(request.getTeacherId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy giáo viên với id: " + request.getTeacherId()));
         course.setTeacher(teacher);
-
-        // Xóa các lịch học cũ
         course.getSchedules().clear();
 
-        // Thêm các lịch học mới
-        List<CourseSchedule> schedules = new ArrayList<>();
         for (CourseScheduleRequest scheduleRequest : request.getSchedules()) {
             CourseSchedule schedule = new CourseSchedule();
             schedule.setCourse(course);
             schedule.setDayOfWeek(scheduleRequest.getDayOfWeek());
             schedule.setTimeSlot(scheduleRequest.getTimeSlot());
-            schedules.add(schedule);
+            course.getSchedules().add(schedule);
         }
-        course.setSchedules(schedules);
 
         courseRepository.save(course);
 
-        notificationService.notifyCourseUpdated(
+        teacherNotificationService.notifyCourseUpdated(
                 course.getTeacher().getId(),
                 course.getId(),
                 course.getTitle()
@@ -116,6 +116,7 @@ public class CourseService {
 
         return toDto(course);
     }
+
 
     // Inactive khoá học
     @Transactional
@@ -161,7 +162,7 @@ public class CourseService {
         course.setSchedules(schedules);
 
         courseRepository.save(course);
-        notificationService.notifyCourseCreated(
+        teacherNotificationService.notifyCourseCreated(
                 teacher.getId(),
                 course.getId(),
                 course.getTitle()
@@ -182,27 +183,9 @@ public class CourseService {
         String courseName = course.getTitle();
         course.setActive(false);
         courseRepository.save(course);
-        notificationService.notifyCourseDeleted(teacherId, courseName);
+        teacherNotificationService.notifyCourseDeleted(teacherId, courseName);
     }
 
-    /**
-     * Ghi danh học viên vào khóa học
-     * @param courseId ID khóa học
-     * @param studentId ID học viên
-     * @param studentName Tên học viên
-     */
-    @Transactional
-    public void enrollStudent(Long courseId, Long studentId, String studentName) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với ID: " + courseId));
-
-        notificationService.notifyStudentEnrolled(
-                course.getTeacher().getId(),
-                course.getId(),
-                course.getTitle(),
-                studentName
-        );
-    }
 
     /**
      * Xử lý phản hồi mới về khóa học
@@ -215,7 +198,7 @@ public class CourseService {
     public void processFeedback(Long courseId, Long studentId, String studentName, String feedback) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với ID: " + courseId));
-        notificationService.notifyCourseFeedback(
+        teacherNotificationService.notifyCourseFeedback(
                 course.getTeacher().getId(),
                 course.getId(),
                 course.getTitle(),

@@ -19,7 +19,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CourseUpdateRequest {
-    @NotNull(message = "ID khoá học không được để trống")
     private Long id;
 
     @NotBlank(message = "Tên khoá học không được để trống")

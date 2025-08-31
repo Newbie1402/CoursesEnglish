@@ -44,7 +44,10 @@ public class ExamService {
     @Autowired
     private TeacherRepository teacherRepository;
     @Autowired
-    private NotificationService notificationService;
+    private TeacherNotificationService teacherNotificationService;
+
+    @Autowired
+    private StudentNotificationService studentNotificationService;
 
     /**
      * Tạo mới bài kiểm tra
@@ -65,7 +68,7 @@ public class ExamService {
         exam.setPassword(request.getPassword());
         exam.setActive(true);
         Exam savedExam = examRepository.save(exam);
-        notificationService.notifyExamCreated(
+        teacherNotificationService.notifyExamCreated(
                 course.getTeacher().getId(),
                 savedExam.getId(),
                 savedExam.getTitle()
@@ -111,7 +114,7 @@ public class ExamService {
         exam.setDescription(request.getDescription());
         exam.setPassword(request.getPassword());
         Exam updatedExam = examRepository.save(exam);
-        notificationService.notifyExamUpdated(
+        teacherNotificationService.notifyExamUpdated(
                 updatedExam.getCourse().getTeacher().getId(),
                 updatedExam.getId(),
                 updatedExam.getTitle()
@@ -260,7 +263,7 @@ public class ExamService {
         redisTemplate.delete(redisKey);
 
         submissionRepository.save(submission);
-        notificationService.notifyExamResult(
+        teacherNotificationService.notifyExamResult(
                 submission.getExam().getCourse().getTeacher().getId(),
                 submission.getExam().getId(),
                 submission.getExam().getTitle(),

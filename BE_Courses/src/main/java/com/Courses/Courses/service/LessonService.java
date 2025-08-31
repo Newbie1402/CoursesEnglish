@@ -28,7 +28,10 @@ public class LessonService {
     private CourseRepository courseRepository;
 
     @Autowired
-    private NotificationService notificationService;
+    private TeacherNotificationService teacherNotificationService;
+
+    @Autowired
+    private StudentNotificationService studentNotificationService;
 
     /**
      * Xử lý upload file, lưu bài học mới và trả về LessonDto
@@ -45,7 +48,7 @@ public class LessonService {
         lesson.setUploadedAt(LocalDateTime.now());
         lesson.setCourse(course);
         lessonRepository.save(lesson);
-        notificationService.notifyLessonCreated(
+        teacherNotificationService.notifyLessonCreated(
                 course.getTeacher().getId(),
                 lesson.getId(),
                 lesson.getTitle(),
