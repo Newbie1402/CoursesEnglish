@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { FaEdit, FaTrash, FaUserGraduate, FaBook, FaClipboardList, FaUserPlus, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { useParams, useNavigate } from 'react-router-dom';
+import { FaTrash, FaUserGraduate, FaBook, FaClipboardList, FaUserPlus, FaCheckCircle, FaTimesCircle, FaClock, FaCalendarAlt } from 'react-icons/fa';
 import { countLessonsInCourse } from '@/services/hooks/lessonService';
 import { countAssignmentsInCourse } from '@/services/hooks/assignmentService';
 import { countStudentsInCourse, getStudentOfCourse } from '@/services/hooks/adminService';
 import { getTeacherDetails } from '@/services/hooks/teacherService';
 import { getLessonOfCourse } from '@/services/hooks/lessonService';
-import { getAssignmentOfCourses, getAssignmentDetails } from '@/services/hooks/assignmentService';
-import { getCourseDetails } from '@/services/hooks/courseService';
+import { getAssignmentOfCourses } from '@/services/hooks/assignmentService';
+import { getCourseDetails, deleteCourse } from '@/services/hooks/courseService';
 import { getProgress } from "@/lib/utils.js";
 import AddStudentModal from '../student/AddStudentModal';
 import LessonDetailModal from "@/pages/admin/lesson/LessonDetailModal.jsx";
 
 const AdminCourseDetail = () => {
   const { courseId } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState({ lessons: 0, assignments: 0, students: 0 });
   const [teacherName, setTeacherName] = useState('');
@@ -26,6 +27,7 @@ const AdminCourseDetail = () => {
   const [showLessonDetailModal, setShowLessonDetailModal] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState(null);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
   // Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -36,16 +38,31 @@ const AdminCourseDetail = () => {
           setCourse(courseData);
       };
 
+    fetchCourseDetails();
+  }, [courseId]);
+
+  useEffect(() => {
+    if (!course) return; // Chỉ chạy khi course đã có dữ liệu
+
+    const fetchTeacher = async () => {
+      if (!course.teacherId) {
+        setTeacherName('Không xác định');
+        return;
+      }
+
+      const teacher = await getTeacherDetails(course.teacherId);
+      setTeacherName(teacher?.fullName || 'Không xác định');
+    };
+
+    fetchTeacher();
+  }, [course]);
+
+  useEffect(() => {
     const fetchStats = async () => {
       const lessonsCount = await countLessonsInCourse(courseId);
       const assignmentsCount = await countAssignmentsInCourse(courseId);
       const studentsCount = await countStudentsInCourse(courseId);
       setStats({ lessons: lessonsCount, assignments: assignmentsCount, students: studentsCount });
-    };
-
-    const fetchTeacher = async () => {
-      const teacher = await getTeacherDetails(courseId);
-      setTeacherName(teacher?.fullName || 'Không xác định');
     };
 
     const fetchLessons = async () => {
@@ -62,9 +79,7 @@ const AdminCourseDetail = () => {
       const studentList = await getStudentOfCourse(courseId);
       setStudents(studentList);
     };
-    fetchCourseDetails();
     fetchStats();
-    fetchTeacher();
     fetchLessons();
     fetchAssignments();
     fetchStudents();
@@ -101,6 +116,29 @@ const AdminCourseDetail = () => {
     setSelectedLessonId(null);
   };
 
+  // Handle delete course
+  const handleDeleteCourse = () => {
+    setShowDeleteConfirmModal(true);
+  };
+
+  // Confirm delete course
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteCourse(courseId);
+      setShowDeleteConfirmModal(false);
+      showToast('Xóa khóa học thành công', 'success');
+      navigate('/admin/courses');
+    } catch (error) {
+      setShowDeleteConfirmModal(false);
+      showToast('Xóa khóa học thất bại', 'error');
+    }
+  };
+
+  // Cancel delete
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmModal(false);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -127,6 +165,15 @@ const AdminCourseDetail = () => {
                       ID: {course.courseId}
                     </span>
                   </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <button
+                    onClick={handleDeleteCourse}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all duration-200 space-x-2 shadow-lg"
+                  >
+                    <FaTrash className="w-4 h-4" />
+                    <span>Xóa khóa học</span>
+                  </button>
                 </div>
               </div>
 
@@ -213,6 +260,63 @@ const AdminCourseDetail = () => {
                   <p className="text-sm text-gray-500">Giảng viên chính</p>
                 </div>
               </div>
+            </div>
+
+            {/* Lịch học */}
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <FaCalendarAlt className="w-4 h-4 text-orange-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Lịch học</h3>
+              </div>
+
+              {course.schedules && course.schedules.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {course.schedules.map((schedule) => (
+                    <div
+                      key={schedule.id}
+                      className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200"
+                    >
+                      <div className="flex items-center space-x-3 mb-2">
+                        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                          <FaClock className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-orange-900">
+                            {schedule.dayOfWeek === 'MONDAY' && 'Thứ 2'}
+                            {schedule.dayOfWeek === 'TUESDAY' && 'Thứ 3'}
+                            {schedule.dayOfWeek === 'WEDNESDAY' && 'Thứ 4'}
+                            {schedule.dayOfWeek === 'THURSDAY' && 'Thứ 5'}
+                            {schedule.dayOfWeek === 'FRIDAY' && 'Thứ 6'}
+                            {schedule.dayOfWeek === 'SATURDAY' && 'Thứ 7'}
+                            {schedule.dayOfWeek === 'SUNDAY' && 'Chủ nhật'}
+                          </h4>
+                          <p className="text-sm text-orange-700">
+                            {schedule.timeSlot === 'SLOT_1' && 'Ca 1'}
+                            {schedule.timeSlot === 'SLOT_2' && 'Ca 2'}
+                            {schedule.timeSlot === 'SLOT_3' && 'Ca 3'}
+                            {schedule.timeSlot === 'SLOT_4' && 'Ca 4'}
+                            {schedule.timeSlot === 'SLOT_5' && 'Ca 5'}
+                          </p>
+                        </div>
+                      </div>
+                      {schedule.timeRange && (
+                        <p className="text-orange-800 font-medium mt-2">
+                          {schedule.timeRange}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FaCalendarAlt className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500">Chưa có lịch học nào được thiết lập</p>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -402,8 +506,58 @@ const AdminCourseDetail = () => {
         courseId={courseId}
         onSuccess={handleAddStudentSuccess}
       />
+
+      {/* Delete Confirm Modal */}
+      {showDeleteConfirmModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={handleCancelDelete}
+          ></div>
+
+          {/* Modal Content */}
+          <div className="relative bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 transform transition-all">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <FaTrash className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Xác nhận xóa khóa học</h3>
+                <p className="text-sm text-gray-500">Hành động này không thể hoàn tác</p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700 leading-relaxed">
+                Bạn có chắc chắn muốn xóa khóa học <span className="font-semibold text-gray-900">"{course?.title}"</span>?
+              </p>
+              <p className="text-sm text-red-600 mt-2">
+                ⚠️ Tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelDelete}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+              >
+                <FaTrash className="w-4 h-4" />
+                <span>Xóa khóa học</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default AdminCourseDetail;
+

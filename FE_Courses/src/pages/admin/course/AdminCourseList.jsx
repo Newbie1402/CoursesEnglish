@@ -26,6 +26,9 @@ const AdminCourseList = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
+  // Toast state
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -65,8 +68,23 @@ const AdminCourseList = () => {
     }
   });
 
-  const handleCourseClick = (courseId) => {
-    navigate(`/admin/courses/${courseId}`);
+  // Toast function
+  const showToast = (message, type = 'error') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'error' });
+    }, 3000);
+  };
+
+  const handleCourseClick = (course) => {
+    // Kiểm tra nếu khóa học đã bị xóa (active = false)
+    if (!course.active) {
+      showToast('Khóa học này đã bị xóa', 'error');
+      return;
+    }
+
+    // Nếu khóa học còn hoạt động thì navigate bình thường
+    navigate(`/admin/courses/${course.courseId}`);
   };
 
   const formatDate = (dateString) => {
@@ -78,7 +96,7 @@ const AdminCourseList = () => {
 
     return (
       <div
-        onClick={() => handleCourseClick(course.courseId)}
+        onClick={() => handleCourseClick(course)}
         className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-blue-200 transition-all duration-300 cursor-pointer group overflow-hidden"
       >
         {/* Header với gradient */}
@@ -223,6 +241,16 @@ const AdminCourseList = () => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className="fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transition-all duration-300 bg-red-500 text-white">
+          <div className="flex items-center space-x-2">
+            <FaTimesCircle className="w-5 h-5" />
+            <span>{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
@@ -231,7 +259,9 @@ const AdminCourseList = () => {
             Tổng cộng {courses.length} khóa học • {filteredCourses.length} đang hiển thị
           </p>
         </div>
-        <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg">
+        <button
+            onClick={() => navigate('/admin/courses/new')}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg">
           <FaPlus className="w-4 h-4 mr-2" />
           Tạo khóa học mới
         </button>

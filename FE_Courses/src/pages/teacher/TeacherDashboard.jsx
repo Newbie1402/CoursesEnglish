@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaBell,
-  FaPlusCircle,
   FaBook,
   FaClipboardList,
   FaUserGraduate,
@@ -26,10 +25,14 @@ import useTeacherService from '@/services/hooks/useTeacherService.js';
 import useCourseService, { fetchStudentsByCourse } from '@/services/hooks/useCourseService';
 import { fetchLessons } from '@/services/hooks/useLessonService';
 import useAssignmentService from '@/services/hooks/useAssignmentService';
-import {getProgress} from "@/lib/utils.js";
+import { getProgress } from "@/lib/utils.js";
+import { getNotificationUser } from '@/services/hooks/notificationService';
+import { NOTIFICATION_TYPES } from './NotificaitonsTypes.jsx';
+import { useAuth } from '../../contexts/AuthContext';
 
 const TeacherDashboard = () => {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const teacherId = localStorage.getItem('teacherId');
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { getTeacherInfo } = useTeacherService(BASE_URL);
@@ -46,6 +49,9 @@ const TeacherDashboard = () => {
   const [totalStudents, setTotalStudents] = useState(0);
   const [recentCoursesWithDetails, setRecentCoursesWithDetails] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  // Thêm state cho recent notifications
+  const [recentNotifications, setRecentNotifications] = useState([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
 
   const { data: courses = [] } = getCourseList(teacherId);
   const { data: activeExams = [] } = getActiveExamsByTeacher(teacherId);
@@ -141,18 +147,11 @@ const TeacherDashboard = () => {
     }
   }, [courses]);
 
-  const handleCreateCourse = () => {
-    navigate('/teacher/courses/new');
-  };
-
-  // Enhanced stats with trends and colors
   const stats = useMemo(() => {
     return [
       {
         label: "Khóa học",
         value: courses.length,
-        change: "+12%",
-        trend: "up",
         icon: FaBook,
         color: "from-blue-500 to-blue-600",
         bgColor: "bg-blue-50",
@@ -161,8 +160,6 @@ const TeacherDashboard = () => {
       {
         label: "Bài học",
         value: totalLessons,
-        change: "+8%",
-        trend: "up",
         icon: FaClipboardList,
         color: "from-green-500 to-green-600",
         bgColor: "bg-green-50",
@@ -171,8 +168,6 @@ const TeacherDashboard = () => {
       {
         label: "Bài tập",
         value: activeExams.length,
-        change: "+24%",
-        trend: "up",
         icon: FaTrophy,
         color: "from-yellow-500 to-yellow-600",
         bgColor: "bg-yellow-50",
@@ -181,8 +176,6 @@ const TeacherDashboard = () => {
       {
         label: "Học viên",
         value: totalStudents,
-        change: "+15%",
-        trend: "up",
         icon: FaUserGraduate,
         color: "from-purple-500 to-purple-600",
         bgColor: "bg-purple-50",
@@ -204,41 +197,6 @@ const TeacherDashboard = () => {
         status: course.status || "Đang diễn ra",
       }));
   }, [recentCoursesWithDetails]);
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'lesson',
-      message: 'Bài học "React Hooks" đã được cập nhật',
-      time: '10 phút trước',
-      icon: FaBook,
-      color: 'text-blue-500'
-    },
-    {
-      id: 2,
-      type: 'student',
-      message: '5 học viên mới đăng ký khóa JavaScript',
-      time: '1 giờ trước',
-      icon: FaUsers,
-      color: 'text-green-500'
-    },
-    {
-      id: 3,
-      type: 'exam',
-      message: '12 bài thi đã được nộp và cần chấm điểm',
-      time: '2 giờ trước',
-      icon: FaClipboardList,
-      color: 'text-orange-500'
-    },
-    {
-      id: 4,
-      type: 'achievement',
-      message: 'Bạn đã đạt 95% tỷ lệ hài lòng từ học viên',
-      time: '1 ngày trước',
-      icon: FaTrophy,
-      color: 'text-yellow-500'
-    }
-  ];
 
   const quickActions = [
     {
@@ -271,29 +229,70 @@ const TeacherDashboard = () => {
     }
   ];
 
-  const mockNotifications = [
-    {
-      id: 1,
-      message: "Bạn có 2 bài tập cần chấm điểm",
-      time: "2 giờ trước",
-      type: "task",
-      priority: "high"
-    },
-    {
-      id: 2,
-      message: "Khóa học mới đã được tạo thành công!",
-      time: "1 ngày trước",
-      type: "success",
-      priority: "normal"
-    },
-    {
-      id: 3,
-      message: "Nhắc nhở: Họp giảng viên vào 3PM hôm nay",
-      time: "3 giờ trước",
-      type: "reminder",
-      priority: "medium"
+  // Fetch 5 notifications gần nhất từ API
+  const fetchRecentNotifications = async () => {
+    if (!token) return;
+
+    try {
+      setLoadingNotifications(true);
+      const response = await getNotificationUser(token);
+
+      if (response?.data?.content) {
+        // Lấy 5 notifications gần nhất
+        const recent5Notifications = response.data.content.slice(0, 5);
+
+        // Transform notifications để có format phù hợp với UI
+        const transformedNotifications = recent5Notifications.map((notification) => {
+          const typeConfig = NOTIFICATION_TYPES[notification.type] || NOTIFICATION_TYPES.COURSE_CREATED;
+
+          return {
+            id: notification.id,
+            type: notification.type,
+            message: notification.message,
+            time: formatTimeAgo(notification.createdAt),
+            icon: typeConfig.icon,
+            color: typeConfig.color,
+            read: notification.read
+          };
+        });
+
+        setRecentNotifications(transformedNotifications);
+      } else {
+        setRecentNotifications([]);
+      }
+    } catch (error) {
+      console.error('Error fetching recent notifications:', error);
+      setRecentNotifications([]);
+    } finally {
+      setLoadingNotifications(false);
     }
-  ];
+  };
+
+  // Format thời gian thành "X phút trước", "X giờ trước", etc.
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now - date;
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMinutes < 1) return 'Vừa xong';
+    if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    if (diffInDays < 7) return `${diffInDays} ngày trước`;
+
+    return date.toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  // Fetch recent notifications khi component mount
+  useEffect(() => {
+    fetchRecentNotifications();
+  }, [token]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -336,7 +335,7 @@ const TeacherDashboard = () => {
                 >
                   <FaBell className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
                   <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
-                    {mockNotifications.length}
+                    {recentNotifications.filter(notification => !notification.read).length}
                   </span>
                 </button>
 
@@ -347,7 +346,7 @@ const TeacherDashboard = () => {
                       <h3 className="font-semibold text-gray-900">Thông báo</h3>
                     </div>
                     <div className="max-h-64 overflow-y-auto">
-                      {mockNotifications.map((notification) => (
+                      {recentNotifications.map((notification) => (
                         <div key={notification.id} className="p-4 hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
                           <div className="flex items-start space-x-3">
                             <div className={`p-2 rounded-lg ${
@@ -375,15 +374,6 @@ const TeacherDashboard = () => {
                   </div>
                 )}
               </div>
-
-              {/* Create Course Button */}
-              <button
-                onClick={handleCreateCourse}
-                className="flex items-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-              >
-                <FaPlusCircle className="w-4 h-4" />
-                <span>Tạo khóa học</span>
-              </button>
             </div>
           </div>
         </div>
@@ -392,8 +382,6 @@ const TeacherDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
-            const TrendIcon = stat.trend === 'up' ? FaArrowUp : FaArrowDown;
-
             return (
               <div
                 key={index}
@@ -402,12 +390,6 @@ const TeacherDashboard = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className={`${stat.bgColor} p-3 rounded-xl group-hover:scale-110 transition-transform duration-200`}>
                     <Icon className={`text-2xl ${stat.textColor}`} />
-                  </div>
-                  <div className={`flex items-center space-x-1 ${
-                    stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    <TrendIcon className="text-xs" />
-                    <span className="text-sm font-medium">{stat.change}</span>
                   </div>
                 </div>
                 <div>
@@ -432,32 +414,73 @@ const TeacherDashboard = () => {
                   <FaLightbulb className="text-yellow-500" />
                   <span>Hoạt động gần đây</span>
                 </h3>
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1">
+                <button
+                  onClick={() => navigate('/teacher/notifications')}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+                >
                   <FaEye />
                   <span>Xem tất cả</span>
                 </button>
               </div>
-              <div className="space-y-4">
-                {recentActivities.map((activity, index) => {
-                  const Icon = activity.icon;
-                  return (
-                    <div key={activity.id} className="flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors">
-                      <div className="relative">
-                        <div className="p-3 bg-gray-100 rounded-xl">
-                          <Icon className={`${activity.color} text-lg`} />
-                        </div>
-                        {index !== recentActivities.length - 1 && (
-                          <div className="absolute top-12 left-1/2 transform -translate-x-1/2 w-px h-8 bg-gray-200"></div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{activity.message}</p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
+
+              {/* Loading State */}
+              {loadingNotifications ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, index) => (
+                    <div key={index} className="flex items-center space-x-4 p-4 rounded-xl animate-pulse">
+                      <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentNotifications.length > 0 ? (
+                    recentNotifications.map((notification, index) => {
+                      const Icon = notification.icon;
+                      return (
+                        <div
+                          key={notification.id}
+                          className={`flex items-center space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer ${
+                            !notification.read ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                          }`}
+                          onClick={() => navigate('/teacher/notifications')}
+                        >
+                          <div className="relative">
+                            <div className={`p-3 rounded-xl ${!notification.read ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                              <Icon className={`${notification.color} text-lg`} />
+                            </div>
+                            {index !== recentNotifications.length - 1 && (
+                              <div className="absolute top-12 left-1/2 transform -translate-x-1/2 w-px h-8 bg-gray-200"></div>
+                            )}
+                            {!notification.read && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                              {notification.message}
+                            </p>
+                            <p className="text-xs text-gray-500">{notification.time}</p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    // Empty State
+                    <div className="text-center py-8">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <FaBell className="text-gray-400 text-2xl" />
+                      </div>
+                      <h4 className="text-gray-600 font-medium mb-2">Chưa có hoạt động nào</h4>
+                      <p className="text-gray-500 text-sm">Các thông báo và hoạt động mới sẽ hiển thị ở đây</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Enhanced Recent Courses */}

@@ -10,3 +10,13 @@ export const getCourseDetails = async (courseId) => {
         return null; // Trả về null nếu có lỗi
     }
 };
+
+export const deleteCourse = async (courseId) => {
+    try {
+        const res = await axios.delete(`${BASE_URL}/api/courses/inactive/${courseId}?active=false`);
+        return res?.data || null; // Trả về null nếu không có dữ liệu
+    } catch (err) {
+        console.error(`Error deleting course ID ${courseId}:`, err);
+        return null; // Trả về null nếu có lỗi
+    }
+}

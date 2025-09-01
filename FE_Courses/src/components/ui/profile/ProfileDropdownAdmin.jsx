@@ -21,7 +21,7 @@ const ProfileDropdownAdmin = ({ admin }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef(null);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, auth } = useAuth();
   const { addToast } = useToast();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -39,12 +39,21 @@ const ProfileDropdownAdmin = ({ admin }) => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${BASE_URL}/api/auth/logout`);
+      // Lấy token từ localStorage hoặc auth context
+      const token = localStorage.getItem('token') || auth?.token;
+
+      // Gửi request logout với Authorization header
+      await axios.post(`${BASE_URL}/api/auth/logout`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       logout();
-      addToast('Đăng xuất thành công!', 'success');
+      addToast('Đăng xuất thành công! Hẹn gặp lại 👋', 'success');
       navigate('/login');
     }
   };
@@ -108,11 +117,13 @@ const ProfileDropdownAdmin = ({ admin }) => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200",
+          "flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200",
           "hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-          "border border-gray-200",
+          "border border-gray-200 bg-white shadow-sm",
           isOpen && "bg-gray-100 ring-2 ring-blue-500 ring-offset-2"
         )}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
       >
         {/* Avatar */}
         <div className="relative">
@@ -120,31 +131,31 @@ const ProfileDropdownAdmin = ({ admin }) => {
             <img
               src={admin.avatarUrl}
               alt={displayName}
-              className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+              className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <FaUserShield className="text-white text-lg" />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <FaUserShield className="text-white text-sm" />
             </div>
           )}
           {/* Online indicator */}
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
         </div>
 
         {/* User Info */}
-        <div className="flex-1 text-left min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">
+        <div className="hidden sm:flex flex-col items-start min-w-0">
+          <span className="text-sm font-medium text-gray-900 truncate">
             {displayName}
-          </p>
-          <p className="text-xs text-gray-500 truncate">
+          </span>
+          <span className="text-xs text-gray-500 truncate">
             Quản trị viên
-          </p>
+          </span>
         </div>
 
         {/* Dropdown Icon */}
         <FaChevronDown
           className={cn(
-            "text-gray-400 transition-transform duration-200 flex-shrink-0",
+            "w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0",
             isOpen && "rotate-180"
           )}
         />
@@ -152,45 +163,84 @@ const ProfileDropdownAdmin = ({ admin }) => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+        <div className={cn(
+          // Responsive width: full width trên mobile, fixed width trên desktop
+          "absolute right-0 mt-2 w-screen max-w-sm sm:w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50",
+          // Positioning: đảm bảo không tràn ra ngoài màn hình
+          "sm:right-0 -right-2 mr-2 sm:mr-0",
+          // Max height và scroll cho mobile
+          "max-h-[90vh] overflow-y-auto",
+          "animate-in fade-in slide-in-from-top-2 duration-200"
+        )}>
           {/* User Info Header */}
-          <div className="px-4 py-3 border-b border-gray-100">
-            <div className="flex items-center space-x-3">
-              {admin?.avatarUrl ? (
-                <img
-                  src={admin.avatarUrl}
-                  alt={displayName}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                  <FaUserShield className="text-white text-xl" />
-                </div>
-              )}
+          <div className="px-3 sm:px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-purple-50">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="relative flex-shrink-0">
+                {admin?.avatarUrl ? (
+                  <img
+                    src={admin.avatarUrl}
+                    alt={displayName}
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                  />
+                ) : (
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <FaUserShield className="text-white text-base sm:text-xl" />
+                  </div>
+                )}
+                <div className="absolute -bottom-0.5 sm:-bottom-1 -right-0.5 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 border-2 border-white rounded-full"></div>
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
+                <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
                   {displayName}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
                   {displayEmail}
                 </p>
-                <p className="text-xs text-blue-600 font-medium">
-                  Quản trị viên hệ thống
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-blue-600 bg-blue-100 px-1.5 sm:px-2 py-0.5 rounded-full font-medium">
+                    Quản trị viên hệ thống
+                  </span>
+                  <span className="text-xs text-green-600 bg-green-100 px-1.5 sm:px-2 py-0.5 rounded-full">
+                    Đang hoạt động
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-100 bg-gray-50/50">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 sm:mb-2">
+              Thống kê nhanh
+            </h4>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
+              <div>
+                <p className="text-base sm:text-lg font-bold text-purple-600">24</p>
+                <p className="text-xs text-gray-500">Khóa học</p>
+              </div>
+              <div>
+                <p className="text-base sm:text-lg font-bold text-green-600">1,247</p>
+                <p className="text-xs text-gray-500">Người dùng</p>
+              </div>
+              <div>
+                <p className="text-base sm:text-lg font-bold text-blue-600">89</p>
+                <p className="text-xs text-gray-500">Giảng viên</p>
               </div>
             </div>
           </div>
 
           {/* Menu Items */}
-          <div className="py-2">
+          <div className="max-h-60 sm:max-h-none overflow-y-auto py-1 sm:py-2">
             {menuItems.map((item, index) => (
               <button
                 key={index}
                 onClick={() => handleMenuClick(item.onClick)}
-                className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-150"
+                className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 text-left hover:bg-gray-50 transition-all duration-150 group"
               >
-                <item.icon className={cn("text-lg flex-shrink-0", item.color)} />
-                <span className="text-sm text-gray-700 font-medium">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-transform duration-200 flex-shrink-0 group-hover:scale-110 bg-gray-50">
+                  <item.icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", item.color)} />
+                </div>
+                <span className="text-sm font-medium text-gray-700 truncate">
                   {item.label}
                 </span>
               </button>
@@ -198,17 +248,24 @@ const ProfileDropdownAdmin = ({ admin }) => {
           </div>
 
           {/* Divider */}
-          <div className="border-t border-gray-100 my-2"></div>
+          <div className="border-t border-gray-100 my-1 sm:my-2"></div>
 
           {/* Logout Button */}
           <button
             onClick={() => handleMenuClick(handleLogout)}
-            className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-red-50 transition-colors duration-150 group"
+            className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 text-left hover:bg-red-50 transition-all duration-150 group"
           >
-            <FaSignOutAlt className="text-lg text-red-500 flex-shrink-0" />
-            <span className="text-sm text-red-600 font-medium group-hover:text-red-700">
-              Đăng xuất
-            </span>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-50 flex items-center justify-center transition-transform duration-200 group-hover:scale-110 flex-shrink-0">
+              <FaSignOutAlt className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <span className="text-sm font-medium text-red-600 group-hover:text-red-700 block truncate">
+                Đăng xuất
+              </span>
+              <p className="text-xs text-red-400 truncate">
+                Thoát khỏi tài khoản
+              </p>
+            </div>
           </button>
         </div>
       )}

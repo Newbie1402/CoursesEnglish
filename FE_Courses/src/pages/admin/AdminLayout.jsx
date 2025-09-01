@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   FaHome,
   FaUsers,
@@ -11,10 +11,12 @@ import {
   FaChalkboardTeacher,
   FaBars,
   FaTimes,
-  FaSearch
+  FaSearch,
+  FaInfoCircle
 } from 'react-icons/fa';
 import ProfileDropdownAdmin from '../../components/ui/profile/ProfileDropdownAdmin';
 import { useAuth } from '../../contexts/AuthContext';
+import { getUnreadNotification } from '@/services/hooks/notificationService';
 
 const adminMenu = [
   {
@@ -68,9 +70,15 @@ const adminMenu = [
 ];
 
 const AdminLayout = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
+  const [showNewNotificationAlert, setShowNewNotificationAlert] = useState(false);
+  const [alertTimeout, setAlertTimeout] = useState(null);
 
   // Tạo admin object từ user data
   const admin = {
@@ -84,6 +92,76 @@ const AdminLayout = () => {
     const currentMenu = adminMenu.find(item => item.path === location.pathname);
     return currentMenu?.label || 'Quản trị hệ thống';
   };
+
+  // Fetch số lượng thông báo chưa đọc
+  const fetchUnreadNotifications = async () => {
+    if (!token) return;
+
+    try {
+      setLoadingNotifications(true);
+      const count = await getUnreadNotification(token);
+      const newCount = count || 0;
+
+      // Kiểm tra nếu có thông báo mới (chỉ hiển thị khi count tăng lên)
+      if (previousUnreadCount > 0 && newCount > previousUnreadCount) {
+        setShowNewNotificationAlert(true);
+
+        // Tự động ẩn thông báo sau 5 giây
+        if (alertTimeout) {
+          clearTimeout(alertTimeout);
+        }
+        const timeout = setTimeout(() => {
+          setShowNewNotificationAlert(false);
+        }, 5000);
+        setAlertTimeout(timeout);
+      }
+
+      setPreviousUnreadCount(unreadNotifications);
+      setUnreadNotifications(newCount);
+    } catch (error) {
+      console.error('Error fetching unread notifications:', error);
+      setUnreadNotifications(0);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  // Handle notification click
+  const handleNotificationClick = () => {
+    navigate('/admin/notifications');
+    setShowNewNotificationAlert(false); // Ẩn alert khi click vào notifications
+  };
+
+  // Handle dismiss alert
+  const handleDismissAlert = () => {
+    setShowNewNotificationAlert(false);
+    if (alertTimeout) {
+      clearTimeout(alertTimeout);
+    }
+  };
+
+  // Fetch unread notifications khi component mount
+  useEffect(() => {
+    fetchUnreadNotifications();
+  }, [token]);
+
+  // Auto-refresh unread notifications mỗi 30 giây
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchUnreadNotifications();
+    }, 30000); // 30 giây
+
+    return () => clearInterval(interval);
+  }, [token]);
+
+  // Cleanup timeout khi component unmount
+  useEffect(() => {
+    return () => {
+      if (alertTimeout) {
+        clearTimeout(alertTimeout);
+      }
+    };
+  }, [alertTimeout]);
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-gray-100">
@@ -217,12 +295,28 @@ const AdminLayout = () => {
             </div>
 
             {/* Notifications */}
-            <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-              <FaBell className="text-gray-600 text-lg" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs
-                             rounded-full flex items-center justify-center animate-pulse">
-                3
-              </span>
+            <button
+              onClick={handleNotificationClick}
+              className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors group"
+              title="Thông báo"
+            >
+              <FaBell className={`text-lg transition-colors ${
+                loadingNotifications ? 'text-blue-500 animate-pulse' : 'text-gray-600 group-hover:text-blue-600'
+              }`} />
+
+              {/* Badge hiển thị số thông báo chưa đọc */}
+              {unreadNotifications > 0 && !loadingNotifications && (
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs
+                               rounded-full flex items-center justify-center animate-pulse font-medium
+                               shadow-lg border-2 border-white">
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </span>
+              )}
+
+              {/* Loading indicator */}
+              {loadingNotifications && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
+              )}
             </button>
 
             {/* Profile Dropdown */}
@@ -246,6 +340,29 @@ const AdminLayout = () => {
             <Outlet />
           </div>
         </div>
+
+        {/* New notification alert (bottom right corner) */}
+        {showNewNotificationAlert && (
+          <div className="fixed bottom-4 right-4 z-50">
+            <div className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-md border border-gray-200">
+              <div className="flex-shrink-0">
+                <FaInfoCircle className="text-blue-500 text-2xl" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-700">
+                  Bạn có {unreadNotifications - previousUnreadCount} thông báo mới.
+                </p>
+              </div>
+              <button
+                onClick={handleDismissAlert}
+                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                title="Đóng thông báo"
+              >
+                <FaTimes className="text-gray-600" />
+              </button>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

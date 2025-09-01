@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,23 +18,37 @@ import {
   FaArrowLeft,
   FaGraduationCap
 } from 'react-icons/fa';
-import useCourseService from '@/services/hooks/useCourseService';
-import { useToast } from '@/components/ui/toast/Toast';
+import useCourseService from '@/services/hooks/useCourseService.js';
+import { useToast } from '@/components/ui/toast/Toast.jsx';
+import { getAllTeacher } from '@/services/hooks/teacherService.js';
+import ScheduleSelector from '@/components/ui/schedule/ScheduleSelector';
 
-const teacherId = Number(localStorage.getItem('teacherId'));
 const courseSchema = z.object({
   title: z.string().min(3, 'Tên khóa học phải có ít nhất 3 ký tự'),
   description: z.string().min(10, 'Mô tả phải có ít nhất 10 ký tự'),
   online: z.boolean(),
   startDate: z.string().min(1, 'Vui lòng chọn ngày bắt đầu'),
   endDate: z.string().min(1, 'Vui lòng chọn ngày kết thúc'),
-  teacherId: z.number().min(1, 'Vui lòng nhập ID giảng viên')
+  teacherId: z.number().min(1, 'Vui lòng chọn giảng viên'),
+  schedules: z
+    .array(
+      z.object({
+        dayOfWeek: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']),
+        timeSlot: z.enum(['SLOT_1', 'SLOT_2', 'SLOT_3', 'SLOT_4', 'SLOT_5', 'SLOT_6'])
+      })
+    )
+    .min(1, 'Vui lòng chọn ít nhất 1 lịch học')
+    .max(3, 'Chỉ được chọn tối đa 3 lịch học')
 });
 
-const CourseCreate = () => {
+const AdminCourseCreate = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const isEditing = Boolean(courseId);
+
+  const [teachers, setTeachers] = useState([]);
+  const [loadingTeachers, setLoadingTeachers] = useState(true);
+  const [schedules, setSchedules] = useState([]);
 
   const defaultValues = {
     title: '',
@@ -42,33 +56,60 @@ const CourseCreate = () => {
     online: true,
     startDate: '',
     endDate: '',
-    teacherId: teacherId
+    teacherId: '',
+    schedules: []
   };
 
   const form = useForm({
     resolver: zodResolver(courseSchema),
-    defaultValues
+    defaultValues: {
+      ...defaultValues,
+      teacherId: Number(defaultValues.teacherId) // Đảm bảo teacherId luôn là kiểu number
+    }
   });
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, watch } = form;
+  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = form;
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      setLoadingTeachers(true);
+      const allTeachers = await getAllTeacher();
+      setTeachers(allTeachers);
+      setLoadingTeachers(false);
+    };
+
+    fetchTeachers();
+  }, []);
+
+  useEffect(() => {
+    setValue('schedules', schedules);
+  }, [schedules, setValue]);
 
   const { createCourse } = useCourseService();
   const { addToast } = useToast();
 
   const { mutate: createCourseMutate, isLoading, isError, error } = createCourse;
 
-  const onSubmit = (formData) => {
+  const onSubmit = async (data) => {
     const payload = {
-      ...formData,
-      teacherId: Number(formData.teacherId),
-      online: Boolean(formData.online),
+      ...data,
+      teacherId: Number(data.teacherId),
+      schedules: data.schedules.map(schedule => ({
+        dayOfWeek: schedule.dayOfWeek,
+        timeSlot: schedule.timeSlot
+      }))
     };
     createCourseMutate(payload, {
       onSuccess: () => {
         addToast('Tạo khóa học thành công!', 'success');
-        navigate('/teacher/courses');
+        navigate('/admin/courses');
       }
     });
+  };
+
+  const handleTeacherChange = (event) => {
+    const selectedTeacherId = Number(event.target.value); // Chuyển đổi giá trị thành số
+    setValue('teacherId', selectedTeacherId);
   };
 
   return (
@@ -80,7 +121,7 @@ const CourseCreate = () => {
           {/* Back button and breadcrumb */}
           <div className="flex items-center gap-4 mb-6">
             <button
-              onClick={() => navigate('/teacher/courses')}
+              onClick={() => navigate('/admin/courses')}
               className="flex items-center gap-2 text-white hover:text-blue-100 transition-colors duration-200"
             >
               <FaArrowLeft className="w-4 h-4" />
@@ -268,24 +309,50 @@ const CourseCreate = () => {
                 <h3 className="text-lg font-semibold text-gray-800">Thông tin giảng viên</h3>
               </div>
 
-              <div>
+              {/* Dropdown to select teacher */}
+              <div className="mt-4">
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
                   <FaUser className="w-4 h-4 text-purple-500" />
-                  ID Giảng viên
+                  Chọn giảng viên
                   <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  {...register('teacherId')}
-                  disabled
-                  value={teacherId}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed shadow-sm"
-                />
-                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                  <FaExclamationCircle className="w-3 h-3" />
-                  ID giảng viên được gán tự động từ tài khoản hiện tại
-                </p>
+                {loadingTeachers ? (
+                  <p className="text-sm text-gray-500">Đang tải danh sách giảng viên...</p>
+                ) : (
+                  <select
+                    id="teacherId"
+                    value={watch('teacherId')} // Đồng bộ giá trị với form
+                    onChange={handleTeacherChange} // Xử lý sự kiện thay đổi
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  >
+                    <option value="">-- Chọn giảng viên --</option>
+                    {teachers.map(teacher => (
+                      <option key={teacher.teacherId} value={teacher.teacherId}>
+                        {teacher.fullName}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {errors.teacherId && (
+                  <p className="mt-2 text-sm text-red-600">{errors.teacherId.message}</p>
+                )}
               </div>
+            </div>
+
+            {/* Schedule Selector Section */}
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center">
+                  <FaCalendarAlt className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800">Chọn lịch học</h3>
+              </div>
+
+              <ScheduleSelector
+                schedules={schedules}
+                setSchedules={setSchedules}
+                errors={errors}
+              />
             </div>
 
             {/* Error Display */}
@@ -305,7 +372,7 @@ const CourseCreate = () => {
             <div className="flex gap-4 justify-end pt-6 border-t border-gray-100">
               <button
                 type="button"
-                onClick={() => navigate('/teacher/courses')}
+                onClick={() => navigate('/admin/courses')}
                 disabled={isLoading || isSubmitting}
                 className="flex items-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -337,4 +404,4 @@ const CourseCreate = () => {
   );
 };
 
-export default CourseCreate;
+export default AdminCourseCreate;

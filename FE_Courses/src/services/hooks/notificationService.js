@@ -48,3 +48,4 @@ export const markReadAll = async (token) => {
         return {};
     }
 };
+

@@ -20,6 +20,7 @@ import useTeacherService from '@/services/hooks/useTeacherService.js';
 
 const ROUTE_NAMES = {
   '/teacher/dashboard': 'Dashboard',
+  '/teacher/notifications': 'Thông báo',
   '/teacher/courses': 'Khóa học',
   '/teacher/assignments': 'Bài tập',
   '/teacher/students': 'Học viên',
@@ -128,6 +129,7 @@ const MainLayout = () => {
 
   const mobileNavItems = [
     { path: '/teacher/dashboard', icon: FaHome, label: 'Dashboard' },
+    { path: 'teacher/notifications', icon: FaBell, label: 'Thông báo' },
     { path: '/teacher/courses', icon: FaBook, label: 'Khóa học' },
     { path: '/teacher/assignments', icon: FaClipboardList, label: 'Bài tập' },
     { path: '/teacher/settings', icon: FaCog, label: 'Cài đặt' },
@@ -234,30 +236,6 @@ const MainLayout = () => {
 
               {/* Quick Actions */}
               <div className="hidden sm:flex items-center">
-                <button
-                  onClick={() => navigate('/teacher/courses/new')}
-                  className={cn(
-                    "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl",
-                    "bg-gradient-to-r from-blue-500 to-purple-600 text-white",
-                    "hover:from-blue-600 hover:to-purple-700",
-                    "transform hover:scale-105 transition-all duration-200",
-                    "shadow-lg hover:shadow-xl",
-                    "text-sm font-medium"
-                  )}
-                >
-                  <FaPlus className="w-4 h-4" />
-                  <span>Tạo khóa học</span>
-                </button>
-              </div>
-
-              {/* Notifications */}
-              <div className="relative">
-                <button className="relative p-3 rounded-xl hover:bg-gray-100 transition-all duration-200 group">
-                  <FaBell className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
-                    3
-                  </span>
-                </button>
               </div>
 
               {/* Profile Dropdown */}

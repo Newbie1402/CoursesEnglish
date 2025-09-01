@@ -2,12 +2,12 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  FaCog,
-  FaChartBar,
-  FaHome,
-  FaTasks,
-  FaUsers,
-  FaBook
+    FaCog,
+    FaChartBar,
+    FaHome,
+    FaTasks,
+    FaUsers,
+    FaBook, FaBell
 } from 'react-icons/fa';
 
 const navigationGroups = [
@@ -23,7 +23,17 @@ const navigationGroups = [
         hoverColor: 'hover:bg-blue-100',
         activeGradient: 'from-blue-500 to-blue-600',
         description: 'Trang chủ và thống kê'
-      }
+      },
+        {
+            label: 'Thông báo',
+            icon: FaBell,
+            path: '/teacher/notifications',
+            color: 'text-yellow-500',
+            bgColor: 'bg-yellow-50',
+            hoverColor: 'hover:bg-yellow-100',
+            activeGradient: 'from-yellow-500 to-yellow-600',
+            description: 'Quản lý thông báo',
+        }
     ]
   },
   {

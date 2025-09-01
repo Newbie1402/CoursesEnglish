@@ -235,15 +235,6 @@ const CourseList = () => {
                 Quản lý và theo dõi tất cả khóa học bạn đang giảng dạy
               </p>
             </div>
-
-            {/* Create Button */}
-            <button
-              onClick={() => navigate('/teacher/courses/new')}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
-            >
-              <FaPlus className="w-4 h-4" />
-              <span>Tạo khóa học mới</span>
-            </button>
           </div>
         </div>
 

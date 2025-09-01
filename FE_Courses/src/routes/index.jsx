@@ -4,7 +4,8 @@ import MainLayout from '@/layouts/MainLayout';
 import TeacherDashboard from '@/pages/teacher/TeacherDashboard';
 import CourseList from '@/pages/teacher/course/CourseList.jsx';
 import CourseDetail from '@/pages/teacher/course/CourseDetail.jsx';
-import CourseCreate from '@/pages/teacher/course/CourseCreate.jsx';
+import TeacherNotifications from '@/pages/teacher/TeacherNotifications';
+import AdminCourseCreate from '@/pages/admin/course/AdminCourseCreate.jsx';
 import Login from '@/pages/login/Login.jsx';
 import LoginCallback from '@/pages/login/LoginCallback.jsx';
 import AssignmentCreate from '@/pages/teacher/assignments/AssignmentCreate.jsx';
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
         element: <TeacherDashboard />
       },
       {
+        path: 'notifications',
+        element: <TeacherNotifications />
+      },
+      {
         path: 'courses',
         children: [
           {
@@ -75,16 +80,8 @@ const router = createBrowserRouter([
             element: <CourseList />
           },
           {
-            path: 'new',
-            element: <CourseCreate />
-          },
-          {
             path: ':courseId',
             element: <CourseDetail />
-          },
-          {
-            path: ':courseId/edit',
-            element: <CourseCreate />
           }
         ]
       },
@@ -171,6 +168,7 @@ const router = createBrowserRouter([
       { path: 'users/:userId', element: <AdminUserDetail /> },
       { path: 'courses', element: <AdminCourseList /> },
       { path: 'courses/:courseId', element: <AdminCourseDetail /> },
+      { path: 'courses/new', element: <AdminCourseCreate /> },
       { path: 'exams', element: <AdminExamList /> },
       { path: 'exams/:examId', element: <AdminExamDetail /> },
       { path: 'notifications', element: <AdminNotificationList /> },

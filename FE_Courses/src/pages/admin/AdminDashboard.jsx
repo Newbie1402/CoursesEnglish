@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   FaUsers,
   FaGraduationCap,
@@ -16,11 +16,134 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaClock,
-  FaDownload
+  FaDownload,
+  FaEdit,
+  FaTrash,
+  FaUserLock,
+  FaUserCheck
 } from 'react-icons/fa';
+import { getNotificationUser } from '@/services/hooks/notificationService';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminDashboard = () => {
+  const { token } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
+
+  // Mapping notification types to icons and colors
+  const notificationTypeConfig = {
+    ADMIN_NEW_ACCOUNT: {
+      icon: FaUserCheck,
+      color: 'text-green-500',
+      bgColor: 'bg-green-50'
+    },
+    ADMIN_ACCOUNT_LOCKED: {
+      icon: FaUserLock,
+      color: 'text-red-500',
+      bgColor: 'bg-red-50'
+    },
+    ADMIN_ACCOUNT_UNLOCKED: {
+      icon: FaUserCheck,
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50'
+    },
+    ADMIN_COURSE_CREATED: {
+      icon: FaPlus,
+      color: 'text-green-500',
+      bgColor: 'bg-green-50'
+    },
+    ADMIN_COURSE_UPDATED: {
+      icon: FaEdit,
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50'
+    },
+    ADMIN_COURSE_DELETED: {
+      icon: FaTrash,
+      color: 'text-red-500',
+      bgColor: 'bg-red-50'
+    },
+    ADMIN_EXAM_CREATED: {
+      icon: FaClipboardList,
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50'
+    },
+    ADMIN_EXAM_UPDATED: {
+      icon: FaEdit,
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50'
+    },
+    ADMIN_EXAM_DELETED: {
+      icon: FaTrash,
+      color: 'text-red-500',
+      bgColor: 'bg-red-50'
+    },
+    DEFAULT: {
+      icon: FaBell,
+      color: 'text-gray-500',
+      bgColor: 'bg-gray-50'
+    }
+  };
+
+  // Format time function
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) {
+      return 'Vừa xong';
+    } else if (diffInHours < 24) {
+      return `${diffInHours} giờ trước`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      if (diffInDays < 7) {
+        return `${diffInDays} ngày trước`;
+      } else {
+        return date.toLocaleDateString('vi-VN');
+      }
+    }
+  };
+
+  // Fetch recent activities from notifications
+  const fetchRecentActivities = async () => {
+    if (!token) return;
+
+    try {
+      setLoadingActivities(true);
+      const response = await getNotificationUser(token);
+
+      if (response?.data?.content) {
+        // Sort by createdAt (newest first) and take first 5
+        const sortedNotifications = response.data.content
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 5);
+
+        // Map notifications to activity format
+        const activities = sortedNotifications.map(notification => {
+          const config = notificationTypeConfig[notification.type] || notificationTypeConfig.DEFAULT;
+
+          return {
+            id: notification.id,
+            type: notification.type,
+            message: notification.message,
+            time: formatTime(notification.createdAt),
+            icon: config.icon,
+            color: config.color,
+            bgColor: config.bgColor,
+            isRead: notification.read
+          };
+        });
+
+        setRecentActivities(activities);
+      }
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+      setRecentActivities([]);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -28,6 +151,10 @@ const AdminDashboard = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    fetchRecentActivities();
+  }, [token]);
 
   // Mock data - sẽ được thay thế bằng API calls
   const stats = [
@@ -90,96 +217,6 @@ const AdminDashboard = () => {
       color: 'from-teal-500 to-teal-600',
       bgColor: 'bg-teal-50',
       textColor: 'text-teal-600'
-    }
-  ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'user',
-      message: 'Học viên mới đăng ký: Nguyễn Văn A',
-      time: '5 phút trước',
-      icon: FaUsers,
-      color: 'text-blue-500'
-    },
-    {
-      id: 2,
-      type: 'course',
-      message: 'Khóa học mới được tạo: React Advanced',
-      time: '15 phút trước',
-      icon: FaGraduationCap,
-      color: 'text-green-500'
-    },
-    {
-      id: 3,
-      type: 'exam',
-      message: 'Bài kiểm tra được hoàn thành: 25 học viên',
-      time: '1 giờ trước',
-      icon: FaClipboardList,
-      color: 'text-purple-500'
-    },
-    {
-      id: 4,
-      type: 'system',
-      message: 'Cập nhật hệ thống thành công',
-      time: '2 giờ trước',
-      icon: FaCog,
-      color: 'text-gray-500'
-    }
-  ];
-
-  const quickActions = [
-    {
-      title: 'Thêm người dùng',
-      description: 'Tạo tài khoản mới',
-      icon: FaPlus,
-      color: 'bg-blue-500 hover:bg-blue-600',
-      action: () => console.log('Add user')
-    },
-    {
-      title: 'Xem báo cáo',
-      description: 'Thống kê chi tiết',
-      icon: FaChartLine,
-      color: 'bg-green-500 hover:bg-green-600',
-      action: () => console.log('View reports')
-    },
-    {
-      title: 'Quản lý khóa học',
-      description: 'Danh sách khóa học',
-      icon: FaGraduationCap,
-      color: 'bg-purple-500 hover:bg-purple-600',
-      action: () => console.log('Manage courses')
-    },
-    {
-      title: 'Cài đặt hệ thống',
-      description: 'Cấu hình admin',
-      icon: FaCog,
-      color: 'bg-orange-500 hover:bg-orange-600',
-      action: () => console.log('Settings')
-    }
-  ];
-
-  const systemStatus = [
-    {
-      name: 'Server Status',
-      status: 'online',
-      uptime: '99.9%',
-      icon: FaCheckCircle,
-      color: 'text-green-500'
-    },
-    {
-      name: 'Database',
-      status: 'online',
-      uptime: '99.8%',
-      icon: FaCheckCircle,
-      color: 'text-green-500'
-    },
-    {
-      name: 'API Response',
-      status: 'warning',
-      uptime: '98.5%',
-      icon: FaExclamationTriangle,
-      color: 'text-yellow-500'
     }
   ];
 
@@ -253,160 +290,90 @@ const AdminDashboard = () => {
             <h3 className="text-lg font-semibold text-gray-900">
               Hoạt động gần đây
             </h3>
-            <button className="text-blue-500 hover:text-blue-600 text-sm font-medium flex items-center space-x-1">
+            <button
+              onClick={fetchRecentActivities}
+              className="text-blue-500 hover:text-blue-600 text-sm font-medium flex items-center space-x-1"
+            >
               <FaEye />
-              <span>Xem tất cả</span>
+              <span>Làm mới</span>
             </button>
           </div>
+
           <div className="space-y-4">
-            {recentActivities.map((activity) => {
-              const Icon = activity.icon;
-              return (
-                <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className={`p-2 rounded-lg bg-gray-100`}>
-                    <Icon className={`${activity.color} text-lg`} />
+            {loadingActivities ? (
+              // Loading skeleton
+              <div className="space-y-4">
+                {[...Array(3)].map((_, index) => (
+                  <div key={index} className="flex items-center space-x-4 p-3 rounded-lg">
+                    <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">{activity.message}</p>
-                    <p className="text-xs text-gray-500">{activity.time}</p>
-                  </div>
+                ))}
+              </div>
+            ) : recentActivities.length === 0 ? (
+              // Empty state
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaBell className="w-8 h-8 text-gray-400" />
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Quick Actions & System Status */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Thao tác nhanh
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {quickActions.map((action, index) => {
-                const Icon = action.icon;
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Chưa có hoạt động nào</h4>
+                <p className="text-gray-500 text-sm">Các hoạt động gần đây sẽ hiển thị ở đây</p>
+              </div>
+            ) : (
+              // Activities list
+              recentActivities.map((activity) => {
+                const Icon = activity.icon;
                 return (
-                  <button
-                    key={index}
-                    onClick={action.action}
-                    className={`${action.color} text-white p-4 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg group`}
+                  <div
+                    key={activity.id}
+                    className={`flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors ${
+                      !activity.isRead ? 'bg-blue-50/50 border-l-4 border-blue-500' : ''
+                    }`}
                   >
-                    <Icon className="text-xl mb-2 group-hover:scale-110 transition-transform" />
-                    <p className="text-xs font-medium">{action.title}</p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* System Status */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Trạng thái hệ thống
-            </h3>
-            <div className="space-y-3">
-              {systemStatus.map((system, index) => {
-                const Icon = system.icon;
-                return (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
-                    <div className="flex items-center space-x-3">
-                      <Icon className={`${system.color} text-lg`} />
-                      <span className="text-sm font-medium text-gray-900">
-                        {system.name}
-                      </span>
+                    <div className={`p-2 rounded-lg ${activity.bgColor || 'bg-gray-100'}`}>
+                      <Icon className={`${activity.color} text-lg`} />
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500">Uptime</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {system.uptime}
+                    <div className="flex-1">
+                      <p className={`text-sm ${!activity.isRead ? 'font-medium text-gray-900' : 'text-gray-700'}`}>
+                        {activity.message}
                       </p>
+                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                     </div>
+                    {!activity.isRead && (
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    )}
                   </div>
                 );
-              })}
-            </div>
+              })
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Performance Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* User Growth Chart */}
+        {/* Quick Actions */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Tăng trưởng người dùng
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            Thao tác nhanh
           </h3>
-          <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
-            <div className="text-center text-gray-500">
-              <FaChartLine className="text-4xl mx-auto mb-2" />
-              <p>Biểu đồ sẽ được tích hợp tại đây</p>
-              <p className="text-sm">Chart.js hoặc Recharts</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Course Completion Chart */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Tỷ lệ hoàn thành khóa học
-          </h3>
-          <div className="h-64 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
-            <div className="text-center text-gray-500">
-              <FaCheckCircle className="text-4xl mx-auto mb-2" />
-              <p>Biểu đồ tròn tỷ lệ hoàn thành</p>
-              <p className="text-sm">Progress rings và percentages</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Calendar & Notifications */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Calendar */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Lịch hoạt động
-            </h3>
-            <FaCalendarAlt className="text-gray-400" />
-          </div>
-          <div className="h-48 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
-            <div className="text-center text-gray-500">
-              <FaCalendarAlt className="text-4xl mx-auto mb-2" />
-              <p>Mini calendar component</p>
-              <p className="text-sm">Hiển thị sự kiện quan trọng</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Notifications */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Thông báo hệ thống
-            </h3>
-            <FaBell className="text-gray-400" />
-          </div>
-          <div className="space-y-3">
-            <div className="p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
-              <p className="text-sm font-medium text-blue-900">
-                Cập nhật hệ thống thành công
-              </p>
-              <p className="text-xs text-blue-700">Phiên bản 2.1.0 đã được triển khai</p>
-            </div>
-            <div className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
-              <p className="text-sm font-medium text-yellow-900">
-                Bảo trì định kỳ
-              </p>
-              <p className="text-xs text-yellow-700">Dự kiến vào 2:00 AM ngày mai</p>
-            </div>
-            <div className="p-3 bg-green-50 border-l-4 border-green-500 rounded">
-              <p className="text-sm font-medium text-green-900">
-                Backup hoàn tất
-              </p>
-              <p className="text-xs text-green-700">Dữ liệu đã được sao lưu thành công</p>
-            </div>
+          <div className="space-y-4">
+            <button className="w-full bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
+              <FaPlus className="text-lg" />
+              <span>Thêm người dùng mới</span>
+            </button>
+            <button className="w-full bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
+              <FaGraduationCap className="text-lg" />
+              <span>Tạo khóa học mới</span>
+            </button>
+            <button className="w-full bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
+              <FaChartLine className="text-lg" />
+              <span>Xem báo cáo chi tiết</span>
+            </button>
+            <button className="w-full bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
+              <FaCog className="text-lg" />
+              <span>Cài đặt hệ thống</span>
+            </button>
           </div>
         </div>
       </div>
