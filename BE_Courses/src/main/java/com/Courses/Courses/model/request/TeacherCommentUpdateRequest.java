@@ -18,16 +18,15 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TeacherCommentUpdateRequest {
-    @NotNull(message = "ID bình luận không được để trống")
     private Long id;
 
-    @NotNull(message = "ID giáo viên không được để trống")
     private Long teacherId;
 
-    @NotNull(message = "ID học viên không được để trống")
     private Long studentId;
 
     private Long examId;
+
+    private Long questionId;
 
     @NotBlank(message = "Nội dung bình luận không được để trống")
     private String content;

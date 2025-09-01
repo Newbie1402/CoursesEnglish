@@ -27,6 +27,10 @@ public class TeacherComment {
     @ManyToOne
     private Exam exam;
 
+    @ManyToOne
+    private Question question;
+
     private String content;
     private LocalDateTime commentedAt;
+    private boolean active = true;
 }

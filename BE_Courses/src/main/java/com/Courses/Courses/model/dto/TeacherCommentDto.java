@@ -15,6 +15,7 @@ public class TeacherCommentDto {
     private Long teacherId;
     private Long studentId;
     private Long examId;
+    private Long questionId;
     private String content;
     private LocalDateTime commentedAt;
 }

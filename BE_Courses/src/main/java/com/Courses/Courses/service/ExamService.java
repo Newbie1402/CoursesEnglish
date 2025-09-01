@@ -172,10 +172,26 @@ public class ExamService {
     /**
      * Lấy chi tiết 1 bài kiểm tra
      */
-    public ExamDto getExamById(Long id) {
-        Exam exam = examRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài kiểm tra với id: " + id));
-        return convertToDto(exam);
+    public ResponseEntity<ResponseData<ExamDto>> getExamById(Long id) {
+        try {
+            Exam exam = examRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bài kiểm tra với id: " + id));
+            ExamDto examDto = convertToDto(exam);
+            return ResponseEntity.ok(
+                new ResponseData<>(
+                    StatusApplication.SUCCESS.getCode(),
+                    StatusApplication.SUCCESS.getMessage(),
+                    examDto
+                )
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ResponseData<>(
+                    StatusApplication.NOT_FOUND.getCode(),
+                    "Không tìm thấy bài kiểm tra với id: " + id,
+                    null
+                ));
+        }
     }
 
     /**

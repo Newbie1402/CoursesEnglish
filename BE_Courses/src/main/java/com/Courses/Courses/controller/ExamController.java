@@ -89,10 +89,7 @@ public class ExamController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<ResponseData<ExamDto>> getExamById(@PathVariable Long id) {
-        ExamDto exam = examService.getExamById(id);
-        return ResponseEntity.ok(
-                new ResponseData<>(StatusApplication.SUCCESS.getCode(), StatusApplication.SUCCESS.getMessage(), exam)
-        );
+        return examService.getExamById(id);
     }
 
     /**

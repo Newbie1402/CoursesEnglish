@@ -26,6 +26,8 @@ public class TeacherCommentCreateRequest {
 
     private Long examId;
 
+    private Long questionId;
+
     @NotBlank(message = "Nội dung bình luận không được để trống")
     private String content;
 
