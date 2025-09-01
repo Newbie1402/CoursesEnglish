@@ -149,8 +149,8 @@ public class AdminNotificationService {
      */
     @Transactional
     public void notifyCourseDeleted(String courseName, String deletedByName, String reason) {
-        String title = "Khóa học bị xóa";
-        String message = "Khóa học \"" + courseName + "\" đã bị xóa bởi " + deletedByName + ".";
+        String title = "Trạng thái khóa học thay đổi";
+        String message = "Khóa học \"" + courseName + "\" đã được " + deletedByName + " cập nhật trạng thái.";
         if (reason != null && !reason.isEmpty()) {
             message += "\nLý do: " + reason;
         }

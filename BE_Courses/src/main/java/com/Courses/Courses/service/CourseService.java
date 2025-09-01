@@ -135,6 +135,12 @@ public class CourseService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy khoá học với id: " + id));
         course.setActive(active);
         courseRepository.save(course);
+
+        adminNotificationService.notifyCourseDeleted(
+                course.getTitle(),
+                course.getTeacher().getUser().getFullName(),
+                active ? "Khôi phục khoá học" : "Khoá học bị vô hiệu hoá"
+        );
     }
 
 
