@@ -2,11 +2,7 @@ package com.Courses.Courses.service;
 
 import com.Courses.Courses.enums.StatusApplication;
 import com.Courses.Courses.model.dto.SubmissionDto;
-import com.Courses.Courses.model.entity.Exam;
-import com.Courses.Courses.model.entity.Question;
-import com.Courses.Courses.model.entity.Student;
-import com.Courses.Courses.model.entity.Submission;
-import com.Courses.Courses.model.entity.SubmissionAnswer;
+import com.Courses.Courses.model.entity.*;
 import com.Courses.Courses.model.request.SubmissionAnswerRequest;
 import com.Courses.Courses.model.request.SubmissionCreateRequest;
 import com.Courses.Courses.model.request.SubmissionUpdateRequest;
@@ -15,6 +11,9 @@ import com.Courses.Courses.repository.ExamRepository;
 import com.Courses.Courses.repository.QuestionRepository;
 import com.Courses.Courses.repository.StudentRepository;
 import com.Courses.Courses.repository.SubmissionRepository;
+import com.Courses.Courses.repository.TeacherCommentReposiory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,14 +33,24 @@ import java.util.stream.Collectors;
 public class SubmissionService {
     private static final Logger logger = LoggerFactory.getLogger(SubmissionService.class);
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Autowired
     private SubmissionRepository submissionRepository;
+
     @Autowired
     private StudentRepository studentRepository;
+
     @Autowired
     private ExamRepository examRepository;
+
     @Autowired
     private QuestionRepository questionRepository;
+
+    @Autowired
+    private TeacherCommentReposiory teacherCommentReposiory;
+
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -371,7 +380,9 @@ public class SubmissionService {
             if (submission.getScore() == null && submission.getSubmittedAt() != null) {
                 calculateSubmissionScore(submission);
             }
+            loadTeacherFeedbackFromComments(submission);
         }
+        submissionRepository.saveAll(submissions);
 
         List<SubmissionDto> dtos = submissions.stream()
                 .map(this::convertToDto)
@@ -384,6 +395,29 @@ public class SubmissionService {
         );
     }
 
+    /**
+     * Tải feedback của giáo viên từ các nhận xét (comments) liên quan đến bài nộp
+     */
+    private void loadTeacherFeedbackFromComments(Submission submission) {
+        try {
+            Optional<TeacherComment> latestComment = teacherCommentReposiory
+                    .findLatestActiveCommentByExamAndStudent(
+                            submission.getExam().getId(),
+                            submission.getStudent().getId()
+                    );
+            if (latestComment.isPresent()) {
+                String newFeedback = latestComment.get().getContent();
+                if (submission.getTeacherFeedback() == null ||
+                        !submission.getTeacherFeedback().equals(newFeedback)) {
+                    logger.info("Cập nhật feedback mới cho bài nộp ID={}: {}", submission.getId(), newFeedback);
+                    submission.setTeacherFeedback(newFeedback);
+                    submissionRepository.updateTeacherFeedback(submission.getId(), newFeedback);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Lỗi khi tải feedback cho bài nộp ID = " + submission.getId(), e);
+        }
+    }
 
     private SubmissionDto convertToDto(Submission submission) {
         return SubmissionDto.builder()

@@ -5,6 +5,7 @@ import com.Courses.Courses.model.entity.SubmissionAnswer;
 import com.Courses.Courses.model.entity.Exam;
 import com.Courses.Courses.model.entity.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -24,4 +25,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
 
     @Query("SELECT a FROM SubmissionAnswer a WHERE a.id = :answerId")
     Optional<SubmissionAnswer> findAnswerById(@Param("answerId") Long answerId);
+
+    @Modifying
+    @Query("UPDATE Submission s SET s.teacherFeedback = :feedback WHERE s.id = :submissionId")
+    void updateTeacherFeedback(@Param("submissionId") Long submissionId, @Param("feedback") String feedback);
 }
