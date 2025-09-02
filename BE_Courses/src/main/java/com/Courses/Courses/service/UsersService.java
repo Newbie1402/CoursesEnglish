@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UsersService {
@@ -146,6 +148,23 @@ public class UsersService {
                 StatusApplication.SUCCESS.getCode(),
                 "Kích hoạt tài khoản người dùng thành công",
                 "Tài khoản của " + user.getFullName() + " đã được kích hoạt"
+        ));
+    }
+
+    /**
+     * Lấy danh sách tất cả người dùng (bao gồm cả người bị vô hiệu hóa và không bị vô hiệu hóa)
+     * @return Danh sách tất cả người dùng
+     */
+    public ResponseEntity<ResponseData<List<UsersDto>>> getAllUsers() {
+        List<Users> users = usersRepository.findAll();
+        List<UsersDto> userDtos = users.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ResponseData<>(
+                StatusApplication.SUCCESS.getCode(),
+                "Lấy danh sách người dùng thành công",
+                userDtos
         ));
     }
 

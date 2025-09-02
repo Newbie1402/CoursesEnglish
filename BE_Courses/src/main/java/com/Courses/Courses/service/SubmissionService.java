@@ -329,6 +329,61 @@ public class SubmissionService {
         );
     }
 
+    /**
+     * Tính tổng điểm cho bài nộp
+     */
+    private void calculateSubmissionScore(Submission submission) {
+        if (submission.getSubmittedAt() == null) {
+            return;
+        }
+
+        double totalScore = 0;
+        double maxScore = 0;
+
+        for (SubmissionAnswer answer : submission.getAnswers()) {
+            Question question = answer.getQuestion();
+            maxScore += question.getMaxScore();
+            if (answer.getScore() != null) {
+                totalScore += answer.getScore();
+            }
+        }
+
+        submission.setScore(totalScore);
+        submission.setMaxScore(maxScore);
+        submissionRepository.save(submission);
+    }
+
+    /**
+     * Lấy tất cả bài nộp của một bài kiểm tra (chỉ dành cho giáo viên)
+     */
+    public ResponseEntity<ResponseData<List<SubmissionDto>>> getAllByExamId(Long examId) {
+        Optional<Exam> examOpt = examRepository.findById(examId);
+        if (examOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ResponseData<>(StatusApplication.NOT_FOUND.getCode(),
+                            "Không tìm thấy bài kiểm tra với id = " + examId,
+                            null)
+            );
+        }
+
+        List<Submission> submissions = submissionRepository.findAllByExamId(examId);
+        for (Submission submission : submissions) {
+            if (submission.getScore() == null && submission.getSubmittedAt() != null) {
+                calculateSubmissionScore(submission);
+            }
+        }
+
+        List<SubmissionDto> dtos = submissions.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ResponseData<>(
+                StatusApplication.SUCCESS.getCode(),
+                "Lấy danh sách " + dtos.size() + " bài nộp của bài kiểm tra thành công",
+                dtos)
+        );
+    }
+
 
     private SubmissionDto convertToDto(Submission submission) {
         return SubmissionDto.builder()
@@ -340,6 +395,7 @@ public class SubmissionService {
                 .submittedAt(submission.getSubmittedAt())
                 .startedAt(submission.getStartedAt())
                 .deadline(submission.getDeadline())
+                .maxScore(submission.getMaxScore())
                 .build();
     }
 }

@@ -38,6 +38,15 @@ public class SubmissionController {
     }
 
     /**
+     * Lấy tất cả bài nộp của một bài kiểm tra (chỉ dành cho TEACHER và ADMIN)
+     */
+    @GetMapping("/exam/{examId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ResponseData<List<SubmissionDto>>> getAllByExam(@PathVariable Long examId) {
+        return submissionService.getAllByExamId(examId);
+    }
+
+    /**
      * Tạo bài nộp mới khi học sinh bắt đầu làm bài kiểm tra
      */
     @PostMapping("/start-exam")

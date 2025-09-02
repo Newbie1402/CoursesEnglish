@@ -9,21 +9,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     Optional<Submission> findByExamAndStudent(Exam exam, Student student);
 
-    /**
-     * Tìm Submission theo examId và studentId
-     */
     @Query("SELECT s FROM Submission s WHERE s.exam.id = :examId AND s.student.id = :studentId")
     Optional<Submission> findByExamIdAndStudentId(@Param("examId") Long examId, @Param("studentId") Long studentId);
 
-    /**
-     * Tìm SubmissionAnswer theo id
-     */
+    @Query("SELECT s FROM Submission s WHERE s.exam.id = :examId")
+    List<Submission> findAllByExamId(@Param("examId") Long examId);
+
     @Query("SELECT a FROM SubmissionAnswer a WHERE a.id = :answerId")
     Optional<SubmissionAnswer> findAnswerById(@Param("answerId") Long answerId);
 }

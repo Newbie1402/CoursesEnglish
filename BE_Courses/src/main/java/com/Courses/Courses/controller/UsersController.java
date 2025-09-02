@@ -12,12 +12,23 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Controller
 @RestController
 @RequestMapping("/api/users")
 public class UsersController {
     @Autowired
     private UsersService usersService;
+
+    /**
+     * API lấy danh sách tất cả người dùng (chỉ dành cho ADMIN)
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseData<List<UsersDto>>> getAllUsers() {
+        return usersService.getAllUsers();
+    }
 
     /**
      * API cập nhật thông tin cá nhân của người dùng
