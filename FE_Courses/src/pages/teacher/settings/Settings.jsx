@@ -36,9 +36,7 @@ const Settings = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const { addToast } = useToast();
-  const { auth } = useAuth();
-
-  const [form, setForm] = useState({
+    const [form, setForm] = useState({
     specialization: '',
     bio: '',
     experienceYears: ''
@@ -286,26 +284,6 @@ const Settings = () => {
                 <p className="text-gray-600 mt-1">
                   Quản lý thông tin cá nhân và tùy chọn hệ thống
                 </p>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="flex-1 lg:ml-auto">
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="text-center p-3 bg-blue-50 rounded-xl">
-                  <p className="text-2xl font-bold text-blue-600">
-                    {form.experienceYears || '0'}
-                  </p>
-                  <p className="text-xs text-gray-600">Năm kinh nghiệm</p>
-                </div>
-                <div className="text-center p-3 bg-green-50 rounded-xl">
-                  <p className="text-2xl font-bold text-green-600">12</p>
-                  <p className="text-xs text-gray-600">Khóa học</p>
-                </div>
-                <div className="text-center p-3 bg-purple-50 rounded-xl col-span-2 lg:col-span-1">
-                  <p className="text-2xl font-bold text-purple-600">4.8/5</p>
-                  <p className="text-xs text-gray-600">Đánh giá</p>
-                </div>
               </div>
             </div>
           </div>

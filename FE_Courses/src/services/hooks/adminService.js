@@ -22,6 +22,16 @@ export const sendMail = async (email) => {
     }
 }
 
+export const getAllUsers = async () => {
+    try{
+        const res = await axios.get(`${BASE_URL}/api/users`);
+        return res.data?.data || [];
+    } catch (err) {
+        console.error('Error fetching users:', err);
+        throw err;
+    }
+}
+
 export const getAllCourses = async () => {
     try{
         const res = await axios.get(`${BASE_URL}/api/courses/view/full`);
@@ -71,6 +81,28 @@ export const countStudentsInCourse = async (courseId) => {
         return Array.isArray(students) ? students.length : 0;
     } catch (err) {
         console.error("Error counting students in course:", err);
+        throw err;
+    }
+}
+
+// Inactive user
+export const inactiveUser = async (userId, reason, deactivatedByUsername) => {
+    try {
+        const res = await axios.put(`${BASE_URL}/api/users/${userId}/deactivate`, { reason, deactivatedByUsername});
+        return res.data || null;
+    } catch (err) {
+        console.error("Error inactivating user:", err);
+        throw err;
+    }
+}
+
+// Active user
+export const activeUser = async (userId) => {
+    try {
+        const res = await axios.put(`${BASE_URL}/api/users/${userId}/activate`, {activatedByUsername: "admin"});
+        return res.data || null;
+    } catch (err) {
+        console.error("Error activating user:", err);
         throw err;
     }
 }

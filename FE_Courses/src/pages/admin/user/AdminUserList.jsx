@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   FaUserPlus,
   FaSearch,
@@ -16,70 +16,56 @@ import {
   FaUserCheck
 } from 'react-icons/fa';
 import AddUserModal from './AddUserModal';
+import { getAllUsers, inactiveUser, activeUser } from '@/services/hooks/adminService';
+import {FaChalkboardUser} from "react-icons/fa6";
 
 const AdminUserList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
 
-  // Mock data for demonstration
-  useEffect(() => {
-    const mockUsers = [
-      {
-        id: 1,
-        fullName: 'Nguyễn Văn An',
-        email: 'nguyenvana@example.com',
-        phoneNumber: '0901234567',
-        role: 'STUDENT',
-        status: 'verified',
-        dateOfBirth: '1995-05-15',
-        address: 'Hà Nội',
-        createdAt: '2025-01-15'
-      },
-      {
-        id: 2,
-        fullName: 'Trần Thị Bình',
-        email: 'tranthib@example.com',
-        phoneNumber: '0987654321',
-        role: 'TEACHER',
-        status: 'pending',
-        dateOfBirth: '1985-08-22',
-        address: 'TP. Hồ Chí Minh',
-        createdAt: '2025-02-10'
-      },
-      {
-        id: 3,
-        fullName: 'Lê Hoàng Cường',
-        email: 'lehoangcuong@example.com',
-        phoneNumber: '0912345678',
-        role: 'STUDENT',
-        status: 'verified',
-        dateOfBirth: '1998-12-03',
-        address: 'Đà Nẵng',
-        createdAt: '2025-03-05'
-      },
-      {
-        id: 4,
-        fullName: 'Phạm Thị Dung',
-        email: 'phamthidung@example.com',
-        phoneNumber: '0976543210',
-        role: 'TEACHER',
-        status: 'rejected',
-        dateOfBirth: '1980-03-18',
-        address: 'Cần Thơ',
-        createdAt: '2025-01-28'
-      }
-    ];
+  const normalizeStatus = (status) => {
+    switch (status) {
+      case 'ACTIVE': return 'active';
+      case 'INACTIVE': return 'inactive';
+      case 'REJECTED': return 'rejected';
+      default: return 'inactive';
+    }
+  };
 
-    setTimeout(() => {
-      setUsers(mockUsers);
-      setLoading(false);
-    }, 1000);
+  const adaptUser = (u) => {
+    const primaryRole = Array.isArray(u.roles) && u.roles.length
+      ? (u.roles.find(r => r !== 'ADMIN') || u.roles[0])
+      : 'STUDENT';
+    return {
+      ...u,
+      role: primaryRole,
+      status: normalizeStatus(u.status),
+      originalStatus: u.status,
+    };
+  };
+
+  const fetchUsers = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const data = await getAllUsers();
+      const adapted = Array.isArray(data) ? data.map(adaptUser) : [];
+      setUsers(adapted);
+    } catch (e) {
+      console.error(e);
+      setError('Không tải được danh sách người dùng');
+      setUsers([]);
+    } finally { setLoading(false); }
   }, []);
+
+  useEffect(() => { fetchUsers(); }, [fetchUsers, refreshTick]);
 
   // Toast functions
   const showToast = (message, type = 'success') => {
@@ -97,20 +83,19 @@ const AdminUserList = () => {
 
   // Filter users
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (user.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = filterRole === 'all' || user.role === filterRole;
     const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  // Calculate stats
-  const stats = {
+  const stats = useMemo(() => ({
     total: users.length,
     students: users.filter(u => u.role === 'STUDENT').length,
     teachers: users.filter(u => u.role === 'TEACHER').length,
-    pending: users.filter(u => u.status === 'pending').length
-  };
+    active: users.filter(u => u.status === 'active').length,
+  }), [users]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('vi-VN');
@@ -118,25 +103,25 @@ const AdminUserList = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'verified':
+      case 'active':
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
             <FaCheckCircle className="w-3 h-3 mr-1" />
-            Đã duyệt
+            Hoạt động
           </span>
         );
-      case 'pending':
+      case 'inactive':
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
             <FaClock className="w-3 h-3 mr-1" />
-            Chờ duyệt
+            Ngừng hoạt động
           </span>
         );
       case 'rejected':
         return (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
             <FaTimesCircle className="w-3 h-3 mr-1" />
-            Từ chối
+            BAN
           </span>
         );
       default:
@@ -147,9 +132,35 @@ const AdminUserList = () => {
   const getRoleIcon = (role) => {
     return role === 'STUDENT' ? (
       <FaUserGraduate className="w-4 h-4 text-blue-600" />
-    ) : (
+    ) : role === 'TEACHER' ? (
       <FaChalkboardTeacher className="w-4 h-4 text-purple-600" />
+    ) : (
+        <FaChalkboardUser className="w-4 h-4 text-red-600" />
     );
+  };
+
+  const handleInactive = async (user) => {
+    const reason = window.prompt('Nhập lý do vô hiệu hóa tài khoản:', 'Vi phạm quy định');
+    if (reason === null) return; // cancel
+    try {
+      setActionLoadingId(user.id);
+      await inactiveUser(user.id, reason, 'admin');
+      showToast('Vô hiệu hóa thành công');
+      fetchUsers();
+    } catch (e) {
+      showToast('Lỗi vô hiệu hóa', 'error');
+    } finally { setActionLoadingId(null); }
+  };
+
+  const handleActive = async (user) => {
+    try {
+      setActionLoadingId(user.id);
+      await activeUser(user.id);
+      showToast('Kích hoạt thành công');
+      fetchUsers();
+    } catch (e) {
+      showToast('Lỗi kích hoạt', 'error');
+    } finally { setActionLoadingId(null); }
   };
 
   const UserCard = ({ user }) => (
@@ -166,7 +177,7 @@ const AdminUserList = () => {
               <div className="flex items-center space-x-2 mt-1">
                 {getRoleIcon(user.role)}
                 <span className="text-sm text-gray-600">
-                  {user.role === 'STUDENT' ? 'Học viên' : 'Giảng viên'}
+                  {user.role === 'STUDENT' ? 'Học viên' : user.role === 'TEACHER' ? 'Giảng viên' : "ADMIN"}
                 </span>
               </div>
             </div>
@@ -193,12 +204,38 @@ const AdminUserList = () => {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-          <span className="text-xs text-gray-500">ID: {user.id}</span>
-          <button className="inline-flex items-center px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
-            <FaEye className="w-3 h-3 mr-1" />
-            Xem chi tiết
-          </button>
+        <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500">ID: {user.id}</span>
+            <button className="inline-flex items-center px-3 py-1.5 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
+              <FaEye className="w-3 h-3 mr-1" />
+              Xem chi tiết
+            </button>
+          </div>
+          {(user.role === 'TEACHER' || user.role === 'STUDENT') && (
+            <div className="flex items-center gap-2">
+              {user.originalStatus === 'ACTIVE' ? (
+                <button
+                  onClick={() => handleInactive(user)}
+                  disabled={actionLoadingId === user.id}
+                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >{actionLoadingId === user.id ? 'Đang xử lý...' : 'Vô hiệu hóa'}</button>
+              ) : (
+                <button
+                  onClick={() => handleActive(user)}
+                  disabled={actionLoadingId === user.id}
+                  className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                >{actionLoadingId === user.id ? 'Đang xử lý...' : 'Kích hoạt'}</button>
+              )}
+              {/* Hiển thị cả hai nút nếu muốn song song */}
+              <button
+                onClick={() => user.originalStatus === 'ACTIVE' ? handleInactive(user) : handleActive(user)}
+                disabled={actionLoadingId === user.id}
+                className="hidden" aria-hidden>
+                Toggle
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -276,14 +313,23 @@ const AdminUserList = () => {
           <p className="text-gray-600 mt-1">
             Tổng cộng {stats.total} người dùng • {filteredUsers.length} đang hiển thị
           </p>
+          {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
         </div>
-        <button
-          onClick={() => setShowAddUserModal(true)}
-          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
-        >
-          <FaUserCheck className="w-5 h-5 mr-2" />
-          Duyệt người dùng
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setRefreshTick(t => t + 1)}
+            className="inline-flex items-center px-4 py-3 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-all shadow-sm"
+          >
+            <FaClock className="w-4 h-4 mr-2" /> Tải lại
+          </button>
+          <button
+            onClick={() => setShowAddUserModal(true)}
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg"
+          >
+            <FaUserCheck className="w-5 h-5 mr-2" />
+            Duyệt người dùng
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -323,9 +369,9 @@ const AdminUserList = () => {
             <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
               <FaClock className="w-5 h-5 text-yellow-600" />
             </div>
-            <h3 className="text-sm font-medium text-gray-500">Chờ duyệt</h3>
+            <h3 className="text-sm font-medium text-gray-500">Active</h3>
           </div>
-          <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
+          <p className="text-3xl font-bold text-yellow-600">{stats.active}</p>
         </div>
       </div>
 
@@ -366,9 +412,9 @@ const AdminUserList = () => {
                 className="border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="verified">Đã duyệt</option>
-                <option value="pending">Chờ duyệt</option>
-                <option value="rejected">Từ chối</option>
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Ngừng hoạt động</option>
+                <option value="rejected">BAN</option>
               </select>
             </div>
           </div>
@@ -402,7 +448,7 @@ const AdminUserList = () => {
             )}
             {filterStatus !== 'all' && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
-                Trạng thái: {filterStatus === 'verified' ? 'Đã duyệt' : filterStatus === 'pending' ? 'Chờ duyệt' : 'Từ chối'}
+                Trạng thái: {filterStatus === 'active' ? 'Hoạt động' : filterStatus === 'inactive' ? 'Ngừng hoạt động' : 'BAN'}
                 <button
                   onClick={() => setFilterStatus('all')}
                   className="ml-2 text-purple-600 hover:text-purple-800"
@@ -450,3 +496,4 @@ const AdminUserList = () => {
 };
 
 export default AdminUserList;
+

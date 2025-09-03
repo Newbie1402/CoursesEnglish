@@ -537,29 +537,6 @@ const TeacherDashboard = () => {
 
           {/* Sidebar */}
           <div className="space-y-8">
-            {/* Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center space-x-2">
-                <FaRocket className="text-orange-500" />
-                <span>Thao tác nhanh</span>
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {quickActions.map((action, index) => {
-                  const Icon = action.icon;
-                  return (
-                    <button
-                      key={index}
-                      onClick={action.action}
-                      className={`${action.color} text-white p-4 rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg group text-center`}
-                    >
-                      <Icon className="text-xl mb-2 mx-auto group-hover:scale-110 transition-transform" />
-                      <p className="text-xs font-medium">{action.title}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Performance Insights */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center space-x-2">

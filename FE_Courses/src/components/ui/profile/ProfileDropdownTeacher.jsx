@@ -1,15 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaCog,
-  FaSignOutAlt,
-  FaChevronDown,
-  FaUser,
-  FaChartBar,
-  FaBell,
-  FaQuestionCircle,
-  FaCrown,
-  FaGraduationCap
+    FaCog,
+    FaSignOutAlt,
+    FaChevronDown,
+    FaChartBar,
+    FaBell,
+    FaCrown,
+    FaGraduationCap, FaBook, FaHome
 } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,40 +56,49 @@ const ProfileDropdownTeacher = ({ teacher }) => {
   };
 
   const menuGroups = [
-    {
-      title: 'Tài khoản',
-      items: [
-        {
-          icon: FaUser,
-          label: 'Trang cá nhân',
-          description: 'Xem và chỉnh sửa thông tin',
-          onClick: () => navigate('/teacher/profile'),
-          color: 'text-blue-500',
-          bgColor: 'bg-blue-50',
-          hoverColor: 'hover:bg-blue-100'
-        },
-        {
-          icon: FaCog,
-          label: 'Cài đặt',
-          description: 'Tùy chỉnh tài khoản',
-          onClick: () => navigate('/teacher/settings'),
-          color: 'text-gray-500',
-          bgColor: 'bg-gray-50',
-          hoverColor: 'hover:bg-gray-100'
-        }
-      ]
-    },
+      {
+          title: 'Tổng quan',
+          items: [
+              {
+                  icon: FaHome,
+                  label: 'Dashboard',
+                  description: 'Trang chủ và thống kê',
+                  onClick: () => navigate('/teacher/dashboard'),
+                  color: 'text-blue-500',
+                  bgColor: 'bg-blue-50',
+                  hoverColor: 'hover:bg-blue-100'
+              },
+              {
+                  icon: FaBook,
+                  label: 'Khóa học',
+                  description: 'Xem và chỉnh sửa khóa học',
+                  onClick: () => navigate('/teacher/courses'),
+                  color: 'text-green-500',
+                  bgColor: 'bg-green-50',
+                  hoverColor: 'hover:bg-green-100'
+              },
+          ]
+      },
     {
       title: 'Công cụ',
       items: [
+          {
+              icon: FaCog,
+              label: 'Cài đặt',
+              description: 'Tùy chỉnh tài khoản',
+              onClick: () => navigate('/teacher/settings'),
+              color: 'text-gray-500',
+              bgColor: 'bg-gray-50',
+              hoverColor: 'hover:bg-gray-100'
+          },
         {
           icon: FaChartBar,
           label: 'Thống kê',
           description: 'Xem báo cáo chi tiết',
           onClick: () => navigate('/teacher/reports'),
-          color: 'text-green-500',
-          bgColor: 'bg-green-50',
-          hoverColor: 'hover:bg-green-100'
+          color: 'text-indigo-500',
+          bgColor: 'bg-indigo-50',
+          hoverColor: 'hover:bg-indigo-100'
         },
         {
           icon: FaBell,
@@ -103,15 +110,6 @@ const ProfileDropdownTeacher = ({ teacher }) => {
           hoverColor: 'hover:bg-yellow-100',
           badge: 3
         },
-        {
-          icon: FaQuestionCircle,
-          label: 'Trợ giúp',
-          description: 'Hướng dẫn sử dụng',
-          onClick: () => navigate('/teacher/help'),
-          color: 'text-purple-500',
-          bgColor: 'bg-purple-50',
-          hoverColor: 'hover:bg-purple-100'
-        }
       ]
     }
   ];
@@ -212,27 +210,6 @@ const ProfileDropdownTeacher = ({ teacher }) => {
                     Đang hoạt động
                   </span>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-100 bg-gray-50/50">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 sm:mb-2">
-              Thống kê nhanh
-            </h4>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
-              <div>
-                <p className="text-base sm:text-lg font-bold text-blue-600">12</p>
-                <p className="text-xs text-gray-500">Khóa học</p>
-              </div>
-              <div>
-                <p className="text-base sm:text-lg font-bold text-green-600">248</p>
-                <p className="text-xs text-gray-500">Học viên</p>
-              </div>
-              <div>
-                <p className="text-base sm:text-lg font-bold text-orange-600">4.8</p>
-                <p className="text-xs text-gray-500">Đánh giá</p>
               </div>
             </div>
           </div>

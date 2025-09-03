@@ -7,7 +7,6 @@ import {
   FaBook,
   FaClipboardList,
   FaCog,
-  FaPlus,
   FaSearch,
   FaBell,
   FaGraduationCap,
@@ -23,7 +22,6 @@ const ROUTE_NAMES = {
   '/teacher/notifications': 'Thông báo',
   '/teacher/courses': 'Khóa học',
   '/teacher/assignments': 'Bài tập',
-  '/teacher/students': 'Học viên',
   '/teacher/reports': 'Báo cáo',
   '/teacher/settings': 'Cài đặt'
 };

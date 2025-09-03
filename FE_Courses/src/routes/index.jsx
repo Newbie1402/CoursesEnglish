@@ -40,10 +40,12 @@ import AdminStudentDetail from '@/pages/admin/student/AdminStudentDetail';
 
 // Tạo lazy loading cho các routes phụ
 const AssignmentList = React.lazy(() => import('@/pages/teacher/assignments/AssignmentList'));
-const StudentList = React.lazy(() => import('@/pages/teacher/students/StudentList'));
 const Reports = React.lazy(() => import('@/pages/teacher/reports/Reports'));
 const Settings = React.lazy(() => import('@/pages/teacher/settings/Settings'));
 const AssignmentDetail = React.lazy(() => import('@/pages/teacher/assignments/AssignmentDetail'));
+const SubmissionList = React.lazy(() => import('@/pages/teacher/submissions/SubmissionList.jsx'));
+const SubmissionDetail = React.lazy(() => import('@/pages/teacher/submissions/SubmissionDetail.jsx'));
+const SubmissionAnswers = React.lazy(() => import('@/pages/teacher/submissions/SubmissionAnswers.jsx'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -110,6 +112,30 @@ const router = createBrowserRouter([
             ),
         },
         {
+            path: 'assignments/:examId/submissions',
+            element: (
+                <React.Suspense fallback={<LoadingFallback />}>
+                    <SubmissionList />
+                </React.Suspense>
+            ),
+        },
+        {
+            path: 'assignments/:examId/submissions/:submissionId',
+            element: (
+                <React.Suspense fallback={<LoadingFallback />}>
+                    <SubmissionDetail />
+                </React.Suspense>
+            ),
+        },
+        {
+            path: 'assignments/:examId/submissions/:submissionId/answers',
+            element: (
+                <React.Suspense fallback={<LoadingFallback />}>
+                    <SubmissionAnswers />
+                </React.Suspense>
+            ),
+        },
+        {
             path: 'assignments/:examId',
             element: (
                 <React.Suspense fallback={<LoadingFallback />}>
@@ -117,14 +143,6 @@ const router = createBrowserRouter([
                 </React.Suspense>
             ),
         },
-      {
-        path: 'students',
-        element: (
-          <React.Suspense fallback={<LoadingFallback />}>
-            <StudentList />
-          </React.Suspense>
-        ),
-      },
       {
         path: 'reports',
         element: (

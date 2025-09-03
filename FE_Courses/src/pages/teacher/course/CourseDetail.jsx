@@ -667,13 +667,13 @@ const CourseDetail = () => {
                                       Xem chi tiết
                                     </button>
                                     <span className="text-gray-300">•</span>
-                                    <button
-                                      onClick={() => navigate(`/teacher/assignments/${exam.examId}/edit`)}
-                                      className="text-green-600 hover:text-green-900 transition-colors duration-200"
-                                      title="Chỉnh sửa"
-                                    >
-                                      Sửa
-                                    </button>
+                                      <button
+                                          onClick={() => navigate(`/teacher/assignments/${exam.examId}/submissions`)}
+                                          className="text-green-600 hover:text-green-900 transition-colors duration-200"
+                                          title="Xem bài nộp"
+                                      >
+                                          Xem bài nộp
+                                      </button>
                                   </div>
                                 </td>
                               </tr>

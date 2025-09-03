@@ -48,7 +48,6 @@ const navigationGroups = [
         hoverColor: 'hover:bg-green-100',
         activeGradient: 'from-green-500 to-green-600',
         description: 'Quản lý khóa học',
-        badge: 5
       },
       {
         label: 'Bài tập',
@@ -59,18 +58,7 @@ const navigationGroups = [
         hoverColor: 'hover:bg-orange-100',
         activeGradient: 'from-orange-500 to-orange-600',
         description: 'Tạo và chấm bài tập',
-        badge: 3
       },
-      {
-        label: 'Học viên',
-        icon: FaUsers,
-        path: '/teacher/students',
-        color: 'text-purple-500',
-        bgColor: 'bg-purple-50',
-        hoverColor: 'hover:bg-purple-100',
-        activeGradient: 'from-purple-500 to-purple-600',
-        description: 'Quản lý học viên'
-      }
     ]
   },
   {
@@ -212,25 +200,6 @@ const NavigationMenu = () => {
           </nav>
         </div>
       ))}
-
-      {/* Quick Stats */}
-      <div className="mt-8 p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">Thống kê nhanh</h4>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600">Khóa học đang dạy</span>
-            <span className="font-semibold text-blue-600">5</span>
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600">Học viên đang học</span>
-            <span className="font-semibold text-green-600">127</span>
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600">Bài tập chờ chấm</span>
-            <span className="font-semibold text-orange-600">8</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

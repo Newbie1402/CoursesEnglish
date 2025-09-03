@@ -28,6 +28,8 @@ import { Input } from '@/components/ui/input/Input';
 import { Select } from '@/components/ui/select/Select';
 import useAssignmentService from '../../../services/hooks/useAssignmentService';
 import { getCourseDetails } from "@/services/hooks/courseService.js";
+import { getSubmissionsList } from '@/services/hooks/submissionService';
+import { getStudentsCourse } from '@/services/hooks/courseService';
 import { cn } from '@/lib/utils';
 
 const AssignmentList = () => {
@@ -37,6 +39,7 @@ const AssignmentList = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('newest');
   const [courseDetails, setCourseDetails] = useState({});
+  const [submissionStats, setSubmissionStats] = useState({}); // { examId: { submissions, totalStudents } }
   const navigate = useNavigate();
   const { getActiveExamsByTeacher } = useAssignmentService();
   const teacherId = localStorage.getItem('teacherId');
@@ -46,35 +49,71 @@ const AssignmentList = () => {
     const fetchCourseDetails = async () => {
       const details = {};
       for (const exam of activeExams) {
-        const courseDetail = await getCourseDetails(exam.courseId);
-        details[exam.courseId] = {
-          title: courseDetail?.title || `Khóa học ID: ${exam.courseId}`,
-          id: exam.courseId
-        };
+        try {
+          const courseDetail = await getCourseDetails(exam.courseId);
+          details[exam.courseId] = {
+            title: courseDetail?.title || `Khóa học ID: ${exam.courseId}`,
+            id: exam.courseId
+          };
+        } catch (e) {
+          details[exam.courseId] = { title: `Khóa học ID: ${exam.courseId}`, id: exam.courseId };
+        }
       }
       setCourseDetails(details);
     };
+    if (activeExams.length) fetchCourseDetails();
+  }, [activeExams]);
 
-    fetchCourseDetails();
-  }, [activeExams, getCourseDetails]);
+  // Fetch submissions count & total students per exam
+  useEffect(() => {
+    if (!activeExams.length) return;
+    let cancelled = false;
+    const fetchStats = async () => {
+      const courseStudentCache = {}; // courseId -> count
+      const result = {};
+      await Promise.all(activeExams.map(async exam => {
+        try {
+          const submissionList = await getSubmissionsList(exam.examId);
+          const submissionCount = Array.isArray(submissionList) ? submissionList.filter(s => s && s.submittedAt).length : 0;
+          let totalStudents;
+          if (courseStudentCache[exam.courseId] != null) {
+            totalStudents = courseStudentCache[exam.courseId];
+          } else {
+            const students = await getStudentsCourse(exam.courseId);
+            totalStudents = Array.isArray(students) ? students.length : 0;
+            courseStudentCache[exam.courseId] = totalStudents;
+          }
+          result[exam.examId] = { submissions: submissionCount, totalStudents };
+        } catch (e) {
+          result[exam.examId] = { submissions: 0, totalStudents: 0 };
+        }
+      }));
+      if (!cancelled) setSubmissionStats(result);
+    };
+    fetchStats();
+    return () => { cancelled = true; };
+  }, [activeExams]);
 
   const assignments = useMemo(() => {
-    return activeExams.map((exam) => ({
-      id: exam.examId,
-      title: exam.title,
-      description: exam.description || 'Không có mô tả',
-      course: courseDetails[exam.courseId]?.title || `Khóa học ID: ${exam.courseId}`,
-      courseId: exam.courseId,
-      dueDate: exam.endTime,
-      startDate: exam.startTime,
-      duration: exam.durationMinutes || 60,
-      submissions: Math.floor(Math.random() * 25), // Mock data
-      totalStudents: Math.floor(Math.random() * 30) + 20, // Mock data
-      status: exam.active ? 'active' : 'inactive',
-      type: exam.type || 'MULTIPLE_CHOICE',
-      priority: exam.endTime && new Date(exam.endTime) - new Date() < 24 * 60 * 60 * 1000 ? 'high' : 'normal'
-    }));
-  }, [activeExams, courseDetails]);
+    return activeExams.map((exam) => {
+      const stat = submissionStats[exam.examId] || {};
+      return {
+        id: exam.examId,
+        title: exam.title,
+        description: exam.description || 'Không có mô tả',
+        course: courseDetails[exam.courseId]?.title || `Khóa học ID: ${exam.courseId}`,
+        courseId: exam.courseId,
+        dueDate: exam.endTime,
+        startDate: exam.startTime,
+        duration: exam.durationMinutes || 60,
+        submissions: stat.submissions ?? 0,
+        totalStudents: stat.totalStudents ?? 0,
+        status: exam.active ? 'active' : 'inactive',
+        type: exam.type || 'MULTIPLE_CHOICE',
+        priority: exam.endTime && new Date(exam.endTime) - new Date() < 24 * 60 * 60 * 1000 ? 'high' : 'normal'
+      };
+    });
+  }, [activeExams, courseDetails, submissionStats]);
 
   // Get time remaining until deadline
   const getTimeRemaining = (dueDate) => {
@@ -257,11 +296,11 @@ const AssignmentList = () => {
             Xem chi tiết
           </button>
           <button
-            onClick={() => navigate(`/teacher/assignments/${assignment.id}/edit`)}
+            onClick={() => navigate(`/teacher/assignments/${assignment.id}/submissions`)}
             className="text-gray-600 hover:text-gray-700 text-sm font-medium flex items-center gap-1 transition-colors"
           >
             <FaEdit className="text-xs" />
-            Chỉnh sửa
+            Xem bài nộp
           </button>
         </div>
       </div>
@@ -556,9 +595,9 @@ const AssignmentList = () => {
                               <FaEye className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => navigate(`/teacher/assignments/${assignment.id}/edit`)}
+                              onClick={() => navigate(`/teacher/assignments/${assignment.id}/submissions`)}
                               className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="Chỉnh sửa"
+                              title="Xem bài nộp"
                             >
                               <FaEdit className="w-4 h-4" />
                             </button>
