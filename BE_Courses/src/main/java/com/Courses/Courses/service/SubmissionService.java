@@ -192,10 +192,25 @@ public class SubmissionService {
             logger.info("Thêm câu trả lời mới cho câu hỏi {}", request.getQuestionId());
         }
 
-        submissionRepository.save(submission);
+        // Lưu submission trước để đảm bảo cả submission và answer đều được lưu
+        Submission savedSubmission = submissionRepository.save(submission);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                new ResponseData<>(StatusApplication.SUCCESS.getCode(), "Lưu câu trả lời thành công", answer)
+        // Tìm lại câu trả lời đã lưu để lấy ID đã được sinh ra
+        SubmissionAnswer savedAnswer;
+        if (answer.getId() != null) {
+            savedAnswer = answer; // Nếu là câu trả lời đã tồn tại
+        } else {
+            // Nếu là câu trả lời mới, tìm trong danh sách answers đã được lưu
+            savedAnswer = savedSubmission.getAnswers().stream()
+                    .filter(a -> a.getQuestion().getId().equals(request.getQuestionId()))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Không thể lưu câu trả lời"));
+        }
+
+        logger.info("Đã lưu câu trả lời với ID = {}", savedAnswer.getId());
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ResponseData<>(StatusApplication.SUCCESS.getCode(), "Lưu câu trả lời thành công", savedAnswer)
         );
     }
 

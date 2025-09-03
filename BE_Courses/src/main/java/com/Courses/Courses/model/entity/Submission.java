@@ -1,5 +1,7 @@
 package com.Courses.Courses.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,6 +25,7 @@ public class Submission {
     private Student student;
 
     @ManyToOne
+    @JsonBackReference("exam-submissions")
     private Exam exam;
 
     private Double score;
@@ -43,5 +46,6 @@ public class Submission {
     private LocalDateTime gradedAt;
 
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL)
+    @JsonManagedReference("submission-answers")
     private List<SubmissionAnswer> answers;
 }

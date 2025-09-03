@@ -72,7 +72,7 @@ public class QuestionService {
         question.setType(request.getType());
         question.setCorrectAnswer(request.getCorrectAnswer());
         question.setOptions(request.getOptions());
-        question.setShufflable(request.getIsShufflable());
+        question.setShufflable(request.getIsShufflable() != null ? request.getIsShufflable() : false);
         question.setMaxScore(request.getMaxScore());
         question.setExam(exam);
 
@@ -100,7 +100,7 @@ public class QuestionService {
         question.setType(request.getType());
         question.setCorrectAnswer(request.getCorrectAnswer());
         question.setOptions(request.getOptions());
-        question.setShufflable(request.getIsShufflable());
+        question.setShufflable(request.getIsShufflable() != null ? request.getIsShufflable() : false);
         question.setMaxScore(request.getMaxScore());
         question.setExam(exam);
 

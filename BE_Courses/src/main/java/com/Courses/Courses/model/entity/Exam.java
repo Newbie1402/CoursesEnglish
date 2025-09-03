@@ -1,6 +1,7 @@
 package com.Courses.Courses.model.entity;
 
 import com.Courses.Courses.enums.ExamType;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,9 +35,11 @@ public class Exam {
     private Integer durationMinutes;
 
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
+    @JsonManagedReference("exam-questions")
     private List<Question> questions;
 
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
+    @JsonManagedReference("exam-submissions")
     private List<Submission> submissions;
 
     private String description;

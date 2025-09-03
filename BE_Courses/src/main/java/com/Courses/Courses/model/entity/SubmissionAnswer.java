@@ -1,5 +1,8 @@
 package com.Courses.Courses.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,9 +20,13 @@ public class SubmissionAnswer {
     private Long id;
 
     @ManyToOne
+    @JsonBackReference("submission-answers")
     private Submission submission;
 
     @ManyToOne
+    @JsonIdentityInfo(
+        generator = ObjectIdGenerators.PropertyGenerator.class,
+        property = "id")
     private Question question;
 
     @Column(columnDefinition = "TEXT")

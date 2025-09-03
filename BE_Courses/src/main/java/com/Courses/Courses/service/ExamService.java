@@ -308,6 +308,9 @@ public class ExamService {
             }
         }
 
+        submission.setScore(totalScore);
+        submission.setMaxScore(maxScore);
+
         // Xóa key Redis để đánh dấu đã hoàn thành bài thi
         String redisKey = "exam:" + submission.getExam().getId() + ":student:" + submission.getStudent().getId();
         redisTemplate.delete(redisKey);

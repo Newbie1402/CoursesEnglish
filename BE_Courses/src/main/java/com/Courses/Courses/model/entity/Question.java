@@ -1,6 +1,7 @@
 package com.Courses.Courses.model.entity;
 
 import com.Courses.Courses.enums.QuestionType;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,5 +36,6 @@ public class Question {
     private Double maxScore;
 
     @ManyToOne
+    @JsonBackReference("exam-questions")
     private Exam exam;
 }
