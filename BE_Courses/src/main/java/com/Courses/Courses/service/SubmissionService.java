@@ -434,6 +434,29 @@ public class SubmissionService {
         }
     }
 
+    /**
+     * Lấy danh sách các câu trả lời của một bài nộp (dành cho giáo viên chấm điểm)
+     */
+    public ResponseEntity<ResponseData<List<SubmissionAnswer>>> getSubmissionAnswers(Long submissionId) {
+        Optional<Submission> submissionOpt = submissionRepository.findById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ResponseData<>(StatusApplication.NOT_FOUND.getCode(),
+                            "Không tìm thấy bài nộp với id = " + submissionId,
+                            null)
+            );
+        }
+
+        Submission submission = submissionOpt.get();
+        List<SubmissionAnswer> answers = submission.getAnswers();
+
+        return ResponseEntity.ok(new ResponseData<>(
+                StatusApplication.SUCCESS.getCode(),
+                "Lấy danh sách " + answers.size() + " câu trả lời của bài nộp thành công",
+                answers)
+        );
+    }
+
     private SubmissionDto convertToDto(Submission submission) {
         return SubmissionDto.builder()
                 .id(submission.getId())

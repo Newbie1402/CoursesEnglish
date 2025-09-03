@@ -92,6 +92,15 @@ public class SubmissionController {
     }
 
     /**
+     * Lấy danh sách các câu trả lời của một bài nộp (dành cho giáo viên chấm điểm)
+     */
+    @GetMapping("/{submissionId}/answers")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ResponseData<List<SubmissionAnswer>>> getSubmissionAnswers(@PathVariable Long submissionId) {
+        return submissionService.getSubmissionAnswers(submissionId);
+    }
+
+    /**
      * Nộp bài và kết thúc bài kiểm tra, chấm điểm tự động cho phần trắc nghiệm
      */
     @PostMapping("/{submissionId}/finish")
