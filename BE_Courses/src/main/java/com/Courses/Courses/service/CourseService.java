@@ -10,6 +10,7 @@ import com.Courses.Courses.model.request.CourseScheduleRequest;
 import com.Courses.Courses.model.request.CourseUpdateRequest;
 import com.Courses.Courses.repository.CourseRepository;
 import com.Courses.Courses.repository.CourseScheduleRepository;
+import com.Courses.Courses.repository.StudentRepository;
 import com.Courses.Courses.repository.TeacherRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ public class CourseService {
 
     @Autowired
     private TeacherRepository teacherRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
 
     @Autowired
     private CourseScheduleRepository courseScheduleRepository;
@@ -74,6 +78,23 @@ public class CourseService {
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Lấy danh sách khoá học đang active theo ID của Học viên
+     * @param studentId ID của Học viên
+     */
+    @Transactional(readOnly = true)
+    public List<CourseDto> getActiveCoursesForStudent(Long studentId) {
+        studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Học viên với id: " + studentId));
+
+        // Lấy danh sách khoá học active của Học viên
+        List<Course> courses = courseRepository.findByTeacherIdAndActiveTrue(studentId);
+        return courses.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
 
     // Lấy thông tin khoá học theo id
     public CourseDto getCourseById(Long id) {

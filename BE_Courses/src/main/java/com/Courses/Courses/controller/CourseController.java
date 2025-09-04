@@ -44,6 +44,15 @@ public class CourseController {
     }
 
     /**
+     * Lấy danh sách khoá học đang hoạt động theo ID của Học viên
+     */
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<List<CourseDto>> getActiveCoursesForStudent(@PathVariable Long studentId) {
+        List<CourseDto> courses = courseService.getActiveCoursesForStudent(studentId);
+        return ResponseEntity.ok(courses);
+    }
+
+    /**
      * Lấy thông tin khoá học theo id
      */
     @GetMapping("/view/{id}")
