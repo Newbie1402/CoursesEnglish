@@ -33,6 +33,8 @@ public class Submission {
     // Điểm tối đa có thể đạt được cho bài nộp
     private Double maxScore;
 
+    private Integer attemptCount = 0;
+
     @Column(columnDefinition = "TEXT")
     private String teacherFeedback;
 

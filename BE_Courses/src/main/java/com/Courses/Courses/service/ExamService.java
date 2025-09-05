@@ -67,6 +67,7 @@ public class ExamService {
         exam.setStartTime(request.getStartTime());
         exam.setEndTime(request.getEndTime());
         exam.setDurationMinutes(request.getDurationMinutes());
+        exam.setAttemptsAllowed(request.getAttemptsAllowed());
         exam.setDescription(request.getDescription());
         exam.setPassword(request.getPassword());
         exam.setActive(true);
@@ -127,6 +128,7 @@ public class ExamService {
         exam.setStartTime(request.getStartTime());
         exam.setEndTime(request.getEndTime());
         exam.setDurationMinutes(request.getDurationMinutes());
+        exam.setAttemptsAllowed(request.getAttemptsAllowed());
         exam.setDescription(request.getDescription());
         exam.setPassword(request.getPassword());
         Exam updatedExam = examRepository.save(exam);
@@ -222,6 +224,20 @@ public class ExamService {
             throw new RuntimeException("Đã hết thời gian làm bài!");
         }
 
+        // Kiểm tra số lần làm bài của học sinh
+        Optional<Submission> existingSubmissionOpt = submissionRepository.findByExamIdAndStudentId(examId, studentId);
+        if (existingSubmissionOpt.isPresent()) {
+            Submission existingSubmission = existingSubmissionOpt.get();
+
+            // Kiểm tra nếu đã nộp bài và đạt giới hạn số lần làm
+            if (existingSubmission.getSubmittedAt() != null) {
+                if (existingSubmission.getAttemptCount() >= exam.getAttemptsAllowed()) {
+                    throw new RuntimeException("Bạn đã sử dụng hết " + exam.getAttemptsAllowed() +
+                        " lần làm bài cho phép!");
+                }
+            }
+        }
+
         // Kiểm tra nếu học sinh đã bắt đầu làm bài rồi
         String redisKey = "exam:" + examId + ":student:" + studentId;
         if (Boolean.TRUE.equals(redisTemplate.hasKey(redisKey))) {
@@ -247,11 +263,22 @@ public class ExamService {
                     Submission newSubmission = new Submission();
                     newSubmission.setExam(exam);
                     newSubmission.setStudent(student);
+                    newSubmission.setAttemptCount(0);
                     return newSubmission;
                 });
 
         submission.setStartedAt(now);
         submission.setDeadline(deadline);
+
+        // Tăng số lần làm bài nếu học sinh đã hoàn thành lần làm bài trước
+        if (submission.getSubmittedAt() != null) {
+            submission.setAttemptCount(submission.getAttemptCount() + 1);
+            submission.setSubmittedAt(null);
+            submission.setScore(null);
+            submission.setTeacherFeedback(null);
+            submission.getAnswers().clear();
+        }
+
         submissionRepository.save(submission);
     }
 
@@ -280,6 +307,11 @@ public class ExamService {
 
         // Đánh dấu thời điểm nộp bài
         submission.setSubmittedAt(LocalDateTime.now());
+
+        // Nếu đây là lần làm bài đầu tiên, tăng số lần làm bài lên 1
+        if (submission.getAttemptCount() == 0) {
+            submission.setAttemptCount(1);
+        }
 
         // Tự động chấm điểm cho câu trắc nghiệm
         double totalScore = 0;
@@ -535,6 +567,7 @@ public class ExamService {
                 .startTime(exam.getStartTime())
                 .endTime(exam.getEndTime())
                 .durationMinutes(exam.getDurationMinutes())
+                .attemptsAllowed(exam.getAttemptsAllowed())
                 .description(exam.getDescription())
                 .password(exam.getPassword())
                 .active(exam.getActive())

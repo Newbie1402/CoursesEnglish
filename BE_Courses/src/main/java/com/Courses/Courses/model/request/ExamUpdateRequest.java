@@ -3,6 +3,7 @@ package com.Courses.Courses.model.request;
 import com.Courses.Courses.enums.ExamType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,6 +39,9 @@ public class ExamUpdateRequest {
 
     @NotNull(message = "Thời lượng làm bài không được để trống")
     private Integer durationMinutes;
+
+    @Min(value = 1, message = "Số lần làm bài cho phép phải từ 1 trở lên")
+    private Integer attemptsAllowed = 1;
 
     private String description;
     private String password;

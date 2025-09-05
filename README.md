@@ -13,3 +13,6 @@ Install plugins:
   Step 5: Click add button and select .env file
   Step 6: Click Apply and OK
 ```
+
+## 📊 Repobeats Analytics
+![Repobeats analytics](https://repobeats.axiom.co/api/embed/2e52faec8c40ba53227047ab13328704bea2424d.svg)

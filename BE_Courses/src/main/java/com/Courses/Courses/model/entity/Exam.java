@@ -34,6 +34,9 @@ public class Exam {
     // Thời lượng làm bài (phút)
     private Integer durationMinutes;
 
+    // Số lần làm bài cho phép (mặc định là 1 lần)
+    private Integer attemptsAllowed = 1;
+
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
     @JsonManagedReference("exam-questions")
     private List<Question> questions;
