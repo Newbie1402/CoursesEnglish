@@ -1,12 +1,14 @@
 package com.Courses.Courses.service;
 
 import com.Courses.Courses.enums.StatusApplication;
+import com.Courses.Courses.model.dto.StudentBasicDto;
 import com.Courses.Courses.model.dto.SubmissionDto;
 import com.Courses.Courses.model.entity.*;
 import com.Courses.Courses.model.request.SubmissionAnswerRequest;
 import com.Courses.Courses.model.request.SubmissionCreateRequest;
 import com.Courses.Courses.model.request.SubmissionUpdateRequest;
 import com.Courses.Courses.model.response.ResponseData;
+import com.Courses.Courses.repository.CourseRepository;
 import com.Courses.Courses.repository.ExamRepository;
 import com.Courses.Courses.repository.QuestionRepository;
 import com.Courses.Courses.repository.StudentRepository;
@@ -14,7 +16,6 @@ import com.Courses.Courses.repository.SubmissionRepository;
 import com.Courses.Courses.repository.TeacherCommentReposiory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,6 +55,9 @@ public class SubmissionService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private CourseRepository courseRepository;
 
     /**
      * Lấy tất cả bài làm của một học sinh (chỉ học sinh đó nhìn thấy)
@@ -469,5 +474,92 @@ public class SubmissionService {
                 .deadline(submission.getDeadline())
                 .maxScore(submission.getMaxScore())
                 .build();
+    }
+
+    private StudentBasicDto convertToStudentBasicDto(Student student) {
+        return StudentBasicDto.builder()
+                .id(student.getId())
+                .fullName(student.getUser().getFullName())
+                .email(student.getUser().getEmail())
+                .phoneNumber(student.getUser().getPhoneNumber())
+                .fatherName(student.getFatherName())
+                .fatherPhone(student.getFatherPhone())
+                .motherName(student.getMotherName())
+                .motherPhone(student.getMotherPhone())
+                .build();
+    }
+
+    /**
+     * Lấy danh sách học sinh chưa làm một bài kiểm tra cụ thể
+     *
+     * @param examId ID của bài kiểm tra
+     * @return ResponseEntity chứa danh sách học sinh chưa làm bài kiểm tra
+     */
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseData<List<StudentBasicDto>>> findStudentsNotAttemptedExam(Long examId) {
+        try {
+            // Kiểm tra bài kiểm tra có tồn tại không
+            Exam exam = examRepository.findById(examId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy bài kiểm tra với id: " + examId));
+
+            List<Student> students = submissionRepository.findStudentsNotAttemptedExam(examId);
+            List<StudentBasicDto> studentDtos = students.stream()
+                    .map(this::convertToStudentBasicDto)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(
+                    new ResponseData<>(
+                            StatusApplication.SUCCESS.getCode(),
+                            "Lấy danh sách " + studentDtos.size() + " học sinh chưa làm bài kiểm tra thành công",
+                            studentDtos
+                    )
+            );
+        } catch (Exception e) {
+            logger.error("Lỗi khi tìm học sinh chưa làm bài kiểm tra: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ResponseData<>(
+                            StatusApplication.INTERNAL_SERVER_ERROR.getCode(),
+                            "Lỗi khi tìm học sinh chưa làm bài kiểm tra: " + e.getMessage(),
+                            null
+                    )
+            );
+        }
+    }
+
+    /**
+     * Lấy danh sách học sinh chưa làm bất kỳ bài kiểm tra nào trong khóa học
+     *
+     * @param courseId ID của khóa học
+     * @return ResponseEntity chứa danh sách học sinh chưa làm bất kỳ bài kiểm tra nào trong khóa học
+     */
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseData<List<StudentBasicDto>>> findStudentsNotAttemptedAnyCourseExams(Long courseId) {
+        try {
+            // Kiểm tra khóa học có tồn tại không
+            Course course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy khóa học với id: " + courseId));
+
+            List<Student> students = submissionRepository.findStudentsNotAttemptedAnyCourseExams(courseId);
+            List<StudentBasicDto> studentDtos = students.stream()
+                    .map(this::convertToStudentBasicDto)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(
+                    new ResponseData<>(
+                            StatusApplication.SUCCESS.getCode(),
+                            "Lấy danh sách " + studentDtos.size() + " học sinh chưa làm bất kỳ bài kiểm tra nào trong khóa học thành công",
+                            studentDtos
+                    )
+            );
+        } catch (Exception e) {
+            logger.error("Lỗi khi tìm học sinh chưa làm bài kiểm tra trong khóa học: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ResponseData<>(
+                            StatusApplication.INTERNAL_SERVER_ERROR.getCode(),
+                            "Lỗi khi tìm học sinh chưa làm bài kiểm tra trong khóa học: " + e.getMessage(),
+                            null
+                    )
+            );
+        }
     }
 }

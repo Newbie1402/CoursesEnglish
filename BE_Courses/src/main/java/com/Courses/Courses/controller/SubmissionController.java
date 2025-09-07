@@ -2,6 +2,7 @@ package com.Courses.Courses.controller;
 
 import com.Courses.Courses.enums.StatusApplication;
 import com.Courses.Courses.model.dto.SubmissionDto;
+import com.Courses.Courses.model.dto.StudentBasicDto;
 import com.Courses.Courses.model.entity.SubmissionAnswer;
 import com.Courses.Courses.model.request.SubmissionAnswerRequest;
 import com.Courses.Courses.model.request.SubmissionCreateRequest;
@@ -205,5 +206,19 @@ public class SubmissionController {
                         submissionService.getSubmissionById(id)
                 )
         );
+    }
+
+    //Lấy danh sách học sinh chưa làm một bài kiểm tra cụ thể
+    @GetMapping("/not-attempted/exam/{examId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ResponseData<List<StudentBasicDto>>> getStudentsNotAttemptedExam(@PathVariable Long examId) {
+        return submissionService.findStudentsNotAttemptedExam(examId);
+    }
+
+    //Lấy danh sách học sinh chưa làm bất kỳ bài kiểm tra nào trong khóa học
+    @GetMapping("/not-attempted/course/{courseId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ResponseData<List<StudentBasicDto>>> getStudentsNotAttemptedAnyCourseExams(@PathVariable Long courseId) {
+        return submissionService.findStudentsNotAttemptedAnyCourseExams(courseId);
     }
 }
