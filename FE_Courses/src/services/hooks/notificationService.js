@@ -1,10 +1,11 @@
 import axios from "axios";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-export const getNotificationUser = async (token) => {
+export const getNotificationUser = async (token, page = 0, size = 10) => {
     try {
         const res = await axios.get(`${BASE_URL}/api/notifications`, {
             headers: { Authorization: `Bearer ${token}` },
+            params: { page, size }
         });
         return res?.data || {};
     } catch (err) {
@@ -48,4 +49,3 @@ export const markReadAll = async (token) => {
         return {};
     }
 };
-

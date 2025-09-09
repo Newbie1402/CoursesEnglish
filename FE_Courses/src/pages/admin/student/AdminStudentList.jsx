@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllStudent } from '@/services/hooks/studentService';
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner';
 import {
   FaSearch,
   FaFilter,
@@ -12,7 +11,8 @@ import {
   FaCalendarAlt,
   FaEye,
   FaMapMarkerAlt,
-  FaChevronRight
+  FaChevronRight,
+  FaChevronDown
 } from 'react-icons/fa';
 
 const AdminStudentList = () => {
@@ -231,15 +231,25 @@ const AdminStudentList = () => {
           {/* Gender Filter */}
           <div className="flex items-center space-x-2">
             <FaFilter className="text-gray-400 w-4 h-4" />
-            <select
-              value={filterGender}
-              onChange={(e) => setFilterGender(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">Tất cả giới tính</option>
-              <option value="MALE">Nam</option>
-              <option value="FEMALE">Nữ</option>
-            </select>
+            <div className="relative">
+              <select
+                value={filterGender}
+                onChange={(e) => setFilterGender(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-[140px] cursor-pointer"
+                style={{
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  backgroundImage: 'none',
+                  outline: 'none'
+                }}
+              >
+                <option value="all">Tất cả giới tính</option>
+                <option value="MALE">Nam</option>
+                <option value="FEMALE">Nữ</option>
+              </select>
+              <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 pointer-events-none z-10" />
+            </div>
           </div>
         </div>
 

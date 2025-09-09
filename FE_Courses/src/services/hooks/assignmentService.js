@@ -32,3 +32,13 @@ export const countAssignmentsInCourse = async (courseId) => {
         return 0; // Trả về 0 nếu có lỗi
     }
 }
+
+export const getQuestions = async (examId) => {
+    try {
+        const res = await axios.get(`${BASE_URL}/api/questions/exam/${examId}`);
+        return res.data?.data || []; // Đảm bảo trả về một mảng
+    } catch (err) {
+        console.error("Error fetching questions for assignment:", err);
+        return []; // Trả về mảng rỗng nếu có lỗi
+    }
+}

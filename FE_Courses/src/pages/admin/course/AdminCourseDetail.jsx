@@ -93,6 +93,19 @@ const AdminCourseDetail = () => {
     }, 3000);
   };
 
+  // Fetch functions - tách ra để có thể sử dụng lại
+  const fetchStats = async () => {
+    const lessonsCount = await countLessonsInCourse(courseId);
+    const assignmentsCount = await countAssignmentsInCourse(courseId);
+    const studentsCount = await countStudentsInCourse(courseId);
+    setStats({ lessons: lessonsCount, assignments: assignmentsCount, students: studentsCount });
+  };
+
+  const fetchStudents = async () => {
+    const studentList = await getStudentOfCourse(courseId);
+    setStudents(studentList);
+  };
+
   // Handle add student success
   const handleAddStudentSuccess = (message, type = 'success') => {
     showToast(message, type);
@@ -434,15 +447,102 @@ const AdminCourseDetail = () => {
         );
       case 'assignments':
         return (
-          <div className="bg-white p-6 rounded shadow">
-            <h2 className="text-lg font-semibold">Danh sách bài tập</h2>
-            <ul>
-              {assignments.map((assignment) => (
-                <li key={assignment.assignmentId} className="py-2 border-b">
-                  {assignment.title}
-                </li>
-              ))}
-            </ul>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">Danh sách bài tập</h2>
+              <button
+                onClick={() => {
+                  // TODO: Implement add assignment functionality
+                  showToast('Tính năng thêm bài tập sẽ được cập nhật sớm', 'info');
+                }}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 space-x-2 shadow-lg"
+              >
+                <FaClipboardList className="w-4 h-4" />
+                <span>Thêm bài tập</span>
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              {assignments.length === 0 ? (
+                <div className="p-12 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FaClipboardList className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 mb-4">Chưa có bài tập nào trong khóa học này</p>
+                  <button
+                    onClick={() => {
+                      // TODO: Implement add assignment functionality
+                      showToast('Tính năng thêm bài tập sẽ được cập nhật sớm', 'info');
+                    }}
+                    className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors space-x-2"
+                  >
+                    <FaClipboardList className="w-4 h-4" />
+                    <span>Thêm bài tập đầu tiên</span>
+                  </button>
+                </div>
+              ) : (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiêu đề bài tập</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn nộp</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm tối đa</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {assignments.map((assignment) => (
+                      <tr
+                        key={assignment.examId}
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          navigate(`/admin/exams/${assignment.examId}`)
+                        }}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                              <FaClipboardList className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{assignment.title}</p>
+                              <p className="text-sm text-gray-500">ID: {assignment.examId}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                          {assignment.createdAt ? new Date(assignment.createdAt).toLocaleDateString('vi-VN') : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                          {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString('vi-VN') : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            assignment.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {assignment.active ? (
+                              <>
+                                <FaCheckCircle className="w-3 h-3 mr-1" />
+                                Đang hoạt động
+                              </>
+                            ) : (
+                              <>
+                                <FaTimesCircle className="w-3 h-3 mr-1" />
+                                Đã ẩn
+                              </>
+                            )}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                          {assignment.maxScore ? `${assignment.maxScore} điểm` : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         );
       default:
@@ -560,4 +660,3 @@ const AdminCourseDetail = () => {
 };
 
 export default AdminCourseDetail;
-

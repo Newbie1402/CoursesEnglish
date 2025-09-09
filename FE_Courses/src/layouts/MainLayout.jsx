@@ -13,7 +13,7 @@ import {
   FaChevronRight
 } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
-import NavigationMenu from '@/components/dashboard/NavigationMenu';
+import NavigationMenu from '@/components/teacher/NavigationMenu';
 import ProfileDropdownTeacher from '@/components/ui/profile/ProfileDropdownTeacher.jsx';
 import useTeacherService from '@/services/hooks/useTeacherService.js';
 

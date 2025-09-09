@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FaBell,
   FaCheckDouble,
@@ -10,9 +10,9 @@ import {
   FaChevronRight,
   FaExclamationCircle
 } from 'react-icons/fa';
-import { useAuth } from '../../contexts/AuthContext';
-import { getNotificationUser, markRead, markReadAll } from '../../services/hooks/notificationService.js';
-import LoadingSpinner from '../../components/ui/loading/LoadingSpinner';
+import { useAuth } from '@/contexts/AuthContext.jsx';
+import { getNotificationUser, markRead, markReadAll } from '@/services/hooks/notificationService.js';
+import LoadingSpinner from '../../../components/ui/loading/LoadingSpinner.jsx';
 import { NOTIFICATION_TYPES } from './NotificaitonsTypes.jsx';
 
 const TeacherNotifications = () => {
@@ -29,19 +29,25 @@ const TeacherNotifications = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   // Fetch danh sách thông báo với pagination
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (page = 0, size = itemsPerPage) => {
     if (!token) return;
 
     try {
       setLoading(true);
-      const response = await getNotificationUser(token);
+      const response = await getNotificationUser(token, page, size);
 
       // Xử lý response theo cấu trúc thực tế từ backend
       if (response?.data?.content) {
         setNotifications(response.data.content);
         setTotalElements(response.data.totalElements || 0);
         setTotalPages(response.data.totalPages || 0);
-        setCurrentPage(response.data.number || 0);
+        const serverPage = response.data.number ?? page;
+        // If requested page out of range after filters or server change, clamp
+        if (serverPage >= (response.data.totalPages || 1)) {
+          setCurrentPage(Math.max(0, (response.data.totalPages || 1) - 1));
+        } else {
+          setCurrentPage(serverPage);
+        }
       } else {
         setNotifications([]);
         setTotalElements(0);
@@ -138,12 +144,12 @@ const TeacherNotifications = () => {
     if (!shouldUseClientPagination) {
       fetchNotifications(currentPage, itemsPerPage);
     }
-  }, [token, currentPage]);
+  }, [token, currentPage, shouldUseClientPagination, itemsPerPage]);
 
   // Fetch lại khi không có filter (lần đầu load)
   useEffect(() => {
     fetchNotifications(0, itemsPerPage);
-  }, [token]);
+  }, [token, itemsPerPage]);
 
   // Format thời gian
   const formatTime = (dateString) => {
@@ -184,6 +190,7 @@ const TeacherNotifications = () => {
           }
         `}
         onClick={() => !notification.read && handleMarkAsRead(notification.id)}
+        onMouseEnter={() => !notification.read && handleMarkAsRead(notification.id)} // Đánh dấu đã đọc khi hover
       >
         <div className="flex items-start space-x-4">
           {/* Icon */}
@@ -420,10 +427,9 @@ const TeacherNotifications = () => {
                         onClick={() => setCurrentPage(pageNumber)}
                         className={`
                           px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                          ${isActive 
-                            ? 'bg-blue-500 text-white' 
-                            : 'text-gray-600 hover:bg-gray-50'
-                          }
+                          ${isActive
+                            ? 'bg-blue-500 text-white'
+                            : 'text-gray-600 hover:bg-gray-50'}
                         `}
                       >
                         {pageNumber + 1}
@@ -449,3 +455,5 @@ const TeacherNotifications = () => {
 };
 
 export default TeacherNotifications;
+
+

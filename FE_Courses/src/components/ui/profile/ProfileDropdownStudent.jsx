@@ -2,11 +2,17 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserCircle, FaCog, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
+import axios from "axios";
+import { useToast } from '@/components/ui/toast/Toast';
+import { useAuth } from '@/contexts/AuthContext';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ProfileDropdownStudent = ({ student }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef(null);
   const navigate = useNavigate();
+    const { addToast } = useToast();
+    const { auth, logout } = useAuth();
 
   // Đóng dropdown khi click outside
   React.useEffect(() => {
@@ -19,6 +25,27 @@ const ProfileDropdownStudent = ({ student }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+    const handleLogout = async () => {
+        try {
+            // Lấy token từ localStorage hoặc auth context
+            const token = localStorage.getItem('token') || auth?.token;
+
+            // Gửi request logout với Authorization header
+            await axios.post(`${BASE_URL}/api/auth/logout`, {}, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            logout();
+            addToast('Đăng xuất thành công! Hẹn gặp lại 👋', 'success');
+            navigate('/login');
+        }
+    };
 
   const menuItems = [
     {
@@ -34,7 +61,7 @@ const ProfileDropdownStudent = ({ student }) => {
     {
       icon: FaSignOutAlt,
       label: 'Đăng xuất',
-      onClick: () => {/* handle logout */},
+      onClick: () => { handleLogout() },
       className: 'text-red-600 hover:bg-red-50'
     }
   ];

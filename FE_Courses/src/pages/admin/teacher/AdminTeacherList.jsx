@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllTeacher } from '@/services/hooks/teacherService';
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner';
 import {
   FaSearch,
   FaFilter,
@@ -14,7 +13,7 @@ import {
   FaMapMarkerAlt,
   FaChevronRight,
   FaGraduationCap,
-  FaUser
+  FaChevronDown
 } from 'react-icons/fa';
 
 const AdminTeacherList = () => {
@@ -307,16 +306,26 @@ const AdminTeacherList = () => {
           {/* Specialization Filter */}
           <div className="flex items-center space-x-2">
             <FaFilter className="text-gray-400 w-4 h-4" />
-            <select
-              value={filterSpecialization}
-              onChange={(e) => setFilterSpecialization(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">Tất cả chuyên môn</option>
-              {specializations.map((spec) => (
-                <option key={spec} value={spec}>{spec}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={filterSpecialization}
+                onChange={(e) => setFilterSpecialization(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-[160px] cursor-pointer"
+                style={{
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  backgroundImage: 'none',
+                  outline: 'none'
+                }}
+              >
+                <option value="all">Tất cả chuyên môn</option>
+                {specializations.map((spec) => (
+                  <option key={spec} value={spec}>{spec}</option>
+                ))}
+              </select>
+              <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 pointer-events-none z-10" />
+            </div>
           </div>
         </div>
 

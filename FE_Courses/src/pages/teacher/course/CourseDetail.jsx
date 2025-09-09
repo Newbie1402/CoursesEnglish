@@ -19,7 +19,8 @@ import {
   FaLaptop,
   FaMapMarkerAlt,
   FaArrowLeft,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaCalendarWeek
 } from 'react-icons/fa';
 import {formatDate, getProgress} from "@/lib/utils.js";
 import useCourseService from "@/services/hooks/useCourseService.js";
@@ -49,6 +50,44 @@ const CourseDetail = () => {
   const { data: students = [], isLoading: isLoadingStudents, isError: isErrorStudents } = getStudentListByCourse(courseId);
   const { data: examsByCourse = [] } = getExamsByCourse(courseId);
   const { addToast } = useToast();
+
+  // Mapping functions for schedule data
+  const getDayOfWeekText = (dayOfWeek) => {
+    const dayMap = {
+      'MONDAY': 'Thứ 2',
+      'TUESDAY': 'Thứ 3',
+      'WEDNESDAY': 'Thứ 4',
+      'THURSDAY': 'Thứ 5',
+      'FRIDAY': 'Thứ 6',
+      'SATURDAY': 'Thứ 7',
+      'SUNDAY': 'Chủ nhật'
+    };
+    return dayMap[dayOfWeek] || dayOfWeek;
+  };
+
+  const getTimeSlotText = (timeSlot) => {
+    const timeSlotMap = {
+      'SLOT_1': '06:45 - 09:15',
+      'SLOT_2': '09:25 - 11:55',
+      'SLOT_3': '12:10 - 13:00',
+      'SLOT_4': '14:50 - 17:20',
+      'SLOT_5': '17:30 - 20:00',
+      'SLOT_6': '20:10 - 21:50'
+    };
+    return timeSlotMap[timeSlot] || timeSlot;
+  };
+
+  const getTimeSlotColor = (timeSlot) => {
+    const colorMap = {
+      'SLOT_1': 'bg-blue-50 text-blue-700 border-blue-200',
+      'SLOT_2': 'bg-green-50 text-green-700 border-green-200',
+      'SLOT_3': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      'SLOT_4': 'bg-purple-50 text-purple-700 border-purple-200',
+      'SLOT_5': 'bg-pink-50 text-pink-700 border-pink-200',
+      'SLOT_6': 'bg-indigo-50 text-indigo-700 border-indigo-200'
+    };
+    return colorMap[timeSlot] || 'bg-gray-50 text-gray-700 border-gray-200';
+  };
 
   // Enhanced stats with better calculations
   const stats = [
@@ -204,7 +243,7 @@ const CourseDetail = () => {
                   <h1 className="text-3xl lg:text-4xl font-bold text-white">{course.title}</h1>
                   <div className="flex items-center gap-4 mt-2 text-blue-100">
                     <div className="flex items-center gap-1">
-                      {course.online ? <FaLaptop className="w-4 h-4" /> : <FaMapMarkerAlt className="w-4 h-4" />}
+                      {course.online ? <FaLaptop className="w-4 h-4 text-blue-500" /> : <FaMapMarkerAlt className="w-4 h-4 text-green-500" />}
                       <span className="text-sm">{course.online ? 'Online' : 'Offline'}</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -344,6 +383,75 @@ const CourseDetail = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Course Schedule Section */}
+                {course?.schedules && course.schedules.length > 0 && (
+                  <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-2xl p-6 border border-orange-200">
+                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                      <FaCalendarWeek className="w-5 h-5 text-orange-600" />
+                      Lịch học khóa học
+                    </h3>
+
+                    {/* Schedule Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {course.schedules.map((schedule, index) => (
+                        <div
+                          key={schedule.id || index}
+                          className={`p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${getTimeSlotColor(schedule.timeSlot)}`}
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <FaCalendarAlt className="w-4 h-4" />
+                              <span className="font-bold text-sm">
+                                {getDayOfWeekText(schedule.dayOfWeek)}
+                              </span>
+                            </div>
+                            <div className="text-xs font-medium opacity-75">
+                              Tiết {schedule.timeSlot.replace('SLOT_', '')}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 mb-2">
+                            <FaClock className="w-4 h-4" />
+                            <span className="font-semibold text-sm">
+                              {getTimeSlotText(schedule.timeSlot)}
+                            </span>
+                          </div>
+
+                          {schedule.timeRange && schedule.timeRange !== getTimeSlotText(schedule.timeSlot) && (
+                            <div className="text-xs opacity-75 mt-1 pl-6">
+                              {schedule.timeRange}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Schedule Summary */}
+                    <div className="mt-6 p-4 bg-white bg-opacity-50 rounded-xl">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-gray-700">
+                          Tổng số buổi học trong tuần:
+                        </span>
+                        <span className="font-bold text-orange-700">
+                          {course.schedules.length} buổi
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-sm mt-2">
+                        <span className="font-medium text-gray-700">
+                          Các ngày trong tuần:
+                        </span>
+                        <span className="font-bold text-orange-700">
+                          {course.schedules
+                            .map(s => getDayOfWeekText(s.dayOfWeek))
+                            .join(', ')
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Course Details Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -494,7 +602,9 @@ const CourseDetail = () => {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {lessons.map((lesson) => (
-                            <tr key={lesson.lessonId} className="hover:bg-gray-50 transition-colors duration-200">
+                            <tr key={lesson.lessonId}
+                                onClick={() => setSelectedLesson(lesson)}
+                                className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center">
                                   <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
@@ -593,7 +703,7 @@ const CourseDetail = () => {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {examsByCourse.map((exam) => {
+                          {examsByCourse.map((exam)=> {
                             const now = new Date();
                             const startTime = new Date(exam.startTime);
                             const endTime = new Date(exam.endTime);
@@ -613,7 +723,9 @@ const CourseDetail = () => {
                             }
 
                             return (
-                              <tr key={exam.examId} className="hover:bg-gray-50 transition-colors duration-200">
+                              <tr key={exam.examId}
+                                  onClick={() => navigate(`/teacher/assignments/${exam.examId}`)}
+                                  className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div className="flex items-center">
                                     <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center mr-3">
@@ -622,7 +734,7 @@ const CourseDetail = () => {
                                     <div>
                                       <div className="text-sm font-medium text-gray-900">{exam.title}</div>
                                       <div className="text-sm text-gray-500">
-                                        {exam.type} • Bài kiểm tra #{exam.examId}
+                                        {exam.type === "MULTIPLE_CHOICE" ? 'Trắc nghiệm' : 'Tự luận'}
                                       </div>
                                     </div>
                                   </div>
@@ -659,16 +771,8 @@ const CourseDetail = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                   <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => navigate(`/teacher/assignments/${exam.examId}`)}
-                                      className="text-blue-600 hover:text-blue-900 transition-colors duration-200"
-                                      title="Xem chi tiết"
-                                    >
-                                      Xem chi tiết
-                                    </button>
-                                    <span className="text-gray-300">•</span>
                                       <button
-                                          onClick={() => navigate(`/teacher/assignments/${exam.examId}/submissions`)}
+                                          onClick={(e ) => {e.stopPropagation(); navigate(`/teacher/assignments/${exam.examId}/submissions`);}}
                                           className="text-green-600 hover:text-green-900 transition-colors duration-200"
                                           title="Xem bài nộp"
                                       >

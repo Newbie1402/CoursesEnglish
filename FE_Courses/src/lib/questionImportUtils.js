@@ -75,7 +75,6 @@ export const parseQuestionsExcel = async (file) => {
         if (lowerSet.has(key)) hasDupOption = true; else lowerSet.add(key);
       });
       if (hasDupOption) {
-        // Sử dụng idx + 2 để đồng bộ (1 header + index bắt đầu 0)
         errorsAcc.push({ row: idx + 2, field: 'options', message: 'Trùng nội dung lựa chọn' });
         return;
       }
@@ -83,17 +82,31 @@ export const parseQuestionsExcel = async (file) => {
         errorsAcc.push({ row: idx + 2, field: 'correctAnswer', message: 'Thiếu đáp án đúng' });
         return;
       }
-      const letter = normalized.correctAnswer.trim().toUpperCase();
-      const letterIndex = letter.charCodeAt(0) - 65;
-      if (letterIndex < 0 || letterIndex >= options.length) {
+      const rawCA = String(normalized.correctAnswer).trim();
+      let answerIndex = -1;
+      // Ưu tiên khớp nội dung (không phân biệt hoa thường)
+      const lowerCA = rawCA.toLowerCase();
+      answerIndex = options.findIndex(o => o.trim().toLowerCase() === lowerCA);
+      if (answerIndex === -1) {
+        // Fallback nếu người dùng vẫn nhập A/B/C...
+        if (rawCA.length === 1) {
+          const letterIdx = rawCA.toUpperCase().charCodeAt(0) - 65;
+          if (letterIdx >= 0 && letterIdx < options.length) {
+            answerIndex = letterIdx;
+          }
+        }
+      }
+      if (answerIndex === -1) {
         errorsAcc.push({ row: idx + 2, field: 'correctAnswer', message: 'Đáp án không khớp lựa chọn' });
         return;
       }
+      const letter = String.fromCharCode(65 + answerIndex);
       validAcc.push({
         content: normalized.content,
         type: 'MULTIPLE_CHOICE',
         options,
-        correctAnswer: letter,
+        // correctAnswer gửi theo NỘI DUNG để phù hợp BE
+        correctAnswer: options[answerIndex],
         isShufflable: /^Y(es)?$/i.test(normalized.shuffle || '') || false,
         maxScore: Number(normalized.maxScore) || 1,
       });
@@ -136,7 +149,7 @@ export const parseQuestionsExcel = async (file) => {
 export const downloadQuestionTemplate = async () => {
   const XLSX = await import('xlsx');
   const ws = XLSX.utils.json_to_sheet([
-    { order: 1, type: 'MULTIPLE_CHOICE', content: 'Ví dụ: Thủ đô Việt Nam?', optionA: 'Hà Nội', optionB: 'TP.HCM', optionC: 'Đà Nẵng', optionD: 'Huế', correctAnswer: 'A', maxScore: 1, shuffle: 'Y' },
+    { order: 1, type: 'MULTIPLE_CHOICE', content: 'Ví dụ: Thủ đô Việt Nam?', optionA: 'Hà Nội', optionB: 'TP.HCM', optionC: 'Đà Nẵng', optionD: 'Huế', correctAnswer: 'Hà Nội', maxScore: 1, shuffle: 'Y' },
     { order: 2, type: 'ESSAY', content: 'Trình bày lợi ích của việc học ngoại ngữ', maxScore: 2 }
   ]);
   const wb = XLSX.utils.book_new();

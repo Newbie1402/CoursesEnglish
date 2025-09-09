@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getAllCourses } from '@/services/hooks/adminService.js';
 import { getProgress } from '@/lib/utils';
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
 import {
   FaSearch,
@@ -15,7 +14,8 @@ import {
   FaTimesCircle,
   FaEye,
   FaChevronRight,
-  FaPlus
+  FaPlus,
+  FaChevronDown
 } from 'react-icons/fa';
 
 const AdminCourseList = () => {
@@ -286,28 +286,48 @@ const AdminCourseList = () => {
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="flex items-center space-x-2">
               <FaFilter className="text-gray-400 w-4 h-4" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All</option>
-                <option value="active">Đang hoạt động</option>
-                <option value="inactive">Tạm dừng</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-[140px] cursor-pointer"
+                  style={{
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    backgroundImage: 'none',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="active">Đang hoạt động</option>
+                  <option value="inactive">Tạm dừng</option>
+                </select>
+                <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 pointer-events-none z-10" />
+              </div>
             </div>
 
             <div className="flex items-center space-x-2">
               <FaSort className="text-gray-400 w-4 h-4" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="newest">Mới nhất</option>
-                <option value="oldest">Cũ nhất</option>
-                <option value="title">Theo tên A-Z</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white min-w-[130px] cursor-pointer"
+                  style={{
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    backgroundImage: 'none',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                  <option value="title">Theo tên A-Z</option>
+                </select>
+                <FaChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 pointer-events-none z-10" />
+              </div>
             </div>
           </div>
         </div>

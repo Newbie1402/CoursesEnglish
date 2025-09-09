@@ -366,14 +366,6 @@ const AdminDashboard = () => {
               <FaGraduationCap className="text-lg" />
               <span>Tạo khóa học mới</span>
             </button>
-            <button className="w-full bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
-              <FaChartLine className="text-lg" />
-              <span>Xem báo cáo chi tiết</span>
-            </button>
-            <button className="w-full bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
-              <FaCog className="text-lg" />
-              <span>Cài đặt hệ thống</span>
-            </button>
           </div>
         </div>
       </div>

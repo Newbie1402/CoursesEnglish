@@ -1,19 +1,32 @@
 import React, { useEffect, useState } from "react";
-import { getMyCourses } from "../../../services/hooks/studentService.js";
+import { getCourseOfStudent } from "@/services/hooks/courseService";
 import CourseCard from "../../../components/student/CourseCard";
+import { useNavigate } from "react-router-dom";
+import { useAuth} from "@/contexts/AuthContext.jsx";
 
 const MyCourses = () => {
+    const { studentId } = useAuth();
+    const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const studentId = 1; // TODO: lấy từ auth context hoặc redux
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const data = await getMyCourses(studentId);
-        setCourses(data);
+        setError(null);
+        const data = await getCourseOfStudent(studentId);
+        // Chuẩn hóa dữ liệu cho CourseCard (id, name, description)
+        const normalized = (data || []).map((c) => ({
+          ...c,
+          id: c.courseId ?? c.id,
+          name: c.title ?? c.name,
+          description: c.description || "",
+        }));
+        setCourses(normalized);
       } catch (err) {
         console.error("Failed to load courses", err);
+        setError("Không thể tải danh sách khóa học.");
       } finally {
         setLoading(false);
       }
@@ -22,11 +35,11 @@ const MyCourses = () => {
   }, [studentId]);
 
   const handleCourseClick = (id) => {
-    // ví dụ: điều hướng sang trang chi tiết
-    console.log("Clicked course:", id);
+    navigate(`/student/courses/${id}`)
   };
 
   if (loading) return <p>Đang tải...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <div className="p-6">
@@ -36,7 +49,7 @@ const MyCourses = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {courses.map((c) => (
-            <CourseCard key={c.id} course={c} onClick={handleCourseClick} />
+            <CourseCard key={c.courseId} course={c} onView={handleCourseClick} />
           ))}
         </div>
       )}

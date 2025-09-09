@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { getCourseDetail } from "../../../services/hooks/studentService.js";
+import { getCourseDetails } from "@/services/hooks/courseService.js";
 import ExamCard from "../../../components/student/ExamCard";
 
 const CourseDetail = () => {
-  const { id } = useParams();           // courseId từ URL
+  const { courseId } = useParams();
   const navigate = useNavigate();
 
   const [course, setCourse] = useState(null);
@@ -13,7 +13,7 @@ const CourseDetail = () => {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const data = await getCourseDetail(id);
+        const data = await getCourseDetails(courseId);
         setCourse(data);
       } catch (e) {
         console.error("Failed to load course detail:", e);
@@ -22,7 +22,7 @@ const CourseDetail = () => {
       }
     };
     fetchDetail();
-  }, [id]);
+  }, [courseId]);
 
   const handleStartExam = (examId) => {
     navigate(`/student/exams/${examId}`);

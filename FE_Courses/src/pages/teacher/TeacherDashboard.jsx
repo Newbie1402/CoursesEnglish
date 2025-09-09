@@ -27,7 +27,7 @@ import { fetchLessons } from '@/services/hooks/useLessonService';
 import useAssignmentService from '@/services/hooks/useAssignmentService';
 import { getProgress } from "@/lib/utils.js";
 import { getNotificationUser } from '@/services/hooks/notificationService';
-import { NOTIFICATION_TYPES } from './NotificaitonsTypes.jsx';
+import { NOTIFICATION_TYPES } from './notifications/NotificaitonsTypes.jsx';
 import { useAuth } from '../../contexts/AuthContext';
 
 const TeacherDashboard = () => {

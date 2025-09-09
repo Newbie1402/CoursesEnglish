@@ -20,7 +20,8 @@ import {
   FaGraduationCap,
   FaPlay,
   FaCheckCircle,
-  FaHourglassHalf
+  FaHourglassHalf,
+  FaPause
 } from 'react-icons/fa';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table/Table';
 import { Button } from '@/components/ui/button/Button';
@@ -40,10 +41,72 @@ const AssignmentList = () => {
   const [sortBy, setSortBy] = useState('newest');
   const [courseDetails, setCourseDetails] = useState({});
   const [submissionStats, setSubmissionStats] = useState({}); // { examId: { submissions, totalStudents } }
+  const [currentPage, setCurrentPage] = useState(0);
   const navigate = useNavigate();
   const { getActiveExamsByTeacher } = useAssignmentService();
   const teacherId = localStorage.getItem('teacherId');
   const { data: activeExams = [] } = getActiveExamsByTeacher(teacherId);
+
+  // Function to get assignment status based on current time
+  const getAssignmentStatus = (startDate, dueDate) => {
+    const now = new Date();
+    const start = new Date(startDate);
+    const due = new Date(dueDate);
+
+    if (now < start) {
+      return 'upcoming'; // Sắp diễn ra
+    } else if (now >= start && now <= due) {
+      return 'active'; // Đang diễn ra
+    } else {
+      return 'ended'; // Kết thúc
+    }
+  };
+
+  // Get status display info
+  const getStatusDisplay = (status) => {
+    switch (status) {
+      case 'upcoming':
+        return {
+          label: 'Sắp diễn ra',
+          icon: FaClock,
+          bgColor: 'bg-blue-100',
+          textColor: 'text-blue-700',
+          borderColor: 'border-blue-200',
+          gradientFrom: 'from-blue-400',
+          gradientTo: 'to-blue-600'
+        };
+      case 'active':
+        return {
+          label: 'Đang diễn ra',
+          icon: FaPlay,
+          bgColor: 'bg-green-100',
+          textColor: 'text-green-700',
+          borderColor: 'border-green-200',
+          gradientFrom: 'from-green-400',
+          gradientTo: 'to-green-600'
+        };
+      case 'ended':
+        return {
+          label: 'Kết thúc',
+          icon: FaCheckCircle,
+          bgColor: 'bg-gray-100',
+          textColor: 'text-gray-700',
+          borderColor: 'border-gray-200',
+          gradientFrom: 'from-gray-400',
+          gradientTo: 'to-gray-600'
+        };
+      default:
+        return {
+          label: 'Không xác định',
+          icon: FaExclamationTriangle,
+          bgColor: 'bg-gray-100',
+          textColor: 'text-gray-700',
+          borderColor: 'border-gray-200',
+          gradientFrom: 'from-gray-400',
+          gradientTo: 'to-gray-600'
+        };
+    }
+  };
 
   useEffect(() => {
     const fetchCourseDetails = async () => {
@@ -97,6 +160,8 @@ const AssignmentList = () => {
   const assignments = useMemo(() => {
     return activeExams.map((exam) => {
       const stat = submissionStats[exam.examId] || {};
+      const status = getAssignmentStatus(exam.startTime, exam.endTime);
+
       return {
         id: exam.examId,
         title: exam.title,
@@ -108,7 +173,7 @@ const AssignmentList = () => {
         duration: exam.durationMinutes || 60,
         submissions: stat.submissions ?? 0,
         totalStudents: stat.totalStudents ?? 0,
-        status: exam.active ? 'active' : 'inactive',
+        status: status, // Sử dụng status được tính toán
         type: exam.type || 'MULTIPLE_CHOICE',
         priority: exam.endTime && new Date(exam.endTime) - new Date() < 24 * 60 * 60 * 1000 ? 'high' : 'normal'
       };
@@ -159,11 +224,12 @@ const AssignmentList = () => {
   // Calculate stats
   const stats = useMemo(() => {
     const total = assignments.length;
+    const upcoming = assignments.filter(a => a.status === 'upcoming').length;
     const active = assignments.filter(a => a.status === 'active').length;
-    const completed = assignments.filter(a => a.status === 'inactive').length;
+    const ended = assignments.filter(a => a.status === 'ended').length;
     const urgent = assignments.filter(a => a.priority === 'high').length;
 
-    return { total, active, completed, urgent };
+    return { total, upcoming, active, ended, urgent };
   }, [assignments]);
 
   // Get unique courses for filter
@@ -197,18 +263,33 @@ const AssignmentList = () => {
     const submissionRate = assignment.totalStudents > 0 ?
       Math.round((assignment.submissions / assignment.totalStudents) * 100) : 0;
 
+    const statusInfo = getStatusDisplay(assignment.status);
+
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 group">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 group relative overflow-hidden">
+        {/* Decorative gradient bar */}
+        <div className={cn(
+          "absolute top-0 left-0 right-0 h-1",
+          `bg-gradient-to-r ${statusInfo.gradientFrom} ${statusInfo.gradientTo}`
+        )} />
+
+        {/* Priority indicator */}
+        {assignment.priority === 'high' && (
+          <div className="absolute top-4 right-4">
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+          <div className="flex-1 pr-4">
+            <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
               {assignment.title}
             </h3>
-            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+            <p className="text-sm text-gray-600 line-clamp-2 mb-3">
               {assignment.description}
             </p>
-            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+            <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <FaBookOpen className="text-xs" />
                 <span>{assignment.course}</span>
@@ -221,11 +302,13 @@ const AssignmentList = () => {
           </div>
 
           <div className={cn(
-            "px-3 py-1 rounded-full text-xs font-medium ml-4",
-            assignment.status === 'active' && "bg-green-100 text-green-700",
-            assignment.status === 'inactive' && "bg-gray-100 text-gray-700"
+            "px-3 py-1 rounded-full text-xs font-medium shadow-sm border flex items-center gap-1.5",
+            statusInfo.bgColor,
+            statusInfo.textColor,
+            statusInfo.borderColor
           )}>
-            {assignment.status === 'active' ? 'Đang diễn ra' : 'Đã kết thúc'}
+            <statusInfo.icon className="w-3 h-3" />
+            {statusInfo.label}
           </div>
         </div>
 
@@ -253,59 +336,71 @@ const AssignmentList = () => {
               {assignment.submissions}/{assignment.totalStudents} ({submissionRate}%)
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
             <div
               className={cn(
-                "h-2 rounded-full transition-all duration-300",
-                submissionRate >= 80 ? "bg-green-500" :
-                submissionRate >= 50 ? "bg-yellow-500" : "bg-red-500"
+                "h-2.5 rounded-full transition-all duration-300 relative",
+                submissionRate >= 80 ? "bg-gradient-to-r from-green-400 to-green-600" :
+                submissionRate >= 50 ? "bg-gradient-to-r from-yellow-400 to-yellow-600" :
+                "bg-gradient-to-r from-red-400 to-red-600"
               )}
               style={{ width: `${submissionRate}%` }}
-            ></div>
+            >
+              <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
+            </div>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="text-center p-2 bg-gray-50 rounded-lg">
-            <FaUsers className="text-blue-500 mx-auto mb-1 text-sm" />
-            <p className="text-xs text-gray-600">Học viên</p>
-            <p className="font-semibold text-gray-900 text-sm">{assignment.totalStudents}</p>
+          <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+            <FaUsers className="text-blue-500 mx-auto mb-1 text-lg" />
+            <p className="text-xs text-blue-600 font-medium">Học viên</p>
+            <p className="font-bold text-blue-900 text-sm">{assignment.totalStudents}</p>
           </div>
-          <div className="text-center p-2 bg-gray-50 rounded-lg">
-            <FaClipboardList className="text-green-500 mx-auto mb-1 text-sm" />
-            <p className="text-xs text-gray-600">Đã nộp</p>
-            <p className="font-semibold text-gray-900 text-sm">{assignment.submissions}</p>
+          <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+            <FaClipboardList className="text-green-500 mx-auto mb-1 text-lg" />
+            <p className="text-xs text-green-600 font-medium">Đã nộp</p>
+            <p className="font-bold text-green-900 text-sm">{assignment.submissions}</p>
           </div>
-          <div className="text-center p-2 bg-gray-50 rounded-lg">
-            <FaChartBar className="text-purple-500 mx-auto mb-1 text-sm" />
-            <p className="text-xs text-gray-600">Loại</p>
-            <p className="font-semibold text-gray-900 text-sm text-xs">
+          <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+            <FaChartBar className="text-purple-500 mx-auto mb-1 text-lg" />
+            <p className="text-xs text-purple-600 font-medium">Loại</p>
+            <p className="font-bold text-purple-900 text-xs">
               {assignment.type === 'MULTIPLE_CHOICE' ? 'Trắc nghiệm' : 'Tự luận'}
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+        <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
           <button
-            onClick={() => handleViewDetails(assignment.id)}
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 transition-colors"
+            onClick={(e) => { e.stopPropagation(); handleViewDetails(assignment.id); }}
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 transform hover:scale-[1.02]"
           >
             <FaEye className="text-xs" />
             Xem chi tiết
           </button>
           <button
-            onClick={() => navigate(`/teacher/assignments/${assignment.id}/submissions`)}
-            className="text-gray-600 hover:text-gray-700 text-sm font-medium flex items-center gap-1 transition-colors"
+            onClick={(e) => { e.stopPropagation(); navigate(`/teacher/assignments/${assignment.id}/submissions`); }}
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-all duration-200 border border-gray-300"
           >
-            <FaEdit className="text-xs" />
-            Xem bài nộp
+            <FaEdit className="text-sm" />
+            Bài nộp
           </button>
         </div>
       </div>
     );
   };
+
+  const pageSize = viewMode === 'grid' ? 6 : 10; // grid: 2 hàng x 3 cột, table: 10 dòng
+
+  // Reset trang khi filter / sort / viewMode đổi
+  useEffect(() => { setCurrentPage(0); }, [searchTerm, filterStatus, filterCourse, sortBy, viewMode]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedAssignments.length / pageSize));
+  const paginatedAssignments = useMemo(() => filteredAndSortedAssignments.slice(currentPage * pageSize, (currentPage + 1) * pageSize), [filteredAndSortedAssignments, currentPage, pageSize]);
+  useEffect(() => { if (currentPage >= totalPages) setCurrentPage(totalPages - 1); }, [totalPages, currentPage]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
@@ -367,7 +462,7 @@ const AssignmentList = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Đã kết thúc</p>
-                <p className="text-3xl font-bold text-blue-600">{stats.completed}</p>
+                <p className="text-3xl font-bold text-blue-600">{stats.ended}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                 <FaCheckCircle className="text-blue-600 text-xl" />
@@ -409,8 +504,9 @@ const AssignmentList = () => {
                 className="min-w-[150px]"
               >
                 <option value="all">Tất cả trạng thái</option>
+                <option value="upcoming">Sắp diễn ra</option>
                 <option value="active">Đang diễn ra</option>
-                <option value="inactive">Đã kết thúc</option>
+                <option value="ended">Kết thúc</option>
               </Select>
 
               <Select
@@ -501,7 +597,7 @@ const AssignmentList = () => {
           <>
             {viewMode === 'grid' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAndSortedAssignments.map(assignment => (
+                {paginatedAssignments.map(assignment => (
                   <AssignmentCard key={assignment.id} assignment={assignment} />
                 ))}
               </div>
@@ -519,8 +615,10 @@ const AssignmentList = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAndSortedAssignments.map((assignment) => (
-                      <TableRow key={assignment.id} className="hover:bg-gray-50 transition-colors">
+                    {paginatedAssignments.map((assignment) => (
+                      <TableRow key={assignment.id}
+                                onClick={() => handleViewDetails(assignment.id)}
+                                className="hover:bg-gray-50 transition-colors cursor-pointer">
                         <TableCell className="font-medium">
                           <div>
                             <p className="font-semibold text-gray-900">{assignment.title}</p>
@@ -566,36 +664,31 @@ const AssignmentList = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium",
-                            assignment.status === 'active'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          )}>
-                            {assignment.status === 'active' ? (
-                              <>
-                                <FaPlay className="w-3 h-3" />
-                                Đang diễn ra
-                              </>
-                            ) : (
-                              <>
-                                <FaCheck className="w-3 h-3" />
-                                Đã kết thúc
-                              </>
-                            )}
-                          </span>
+                          {(() => {
+                            const statusInfo = getStatusDisplay(assignment.status);
+                            return (
+                              <span className={cn(
+                                "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium",
+                                statusInfo.bgColor,
+                                statusInfo.textColor
+                              )}>
+                                <statusInfo.icon className="w-3 h-3" />
+                                {statusInfo.label}
+                              </span>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleViewDetails(assignment.id)}
+                              onClick={(e) => { e.stopPropagation(); handleViewDetails(assignment.id); }}
                               className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                               title="Xem chi tiết"
                             >
                               <FaEye className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => navigate(`/teacher/assignments/${assignment.id}/submissions`)}
+                              onClick={(e) => { e.stopPropagation(); navigate(`/teacher/assignments/${assignment.id}/submissions`); }}
                               className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                               title="Xem bài nộp"
                             >
@@ -609,6 +702,39 @@ const AssignmentList = () => {
                 </Table>
               </div>
             )}
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-8 pt-4 border-t border-gray-200">
+                <div className="text-sm text-gray-600">
+                  Trang {currentPage + 1} / {totalPages} · Tổng {filteredAndSortedAssignments.length} bài tập
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                    disabled={currentPage === 0}
+                    className="px-3 py-2 rounded-lg border text-sm disabled:opacity-50 hover:bg-gray-50"
+                  >Trước</button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }).slice(0, 6).map((_, i) => {
+                      const isActive = i === currentPage;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentPage(i)}
+                          className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                        >{i + 1}</button>
+                      );
+                    })}
+                    {totalPages > 6 && <span className="px-2 text-gray-500">...</span>}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                    disabled={currentPage === totalPages - 1}
+                    className="px-3 py-2 rounded-lg border text-sm disabled:opacity-50 hover:bg-gray-50"
+                  >Tiếp</button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -617,3 +743,4 @@ const AssignmentList = () => {
 };
 
 export default AssignmentList;
+

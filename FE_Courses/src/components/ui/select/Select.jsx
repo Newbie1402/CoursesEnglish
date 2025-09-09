@@ -7,6 +7,7 @@ const Select = React.forwardRef(({
   children,
   error,
   icon: Icon,
+  hideNativeArrow = true,
   ...props
 }, ref) => {
   return (
@@ -15,23 +16,27 @@ const Select = React.forwardRef(({
         className={cn(
           "w-full h-10 pl-3 pr-10 text-sm rounded-md border border-gray-300",
           "bg-white text-gray-900 appearance-none",
+          hideNativeArrow && "[&::-ms-expand]:hidden [background-image:none]", // remove native + plugin arrow
           "focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent",
-          "disabled:cursor-not-allowed disabled:opacity-50",
+            "disabled:cursor-not-allowed disabled:opacity-50",
           error && "border-red-500 focus:ring-red-500",
           className
         )}
+        style={hideNativeArrow ? { WebkitAppearance: 'none', MozAppearance: 'none' } : undefined}
         ref={ref}
         {...props}
       >
         {children}
       </select>
-      <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-        {Icon ? (
-          <Icon className="w-4 h-4 text-gray-400" />
-        ) : (
-          <FaChevronDown className="w-4 h-4 text-gray-400" />
-        )}
-      </div>
+      {hideNativeArrow && (
+        <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+          {Icon ? (
+            <Icon className="w-4 h-4 text-gray-400" />
+          ) : (
+            <FaChevronDown className="w-4 h-4 text-gray-400" />
+          )}
+        </div>
+      )}
     </div>
   );
 });

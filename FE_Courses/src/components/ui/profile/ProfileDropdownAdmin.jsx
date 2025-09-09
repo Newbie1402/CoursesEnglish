@@ -65,12 +65,6 @@ const ProfileDropdownAdmin = ({ admin }) => {
 
   const menuItems = [
     {
-      icon: FaUserCircle,
-      label: 'Trang cá nhân',
-      onClick: () => navigate('/admin/profile'),
-      color: 'text-blue-600'
-    },
-    {
       icon: FaUsers,
       label: 'Quản lý người dùng',
       onClick: () => navigate('/admin/users'),
@@ -94,18 +88,6 @@ const ProfileDropdownAdmin = ({ admin }) => {
       onClick: () => navigate('/admin/notifications'),
       color: 'text-yellow-600'
     },
-    {
-      icon: FaChartBar,
-      label: 'Thống kê & Báo cáo',
-      onClick: () => navigate('/admin/reports'),
-      color: 'text-indigo-600'
-    },
-    {
-      icon: FaCog,
-      label: 'Cài đặt hệ thống',
-      onClick: () => navigate('/admin/settings'),
-      color: 'text-gray-600'
-    }
   ];
 
   const displayName = admin?.fullName || admin?.name || 'Admin';
@@ -204,27 +186,6 @@ const ProfileDropdownAdmin = ({ admin }) => {
                     Đang hoạt động
                   </span>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-100 bg-gray-50/50">
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 sm:mb-2">
-              Thống kê nhanh
-            </h4>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
-              <div>
-                <p className="text-base sm:text-lg font-bold text-purple-600">24</p>
-                <p className="text-xs text-gray-500">Khóa học</p>
-              </div>
-              <div>
-                <p className="text-base sm:text-lg font-bold text-green-600">1,247</p>
-                <p className="text-xs text-gray-500">Người dùng</p>
-              </div>
-              <div>
-                <p className="text-base sm:text-lg font-bold text-blue-600">89</p>
-                <p className="text-xs text-gray-500">Giảng viên</p>
               </div>
             </div>
           </div>

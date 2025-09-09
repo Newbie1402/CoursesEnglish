@@ -14,9 +14,9 @@ import {
   FaSearch,
   FaInfoCircle
 } from 'react-icons/fa';
-import ProfileDropdownAdmin from '../../components/ui/profile/ProfileDropdownAdmin';
-import { useAuth } from '../../contexts/AuthContext';
-import { getUnreadNotification } from '@/services/hooks/notificationService';
+import ProfileDropdownAdmin from '../components/ui/profile/ProfileDropdownAdmin.jsx';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { getUnreadNotification } from '@/services/hooks/notificationService.js';
 
 const adminMenu = [
   {
@@ -48,12 +48,6 @@ const adminMenu = [
     path: '/admin/notifications',
     icon: FaBell,
     color: 'text-yellow-500'
-  },
-  {
-    label: 'Báo cáo',
-    path: '/admin/reports',
-    icon: FaChartBar,
-    color: 'text-indigo-500'
   },
   {
     label: 'Học viên',
@@ -176,7 +170,7 @@ const AdminLayout = () => {
       {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-50
-        w-72 bg-white border-r border-gray-200 
+        w-72 bg-white border-r border-gray-200
         flex flex-col shadow-xl lg:shadow-sm
         transform transition-transform duration-300 ease-in-out lg:transform-none
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -211,10 +205,10 @@ const AdminLayout = () => {
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
                   className={`
-                    group flex items-center space-x-3 px-4 py-3 rounded-xl 
+                    group flex items-center space-x-3 px-4 py-3 rounded-xl
                     font-medium transition-all duration-200 relative overflow-hidden
-                    ${isActive 
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-105' 
+                    ${isActive
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg transform scale-105'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:shadow-md'
                     }
                   `}
@@ -222,7 +216,7 @@ const AdminLayout = () => {
                 >
                   {/* Background animation */}
                   <div className={`
-                    absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 
+                    absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600
                     transform transition-transform duration-300
                     ${isActive ? 'scale-100' : 'scale-0 group-hover:scale-100 opacity-10'}
                   `} />
