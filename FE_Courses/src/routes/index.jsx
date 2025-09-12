@@ -23,7 +23,6 @@ import PrivateRoute from '@/components/auth/PrivateRoute';
 import AuthRedirect from '@/pages/login/AuthRedirect.jsx';
 import Forbidden403 from '@/pages/login/Forbidden403.jsx';
 import StudentLayout from '@/layouts/StudentLayout';
-import AttendanceList from '@/pages/student/attendance/AttendanceList';
 import MyCourses from '@/pages/student/courses/MyCourses';
 import CourseDetailStudent from '@/pages/student/courses/CourseDetail';
 import StudentDashboard from '@/pages/student/dashboard/StudentDashboard';
@@ -39,6 +38,9 @@ import AdminStudentDetail from '@/pages/admin/student/AdminStudentDetail';
 import AdminSubmissionDetail from '@/pages/admin/submission/submissionDetail.jsx';
 import Submissions from '@/pages/student/submissions/Submissions.jsx';
 import SubmissionDetailStudent from '@/pages/student/submissions/SubmissionDetail.jsx';
+import StudentSettings from "@/pages/student/settings/Settings.jsx";
+import CourseRegistration from "@/pages/student/courseRegistration/CourseRegistration.jsx";
+import ScheduleStudent from "@/pages/student/schedules/ScheduleStudent.jsx";
 
 // Tạo lazy loading cho các routes phụ
 const AssignmentList = React.lazy(() => import('@/pages/teacher/assignments/AssignmentList'));
@@ -203,32 +205,54 @@ const router = createBrowserRouter([
       ] },
     ]
   },
-  {
-    path: '/student',
-    element: (
-      <PrivateRoute allowedRoles={['ROLE_STUDENT']}>
-        <StudentLayout />
-      </PrivateRoute>
-    ),
-    children: [
-      { index: true, element: <StudentDashboard /> },
-      { path: 'dashboard', element: <StudentDashboard /> },
-      { path: 'courses', children: [
-        { index: true, element: <MyCourses /> },
-        { path: ':courseId', element: <CourseDetailStudent /> },
-      ] },
-      { path: 'attendance', element: <AttendanceList /> },
-      { path: 'exams', children: [
-        { index: true, element: <ExamList /> },
-        { path: ':examId', element: <ExamDetail /> },
-        { path: ':examId/submission/:submissionId', element: <Submissions /> },
-        { path: ':examId/submission/:submissionId/detail', element: <SubmissionDetailStudent /> },
-      ] },
-      { path: 'grades', element: <GradeOverview /> },
-      { path: 'notifications', element: <NotificationCenter /> },
-      { path: 'feedback', element: <TeacherFeedbackForm /> },
-    ]
-  },
+    {
+        path: '/student',
+        element: (
+            <PrivateRoute allowedRoles={['ROLE_STUDENT']}>
+                <StudentLayout/>
+            </PrivateRoute>
+        ),
+        children: [
+            {index: true, element: <StudentDashboard/>},
+            {path: 'dashboard', element: <StudentDashboard/>},
+            {
+                path: 'courses',
+                children: [
+                    {index: true, element: <MyCourses/>},        // danh sách khóa học
+                    {path: ':id', element: <CourseDetailStudent/>},    // chi tiết khóa học
+                    {path: ':id/exams', element: <ExamList/>},  // danh sách bài kiểm tra trong khóa học
+                ]
+            },
+            {path: 'schedule', element: <ScheduleStudent/>},
+            {
+                path: 'exams', children: [
+                    {path: ':examId', element: <ExamDetail/>},
+                    {path: ':examId/submission/:submissionId', element: <Submissions/>},
+                    {path: ':examId/submission/:submissionId/detail', element: <SubmissionDetailStudent/>},
+                ]
+            },
+            {path: 'submissions/:submissionId/detail', element: <SubmissionDetailStudent/>},
+            {path: 'grades', element: <GradeOverview/>},
+            {path: 'notifications', element: <NotificationCenter/>},
+            {path: 'feedback', element: <TeacherFeedbackForm/>},
+            {
+                path: 'settings',
+                element: (
+                    <React.Suspense fallback={<LoadingFallback/>}>
+                        <StudentSettings/>
+                    </React.Suspense>
+                ),
+            },
+            {
+                path: 'course-registration',
+                element: (
+                    <React.Suspense fallback={<LoadingFallback/>}>
+                        <CourseRegistration/>
+                    </React.Suspense>
+                )
+            },
+        ]
+    },
   {
     path: '/',
     element: <AuthRedirect />,

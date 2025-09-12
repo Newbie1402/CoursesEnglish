@@ -10,7 +10,7 @@ const STATUS_STYLES = {
 
 const STUDENT_STATUS_STYLES = {
   not_started: 'bg-slate-100 text-slate-600 ring-1 ring-slate-300',
-  in_progress: 'bg-amber-100 text-amber-700 ring-1 ring-amber-300 animate-pulse',
+  in_progress: 'bg-amber-100 text-amber-700 ring-1 ring-amber-300',
   submitted: 'bg-purple-100 text-purple-700 ring-1 ring-purple-300'
 };
 
@@ -20,15 +20,6 @@ const getStatusLabel = (status) => {
     case 'ongoing': return 'Đang diễn ra';
     case 'completed': return 'Đã kết thúc';
     default: return 'Không rõ';
-  }
-};
-
-const getStudentStatusLabel = (s) => {
-  switch (s) {
-    case 'not_started': return 'Chưa làm';
-    case 'in_progress': return 'Đang làm';
-    case 'submitted': return 'Đã nộp';
-    default: return '---';
   }
 };
 
@@ -81,16 +72,6 @@ const ExamCard = ({ exam, onStart, studentStatus }) => {
       <div className="flex items-start justify-between gap-4">
         <h3 className="text-lg font-semibold leading-snug line-clamp-2">{exam.title}</h3>
         <span className={`px-3 py-1 text-xs font-medium rounded-full shrink-0 ${STATUS_STYLES[status] || STATUS_STYLES.unknown}`}>{getStatusLabel(status)}</span>
-      </div>
-      <div className="flex flex-wrap gap-2 items-center">
-        {studentStatus && (
-          <span className={`px-2 py-0.5 text-[11px] font-medium rounded-full ${STUDENT_STATUS_STYLES[studentStatus] || STUDENT_STATUS_STYLES.not_started}`}>
-            {getStudentStatusLabel(studentStatus)}
-          </span>
-        )}
-        {!studentStatus && (
-          <span className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-500 ring-1 ring-slate-200">Trạng thái?</span>
-        )}
       </div>
       <div className="text-sm text-gray-600 space-y-1">
         <p><span className="font-medium">Bắt đầu:</span> {formatDateTime(exam.startTime)}</p>

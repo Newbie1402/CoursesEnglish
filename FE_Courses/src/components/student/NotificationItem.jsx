@@ -9,7 +9,7 @@ const NotificationItem = ({ notification, onClick }) => {
       <h3 className="font-semibold">{notification.title}</h3>
       <p className="text-gray-700">{notification.message}</p>
       <span className="text-sm text-gray-500">
-        📅 {new Date(notification.date).toLocaleString()}
+        📅 {new Date(notification.createdAt).toLocaleString()}
       </span>
     </div>
   );

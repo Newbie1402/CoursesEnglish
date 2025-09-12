@@ -370,7 +370,7 @@ const AdminCourseDetail = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Học viên</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số điện thoại</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày sinh</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tham gia vào</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -388,9 +388,9 @@ const AdminCourseDetail = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">{student.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">{student.phoneNumber || '-'}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">{student.phone || '-'}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                          {student.dateOfBirth ? new Date(student.dateOfBirth).toLocaleDateString('vi-VN') : '-'}
+                          {student.enrolledAt ? new Date(student.enrolledAt).toLocaleDateString('vi-VN') : '-'}
                         </td>
                       </tr>
                     ))}

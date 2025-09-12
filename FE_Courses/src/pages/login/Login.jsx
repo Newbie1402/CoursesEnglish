@@ -28,7 +28,6 @@ const Login = () => {
       const { token, error } = event.data || {};
       if (token) {
         localStorage.setItem('token', token);
-        addToast('Đăng nhập thành công!', 'success');
         navigate('/');
       } else if (error) {
         addToast(error, 'error');
