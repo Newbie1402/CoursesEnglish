@@ -8,11 +8,13 @@ import com.Courses.Courses.service.MailSenderService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/accepted-accounts")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class AcceptedAccountController {
 
     private final AcceptedAccountService acceptedAccountService;

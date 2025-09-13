@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/notifications")
 @CrossOrigin
+@PreAuthorize("isAuthenticated()")
 public class NotificationController {
     private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
 
@@ -34,6 +36,7 @@ public class NotificationController {
      * Lấy danh sách thông báo của người dùng hiện tại
      */
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResponseData<Page<NotificationDto>>> getMyNotifications(
             @RequestHeader("Authorization") String authHeader,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -66,6 +69,7 @@ public class NotificationController {
      * Lấy số lượng thông báo chưa đọc
      */
     @GetMapping("/unread-count")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResponseData<Map<String, Long>>> getUnreadCount(
             @RequestHeader("Authorization") String authHeader) {
         try {
@@ -100,6 +104,7 @@ public class NotificationController {
      * Đánh dấu một thông báo là đã đọc
      */
     @PutMapping("/{id}/read")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResponseData<NotificationDto>> markAsRead(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable Long id) {
@@ -132,6 +137,7 @@ public class NotificationController {
      * Đánh dấu tất cả thông báo là đã đọc
      */
     @PutMapping("/read-all")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResponseData<Void>> markAllAsRead(
             @RequestHeader("Authorization") String authHeader) {
         try {

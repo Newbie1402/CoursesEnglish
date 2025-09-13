@@ -198,6 +198,7 @@ public class SubmissionController {
      * Lấy chi tiết bài nộp
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN') or @submissionService.isSubmissionOwnedByCurrentUser(#id)")
     public ResponseEntity<ResponseData<SubmissionDto>> getSubmissionById(@PathVariable Long id) {
         return ResponseEntity.ok(
                 new ResponseData<>(

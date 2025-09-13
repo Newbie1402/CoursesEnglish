@@ -5,6 +5,7 @@ import com.Courses.Courses.model.request.LessonUpdateRequest;
 import com.Courses.Courses.service.LessonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,7 @@ public class LessonController {
      * Chỉ nhận request, validate, gọi service xử lý nghiệp vụ
      */
     @PostMapping(value = "/upload", consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<LessonDto> uploadLesson(
             @RequestParam("title") String title,
             @RequestParam("file") MultipartFile file,
@@ -38,6 +40,7 @@ public class LessonController {
      * Lấy tất cả bài giảng (bao gồm cả active/inactive)
      */
     @GetMapping("/view/all")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<List<LessonDto>> getAllLessons() {
         return ResponseEntity.ok(lessonService.getAllLessons());
     }
@@ -78,6 +81,7 @@ public class LessonController {
      * Cập nhật thông tin bài giảng (title, file mới, courseId)
      */
     @PutMapping(value = "/update/{id}", consumes = {"multipart/form-data"})
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<LessonDto> updateLesson(
             @PathVariable Long id,
             @RequestParam("title") String title,
@@ -92,6 +96,7 @@ public class LessonController {
      * Đổi trạng thái active/inactive cho bài giảng
      */
     @PatchMapping("/update/{id}/active")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<?> setLessonActive(
             @PathVariable Long id,
             @RequestParam boolean active

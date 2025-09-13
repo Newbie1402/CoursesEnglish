@@ -7,6 +7,7 @@ import com.Courses.Courses.service.CourseService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,7 @@ public class CourseController {
     }
 
     @GetMapping("/view/full")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     public ResponseEntity<List<CourseDto>> getFULLCourses() {
         List<CourseDto> courses = courseService.getFULLCourses();
         return ResponseEntity.ok(courses);
@@ -38,6 +40,7 @@ public class CourseController {
      * Lấy danh sách khoá học đang hoạt động theo ID của giáo viên
      */
     @GetMapping("/teacher/{teacherId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<List<CourseDto>> getActiveCoursesForTeacher(@PathVariable Long teacherId) {
         List<CourseDto> courses = courseService.getActiveCoursesForTeacher(teacherId);
         return ResponseEntity.ok(courses);
@@ -47,6 +50,7 @@ public class CourseController {
      * Lấy danh sách khoá học đang hoạt động theo ID của Học viên
      */
     @GetMapping("/student/{studentId}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'ADMIN') or @securityUtils.isCurrentUser(#studentId)")
     public ResponseEntity<List<CourseDto>> getActiveCoursesForStudent(@PathVariable Long studentId) {
         List<CourseDto> courses = courseService.getActiveCoursesForStudent(studentId);
         return ResponseEntity.ok(courses);
@@ -65,6 +69,7 @@ public class CourseController {
      * Sửa thông tin khoá học
      */
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<CourseDto> updateCourse(@PathVariable Long id, @Valid @RequestBody CourseUpdateRequest request) {
         CourseDto updated = courseService.updateCourse(id, request);
         return ResponseEntity.ok(updated);
@@ -74,6 +79,7 @@ public class CourseController {
      * Inactive (xoá mềm) khoá học
      */
     @DeleteMapping("/inactive/{id}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<String> inactiveCourse(@PathVariable Long id, @RequestParam boolean active) {
         courseService.setActiveStatus(id, active);
         String message = active ? "Hiển thị khoá học thành công." : "Ẩn khoá học thành công.";
@@ -84,6 +90,7 @@ public class CourseController {
      * Thêm mới khoá học
      */
     @PostMapping("/create")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<CourseDto> createCourse(@Valid @RequestBody CourseCreateRequest request) {
         CourseDto created = courseService.createCourse(request);
         return ResponseEntity.status(201).body(created);

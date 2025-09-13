@@ -34,7 +34,7 @@ public class TeacherCommentController {
      * API cập nhật nhận xét (chỉ dành cho TEACHER)
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('TEACHER')")
+    @PreAuthorize("hasRole('TEACHER') and @teacherCommentService.isCommentCreatedByTeacher(#id, principal.username)")
     public ResponseEntity<ResponseData<TeacherCommentDto>> updateComment(
             @PathVariable Long id,
             @Valid @RequestBody TeacherCommentUpdateRequest request) {
@@ -45,7 +45,7 @@ public class TeacherCommentController {
      * API xóa nhận xét (chỉ dành cho TEACHER)
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('TEACHER')")
+    @PreAuthorize("hasRole('TEACHER') and @teacherCommentService.isCommentCreatedByTeacher(#id, principal.username)")
     public ResponseEntity<ResponseData<String>> deleteComment(@PathVariable Long id) {
         return teacherCommentService.deleteComment(id);
     }
@@ -71,6 +71,7 @@ public class TeacherCommentController {
      * API lấy nhận xét theo ID học viên
      */
     @GetMapping("/student/{studentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER') or @securityUtils.isCurrentUser(#studentId)")
     public ResponseEntity<ResponseData<List<TeacherCommentDto>>> getCommentsByStudentId(
             @PathVariable Long studentId) {
         return teacherCommentService.getCommentsByStudentId(studentId);

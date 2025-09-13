@@ -8,12 +8,7 @@ import com.Courses.Courses.model.request.SubmissionAnswerRequest;
 import com.Courses.Courses.model.request.SubmissionCreateRequest;
 import com.Courses.Courses.model.request.SubmissionUpdateRequest;
 import com.Courses.Courses.model.response.ResponseData;
-import com.Courses.Courses.repository.CourseRepository;
-import com.Courses.Courses.repository.ExamRepository;
-import com.Courses.Courses.repository.QuestionRepository;
-import com.Courses.Courses.repository.StudentRepository;
-import com.Courses.Courses.repository.SubmissionRepository;
-import com.Courses.Courses.repository.TeacherCommentReposiory;
+import com.Courses.Courses.repository.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
@@ -22,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +56,9 @@ public class SubmissionService {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
 
     /**
      * Lấy tất cả bài làm của một học sinh (chỉ học sinh đó nhìn thấy)
@@ -561,5 +562,49 @@ public class SubmissionService {
                     )
             );
         }
+    }
+
+    /**
+     * Kiểm tra xem người dùng hiện tại có phải là chủ sở hữu của bài nộp hay không
+     * @param submissionId ID của bài nộp cần kiểm tra
+     * @return true nếu người dùng hiện tại là chủ sở hữu của bài nộp, ngược lại false
+     */
+    public boolean isSubmissionOwnedByCurrentUser(Long submissionId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        String email = null;
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        } else {
+            email = principal.toString();
+        }
+
+        // Tìm user hiện tại
+        Optional<Users> currentUserOpt = usersRepository.findByEmail(email);
+        if (currentUserOpt.isEmpty()) {
+            return false;
+        }
+
+        Users currentUser = currentUserOpt.get();
+
+        // Tìm bài nộp
+        Optional<Submission> submissionOpt = submissionRepository.findById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return false;
+        }
+
+        Submission submission = submissionOpt.get();
+
+        // Nếu người dùng là học sinh, kiểm tra xem học sinh có phải là người nộp bài không
+        Student student = studentRepository.findStudentByUser_Id(currentUser.getId());
+        if (student != null && submission.getStudent() != null) {
+            return submission.getStudent().getId().equals(student.getId());
+        }
+
+        return false;
     }
 }

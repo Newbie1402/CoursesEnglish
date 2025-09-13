@@ -7,6 +7,7 @@ import com.Courses.Courses.model.response.ResponseData;
 import com.Courses.Courses.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class StudentController {
      * API lấy danh sách toàn bộ học sinh
      */
     @GetMapping("/view/all")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ResponseData<List<StudentDto>>> getAllStudents() {
         // Gọi service và trả về response chuẩn hóa
         return studentService.getAllStudents();
@@ -33,6 +35,7 @@ public class StudentController {
      * API lấy thông tin chi tiết học sinh theo id
      */
     @GetMapping("/view/{id}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN') or @securityUtils.isCurrentUser(#id)")
     public ResponseEntity<ResponseData<StudentDto>> getStudentById(@PathVariable Long id) {
         return studentService.getStudentById(id);
     }
@@ -41,6 +44,7 @@ public class StudentController {
      * API thêm mới học sinh
      */
     @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseData<StudentDto>> createStudent(@Validated @RequestBody StudentCreateRequest request) {
         return studentService.createStudent(request);
     }
@@ -49,6 +53,7 @@ public class StudentController {
      * API cập nhật thông tin học sinh theo id
      */
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @securityUtils.isCurrentUser(#id)")
     public ResponseEntity<ResponseData<StudentDto>> updateStudent(@PathVariable Long id, @Validated @RequestBody StudentUpdateRequest request) {
         return studentService.updateStudent(id, request);
     }

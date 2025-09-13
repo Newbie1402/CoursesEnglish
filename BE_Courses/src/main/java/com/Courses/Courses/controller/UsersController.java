@@ -34,6 +34,7 @@ public class UsersController {
      * API cập nhật thông tin cá nhân của người dùng
      */
     @PutMapping("/{id}/profile")
+    @PreAuthorize("hasRole('ADMIN') or @securityUtils.isCurrentUser(#id)")
     public ResponseEntity<ResponseData<UsersDto>> updateUserProfile(
             @PathVariable Long id,
             @Valid @RequestBody UserUpdateRequest request) {

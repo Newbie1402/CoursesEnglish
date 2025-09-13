@@ -8,6 +8,7 @@ import com.Courses.Courses.service.QuestionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class QuestionController {
      * Lấy tất cả câu hỏi
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ResponseData<List<QuestionDto>>> getAllQuestions() {
         return questionService.getAllQuestions();
     }
@@ -31,6 +33,7 @@ public class QuestionController {
      * Lấy tất cả câu hỏi của một bài kiểm tra
      */
     @GetMapping("/exam/{examId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'STUDENT')")
     public ResponseEntity<ResponseData<List<QuestionDto>>> getQuestionsByExamId(@PathVariable Long examId) {
         return questionService.getAllQuestionsByExamId(examId);
     }
@@ -39,6 +42,7 @@ public class QuestionController {
      * Lấy chi tiết câu hỏi theo ID
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'STUDENT')")
     public ResponseEntity<ResponseData<QuestionDto>> getQuestionById(@PathVariable Long id) {
         return questionService.getQuestionById(id);
     }
@@ -47,6 +51,7 @@ public class QuestionController {
      * Tạo câu hỏi mới
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ResponseData<QuestionDto>> createQuestion(@RequestBody @Valid QuestionCreateRequest request) {
         return questionService.createQuestion(request);
     }
@@ -55,6 +60,7 @@ public class QuestionController {
      * Cập nhật câu hỏi
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ResponseData<QuestionDto>> updateQuestion(
             @PathVariable Long id,
             @RequestBody @Valid QuestionUpdateRequest request) {
@@ -70,6 +76,7 @@ public class QuestionController {
      * Xóa câu hỏi
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
     public ResponseEntity<ResponseData<Void>> deleteQuestion(@PathVariable Long id) {
         return questionService.deleteQuestion(id);
     }

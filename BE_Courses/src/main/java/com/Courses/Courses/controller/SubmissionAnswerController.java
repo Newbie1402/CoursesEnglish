@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class SubmissionAnswerController {
      * @return Câu trả lời đã được thêm
      */
     @PostMapping("/submission/{submissionId}")
+    @PreAuthorize("hasRole('STUDENT') and @submissionService.isSubmissionOwnedByCurrentUser(#submissionId)")
     public ResponseEntity<ResponseData<SubmissionAnswer>> addAnswer(
             @PathVariable Long submissionId,
             @RequestBody @Valid SubmissionAnswer answer) {
@@ -45,6 +47,7 @@ public class SubmissionAnswerController {
      * @return Câu trả lời sau khi cập nhật
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('STUDENT') and @submissionService.isSubmissionAnswerOwnedByCurrentUser(#id)")
     public ResponseEntity<ResponseData<SubmissionAnswer>> updateAnswer(
             @PathVariable Long id,
             @RequestBody @Valid SubmissionAnswer answer) {
@@ -55,6 +58,7 @@ public class SubmissionAnswerController {
      * Xóa câu trả lời
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('STUDENT') and @submissionService.isSubmissionAnswerOwnedByCurrentUser(#id)")
     public ResponseEntity<ResponseData<Void>> deleteAnswer(@PathVariable Long id) {
         return submissionService.deleteAnswer(id);
     }
@@ -64,6 +68,7 @@ public class SubmissionAnswerController {
      * Chỉ dùng để theo dõi hành vi học sinh trong quá trình làm bài
      */
     @PostMapping("/track-choice")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ResponseData<Void>> trackChoiceAction(
             @RequestBody @Valid ChoiceTrackingRequest request) {
         try {
@@ -132,6 +137,7 @@ public class SubmissionAnswerController {
      * Ghi nhận hàng loạt hành động chọn đáp án (batch)
      */
     @PostMapping("/track-choices/batch")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ResponseData<Void>> trackChoiceActions(
             @RequestBody @Valid List<ChoiceTrackingRequest> requests) {
         try {
