@@ -1,36 +1,14 @@
-import axios from "axios";
+import api from '../api';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL_STUDENT;
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-const api = axios.create({
-    baseURL: BASE_URL,
-    withCredentials: true,
-});
-
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-        const bearer = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
-        config.headers = { ...(config.headers || {}) };
-        if (!config.headers.Authorization) config.headers.Authorization = bearer;
-    }
-    return config;
-});
-
+// Helper functions để giữ nguyên logic
 const unwrap = (res) => res?.data?.data ?? res?.data ?? null;
-const getToken = () => localStorage.getItem("token") || "";
-const authHeader = (explicitToken) => {
-    const t = explicitToken ?? getToken();
-    return t ? { Authorization: `Bearer ${t}` } : {};
-};
 const resolveStudentId = (maybe) =>
     (maybe ?? localStorage.getItem("studentId") ?? undefined);
 
 // Lấy tất cả học viên
 export const get1AllStudent = async () => {
   try {
-    const res = await axios.get(`${BASE_URL}/api/student/view/all`);
+    const res = await api.get(`/api/student/view/all`);
     return res.data?.data || [];
   } catch (err) {
     console.error("Error fetching all students:", err);
@@ -41,7 +19,7 @@ export const get1AllStudent = async () => {
 // Lấy chi tiết học viên
 export const getStudentDetail1 = async (studentId) => {
   try {
-    const res = await axios.get(`${BASE_URL}/api/student/view/${studentId}`);
+    const res = await api.get(`/api/student/view/${studentId}`);
     return res.data?.data || null;
   } catch (err) {
     console.error(`Error fetching student detail for ID ${studentId}:`, err);
@@ -52,7 +30,7 @@ export const getStudentDetail1 = async (studentId) => {
 // Lấy danh sách khóa học
 export const getMyCourses1 = async (studentId) => {
   try {
-    const res = await axios.get(`${API_URL}/${studentId}/courses`);
+    const res = await api.get(`/api/students/${studentId}/courses`);
     return res.data;
   } catch (err) {
     console.error("Error fetching courses:", err);
@@ -63,7 +41,7 @@ export const getMyCourses1 = async (studentId) => {
 // Lấy chi tiết 1 khóa học
 export const getCourseDetail1 = async (courseId) => {
   try {
-    const res = await axios.get(`${API_URL}/courses/${courseId}`);
+    const res = await api.get(`/api/courses/${courseId}`);
     return res.data;
   } catch (err) {
     console.error("Error fetching course detail:", err);
@@ -74,7 +52,7 @@ export const getCourseDetail1 = async (courseId) => {
 // Lấy danh sách bài kiểm tra
 export const getMyExams1 = async (studentId) => {
   try {
-    const res = await axios.get(`${API_URL}/${studentId}/exams`);
+    const res = await api.get(`/api/students/${studentId}/exams`);
     return res.data;
   } catch (err) {
     console.error("Error fetching exams:", err);
@@ -82,11 +60,10 @@ export const getMyExams1 = async (studentId) => {
   }
 };
 
-
 // Gửi feedback đến giáo viên
 export const sendTeacherFeedback = async (studentId, courseId, feedback) => {
   try {
-    const res = await axios.post(`${API_URL}/${studentId}/courses/${courseId}/feedback`, {
+    const res = await api.post(`/api/students/${studentId}/courses/${courseId}/feedback`, {
       feedback,
     });
     return res.data;
@@ -97,12 +74,10 @@ export const sendTeacherFeedback = async (studentId, courseId, feedback) => {
 };
 
 // Lấy danh sách thông báo
-export const getNotifications = async (token, page = 0, size = 10) => {
-    const t = token || getToken();
+export const getNotifications = async (page = 0, size = 10) => {
     try {
         const res = await api.get(`/api/notifications`, {
-            params: { page, size },
-            headers: authHeader(t),
+            params: { page, size }
         });
         const pg = unwrap(res);
         // Trả về mảng cho UI: ưu tiên pg.content nếu có, nếu không thì pg (một số BE trả về mảng thẳng)
@@ -116,12 +91,9 @@ export const getNotifications = async (token, page = 0, size = 10) => {
 };
 
 // Lấy số lượng thông báo chưa đọc
-export const getUnreadNotificationCount = async (token) => {
-    const t = token || getToken();
+export const getUnreadNotificationCount = async () => {
     try {
-        const res = await api.get(`/api/notifications/unread-count`, {
-            headers: authHeader(t),
-        });
+        const res = await api.get(`/api/notifications/unread-count`);
         const data = unwrap(res);
         return typeof data === "number" ? data : data?.count || 0;
     } catch (error) {
@@ -131,12 +103,9 @@ export const getUnreadNotificationCount = async (token) => {
 };
 
 // Đánh dấu tất cả đã đọc
-export const markAllNotificationsAsRead = async (token) => {
-    const t = token || getToken();
+export const markAllNotificationsAsRead = async () => {
     try {
-        await api.put(`/api/notifications/read-all`, null, {
-            headers: authHeader(t),
-        });
+        await api.put(`/api/notifications/read-all`);
         return true;
     } catch (error) {
         console.error("Lỗi khi đánh dấu tất cả thông báo đã đọc:", error);
@@ -246,7 +215,6 @@ export const getStudentDetail = async (studentId) => {
         throw err;
     }
 };
-
 
 // Lấy danh sách khóa học của học viên (alias cho getMyEnrolledCourses)
 export const getMyCourses = async (studentId) => {
@@ -499,10 +467,12 @@ export const getAttendance = async (studentId) => {
             })
         );
 
-        return lessonsArrays.flat();
+        // flatten tất cả mảng lessons + sắp xếp theo ngày giảm dần
+        return lessonsArrays
+            .flat()
+            .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     } catch (err) {
-        console.error("Error building attendance from lessons:", err);
-        // Đừng throw để UI vẫn chạy được
+        console.error("Error fetching attendance:", err);
         return [];
     }
 };

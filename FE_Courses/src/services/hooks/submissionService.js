@@ -1,9 +1,8 @@
-import axios from 'axios';
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import api from '../api';
 
 export const getSubmissionsList = async (examId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/submissions/exam/${examId}`);
+        const res = await api.get(`/api/submissions/exam/${examId}`);
         return res.data?.data || [];
     } catch (err) {
         console.error("Error fetching submission details:", err);
@@ -13,7 +12,7 @@ export const getSubmissionsList = async (examId) => {
 
 export const getSubmissionDetail = async (submissionId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/submissions/${submissionId}`);
+        const res = await api.get(`/api/submissions/${submissionId}`);
         return res.data?.data || {};
     } catch (err) {
         console.error("Error fetching submission details:", err);
@@ -23,7 +22,7 @@ export const getSubmissionDetail = async (submissionId) => {
 
 export const getSubmissionAnswer = async (submissionId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/submissions/${submissionId}/answers`);
+        const res = await api.get(`/api/submissions/${submissionId}/answers`);
         return res.data?.data || [];
     } catch (err) {
         console.error("Error fetching submission answers:", err);
@@ -33,7 +32,7 @@ export const getSubmissionAnswer = async (submissionId) => {
 
 export const getSubmissionStudent = async (studentId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/submissions/student/${studentId}`);
+        const res = await api.get(`/api/submissions/student/${studentId}`);
         return res.data?.data || [];
     } catch (err) {
         console.error("Error fetching submission student:", err);
@@ -43,7 +42,7 @@ export const getSubmissionStudent = async (studentId) => {
 
 export const gradeAnswer = async (answerId, score, feedback) => {
     try {
-        const res = await axios.patch(`${BASE_URL}/api/submissions/answers/${answerId}/grade`,
+        const res = await api.patch(`/api/submissions/answers/${answerId}/grade`,
             {
                 score,
                 feedback});
@@ -56,7 +55,7 @@ export const gradeAnswer = async (answerId, score, feedback) => {
 
 export const deleteSubmission = async (submissionId) => {
     try {
-        const res = await axios.delete(`${BASE_URL}/api/submissions/${submissionId}`);
+        const res = await api.delete(`/api/submissions/${submissionId}`);
         return res.data || {};
     } catch (err) {
         console.error(`Error deleting submission ${submissionId}:`, err);
@@ -66,7 +65,7 @@ export const deleteSubmission = async (submissionId) => {
 
 export const updateSubmission = async (submissionId) => {
     try {
-        const res = await axios.patch(`${BASE_URL}/api/submissions/${submissionId}/update`);
+        const res = await api.patch(`/api/submissions/${submissionId}/update`);
         return res.data || {};
     } catch (err) {
         console.error(`Error updating submission ${submissionId}:`, err);
@@ -76,7 +75,7 @@ export const updateSubmission = async (submissionId) => {
 
 export const notAttempts = async (examId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/submissions/not-attempted/exam/${examId}`);
+        const res = await api.get(`/api/submissions/not-attempted/exam/${examId}`);
         return res.data?.data || [];
     } catch (err) {
         console.error("Error fetching not attempts students:", err);
@@ -95,7 +94,7 @@ export const notAttempts = async (examId) => {
 
 export const startExam = async (examId, studentId, password) => {
     try {
-        const res = await axios.post(`${BASE_URL}/api/submissions/start-exam?examId=${examId}&studentId=${studentId}&password=${password}`);
+        const res = await api.post(`/api/submissions/start-exam?examId=${examId}&studentId=${studentId}&password=${password}`);
         return res.data?.data || {};
     } catch (err) {
         console.error(`Error starting exam ${examId} from studentId ${studentId} with password ${password}:`, err);
@@ -105,7 +104,7 @@ export const startExam = async (examId, studentId, password) => {
 
 export const finishExam = async (submissionId) => {
     try {
-        const res = await axios.post(`${BASE_URL}/api/submissions/${submissionId}/finish`);
+        const res = await api.post(`/api/submissions/${submissionId}/finish`);
         return res.data?.data || {};
     } catch (err) {
         console.error(`Error finishing exam with submission ${submissionId}:`, err);
@@ -115,7 +114,7 @@ export const finishExam = async (submissionId) => {
 
 export const createAnswers = async (questionId, studentAnswer, submissionId) => {
     try {
-        const res = await axios.post(`${BASE_URL}/api/submissions/${submissionId}/answers`, { questionId ,studentAnswer });
+        const res = await api.post(`/api/submissions/${submissionId}/answers`, { questionId ,studentAnswer });
         return res.data?.data || {};
     } catch (err) {
         console.error(`Error submitting answers for submission ${submissionId}:`, err);
@@ -125,7 +124,7 @@ export const createAnswers = async (questionId, studentAnswer, submissionId) => 
 
 export const updateAnswer = async (answerId, studentAnswer) => {
     try {
-        const res = await axios.put(`${BASE_URL}/api/submission-answers/${answerId}`, { studentAnswer });
+        const res = await api.put(`/api/submission-answers/${answerId}`, { studentAnswer });
         return res.data?.data || {};
     } catch (err) {
         console.error(`Error updating answers ${answerId}:`, err);
@@ -135,7 +134,7 @@ export const updateAnswer = async (answerId, studentAnswer) => {
 
 export const deleteAnswer = async (answerId) => {
     try {
-        const res = await axios.delete(`${BASE_URL}/api/submission-answers/${answerId}`);
+        const res = await api.delete(`/api/submission-answers/${answerId}`);
         return res.data || {};
     } catch (err) {
         console.error(`Error deleting answers ${answerId}:`, err);
@@ -145,7 +144,7 @@ export const deleteAnswer = async (answerId) => {
 
 export const checkStatusSubmission = async (submissionId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/submissions/${submissionId}/status`);
+        const res = await api.get(`/api/submissions/${submissionId}/status`);
         return res?.data || {};
     } catch (err) {
         console.error(`Error checking time remaining for submission ${submissionId}:`, err);
@@ -173,7 +172,7 @@ export const trackChoiceAction = async (actions) => {
                 currentChoices: Array.isArray(currentChoices) ? currentChoices : []
             }];
         }
-        const res = await axios.post(`${BASE_URL}/api/submission-answers/track-choice`, actions);
+        const res = await api.post(`/api/submission-answers/track-choice`, actions);
         return res?.data || {};
     } catch (err) {
         console.error(`Error tracking choice actions:`, err);
@@ -192,7 +191,7 @@ export const trackChoiceActionBatch = async (actions = []) => {
             console.warn('trackChoiceActionBatch expects an array.');
             return {};
         }
-        const res = await axios.post(`${BASE_URL}/api/submission-answers/track-choices/batch`, actions);
+        const res = await api.post(`/api/submission-answers/track-choices/batch`, actions);
         return res?.data || {};
     } catch (err) {
         console.error(`Error tracking batch choice actions:`, err);

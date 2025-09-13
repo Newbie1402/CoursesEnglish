@@ -1,53 +1,51 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import api from '../api';
 
 // API tạo bài kiểm tra
 const createExamApi = async (examData) => {
-  const response = await axios.post(`${BASE_URL}/api/exams/create`, examData);
+  const response = await api.post(`/api/exams/create`, examData);
   return response.data;
 };
 
 // API tạo câu hỏi
 const createQuestionApi = async (data) => {
-  const response = await axios.post(`${BASE_URL}/api/questions`, data);
+  const response = await api.post(`/api/questions`, data);
   return response.data;
 };
 
 // API lấy danh sách bài kiểm tra đang hoạt động của giáo viên
 const fetchActiveExamsByTeacher = async (teacherId) => {
-  const response = await axios.get(`${BASE_URL}/api/exams/teacher/${teacherId}/active`);
+  const response = await api.get(`/api/exams/teacher/${teacherId}/active`);
   return response.data.data; // Trả về danh sách bài kiểm tra
 };
 
 // API lấy danh sách bài kiểm tra dang active của một khóa học
 const fetchExamsByCourse = async (courseId) => {
-  const response = await axios.get(`${BASE_URL}/api/exams/course/${courseId}/active`);
+  const response = await api.get(`/api/exams/course/${courseId}/active`);
   return response.data.data; // Trả về danh sách bài kiểm tra
 };
 
 // API lấy danh sách câu hỏi của một bài kiểm tra
 const fetchQuestionsByExam = async (examId) => {
-    const response = await axios.get(`${BASE_URL}/api/questions/exam/${examId}`);
+    const response = await api.get(`/api/questions/exam/${examId}`);
     return response.data.data; // Trả về danh sách câu hỏi
 };
 
 // API lấy thông tin chi tiết của một bài kiểm tra
 const fetchExamById = async (examId) => {
-  const response = await axios.get(`${BASE_URL}/api/exams/${examId}`);
+  const response = await api.get(`/api/exams/${examId}`);
   return response.data.data; // Trả về thông tin chi tiết bài kiểm tra
 };
 
 // API cập nhật câu hỏi
 const updateQuestionApi = async ({ questionId, data }) => {
-  const response = await axios.put(`${BASE_URL}/api/questions/${questionId}`, data);
+  const response = await api.put(`/api/questions/${questionId}`, data);
   return response.data;
 };
 
 // API xóa câu hỏi
 const deleteQuestionApi = async (questionId) => {
-  const response = await axios.delete(`${BASE_URL}/api/questions/${questionId}`);
+  const response = await api.delete(`/api/questions/${questionId}`);
   return response.data;
 };
 

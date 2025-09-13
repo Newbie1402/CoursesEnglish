@@ -1,9 +1,8 @@
-import axios from "axios";
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import api from '../api';
 
 export const getLessonOfCourse = async (courseId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/lessons/course/${courseId}`);
+        const res = await api.get(`/api/lessons/course/${courseId}`);
         return res?.data || []; // Đảm bảo trả về một mảng
     } catch (err) {
         console.error(`Error fetching lessons for course ID ${courseId}:`, err);
@@ -14,7 +13,7 @@ export const getLessonOfCourse = async (courseId) => {
 // Lay chi tiet mot lesson
 export const getLessonDetails = async (lessonId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/lessons/view/${lessonId}`);
+        const res = await api.get(`/api/lessons/view/${lessonId}`);
         return res?.data || null; // Trả về null nếu không có dữ liệu
     } catch (err) {
         console.error(`Error fetching details for lesson ID ${lessonId}:`, err);

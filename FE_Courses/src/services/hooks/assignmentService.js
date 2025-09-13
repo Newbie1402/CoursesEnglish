@@ -1,9 +1,8 @@
-import axios from "axios";
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import api from '../api';
 
 export const getAssignmentOfCourses = async (courseId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/exams/course/${courseId}/active`);
+        const res = await api.get(`/api/exams/course/${courseId}/active`);
         return res.data?.data || []; // Đảm bảo trả về một mảng
     } catch (err) {
         console.error("Error fetching assignments for course:", err);
@@ -14,7 +13,7 @@ export const getAssignmentOfCourses = async (courseId) => {
 // lay thong tin chi tiet bai kiem tra
 export const getAssignmentDetails = async (assignmentId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/exams/${assignmentId}`);
+        const res = await api.get(`/api/exams/${assignmentId}`);
         return res.data?.data || null; // Trả về null nếu không có dữ liệu
     } catch (err) {
         console.error(`Error fetching details for assignment ID ${assignmentId}:`, err);
@@ -35,7 +34,7 @@ export const countAssignmentsInCourse = async (courseId) => {
 
 export const getQuestions = async (examId) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/questions/exam/${examId}`);
+        const res = await api.get(`/api/questions/exam/${examId}`);
         return res.data?.data || []; // Đảm bảo trả về một mảng
     } catch (err) {
         console.error("Error fetching questions for assignment:", err);

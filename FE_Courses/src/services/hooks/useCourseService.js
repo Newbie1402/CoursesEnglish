@@ -1,42 +1,40 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import api from '../api';
 
 // Lấy danh sách khóa học của giảng viên
 const fetchCourses = async (teacherId) => {
-  const response = await axios.get(`${BASE_URL}/api/courses/teacher/${teacherId}`);
+  const response = await api.get(`/api/courses/teacher/${teacherId}`);
   return response.data;
 };
 
 // Lấy chi tiết khóa học
 const fetchCourseDetail = async (courseId) => {
   if (!courseId) throw new Error('Thiếu courseId');
-  const response = await axios.get(`${BASE_URL}/api/courses/view/${courseId}`);
+  const response = await api.get(`/api/courses/view/${courseId}`);
   return response.data;
 };
 
 // Tạo mới khóa học
 const createCourseApi = async (courseData) => {
-  const response = await axios.post(`${BASE_URL}/api/courses/create`, courseData);
+  const response = await api.post(`/api/courses/create`, courseData);
   return response.data;
 };
 
 // Cập nhật khóa học
 const updateCourseApi = async ({ courseId, data }) => {
-  const response = await axios.put(`${BASE_URL}/api/courses/update/${courseId}`, data);
+  const response = await api.put(`/api/courses/update/${courseId}`, data);
   return response.data;
 };
 
 // Xóa (inactive) khóa học
 const deleteCourseApi = async (courseId) => {
-  const response = await axios.delete(`${BASE_URL}/api/courses/inactive/${courseId}?active=false`);
+  const response = await api.delete(`/api/courses/inactive/${courseId}?active=false`);
   return response.data;
 };
 
 // Fetch danh sách học viên theo khóa học
 const fetchStudentsByCourse = async (courseId) => {
-  const response = await axios.get(`${BASE_URL}/api/enrollments/course/${courseId}/students`);
+  const response = await api.get(`/api/enrollments/course/${courseId}/students`);
   return Array.isArray(response.data.data) ? response.data.data : [];
 };
 

@@ -1,15 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import api from '../api';
 
 // Lấy danh sách bài học (theo courseId hoặc tất cả bài học active)
 const fetchLessons = async ({ courseId }) => {
   let response;
   if (courseId) {
-    response = await axios.get(`${BASE_URL}/api/lessons/course/${courseId}`);
+    response = await api.get(`/api/lessons/course/${courseId}`);
   } else {
-    response = await axios.get(`${BASE_URL}/api/lessons/view/active`);
+    response = await api.get(`/api/lessons/view/active`);
   }
   const lessons = Array.isArray(response.data) ? response.data : [];
   return lessons.filter(lesson => lesson.active === true); // Chỉ lấy các bài học có active = true
@@ -22,7 +20,7 @@ const createLessonApi = async (formData) => {
   const file = Array.isArray(formData.file) ? formData.file[0] : formData.file;
   data.append('file', file);
   data.append('courseId', formData.courseId);
-  const response = await axios.post(`${BASE_URL}/api/lessons/upload`, data, {
+  const response = await api.post(`/api/lessons/upload`, data, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data;
@@ -34,8 +32,8 @@ const updateLessonApi = async ({ lessonId, data }) => {
   if (data.title) formData.append('title', data.title);
   if (data.file) formData.append('file', data.file);
   if (data.courseId) formData.append('courseId', data.courseId);
-  const response = await axios.put(
-    `${BASE_URL}/api/lessons/update/${lessonId}`,
+  const response = await api.put(
+    `/api/lessons/update/${lessonId}`,
     formData,
     {
       headers: {
@@ -48,7 +46,7 @@ const updateLessonApi = async ({ lessonId, data }) => {
 
 // Xóa (ẩn) bài học
 const deleteLessonApi = async (lessonId) => {
-  const response = await axios.patch(`${BASE_URL}/api/lessons/update/${lessonId}/active?active=false`);
+  const response = await api.patch(`/api/lessons/update/${lessonId}/active?active=false`);
   return response.data;
 };
 

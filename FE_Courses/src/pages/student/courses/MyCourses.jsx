@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { getMyCourses } from "@/services/hooks/studentService";
-import { getTeacherDetails } from "@/services/hooks/teacherService";
+// Thay đổi import để sử dụng useTeacherService thay vì getTeacherDetails riêng lẻ
+import useTeacherService from "@/services/hooks/useTeacherService";
 import { useAuth } from "@/contexts/AuthContext.jsx";
 import {
     Card,
@@ -35,9 +36,11 @@ const normalizeCourse = (c) => ({
 
 const MyCourses = ({ studentId: propStudentId }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { studentId } = useAuth(); // { studentId, ... } được set trong LoginCallback
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Search and Filter States
     const [searchTerm, setSearchTerm] = useState("");
@@ -46,11 +49,19 @@ const MyCourses = ({ studentId: propStudentId }) => {
     const [sortOrder, setSortOrder] = useState("asc"); // asc | desc
     const [showFilters, setShowFilters] = useState(false);
 
+    // Sử dụng useTeacherService để lấy thông tin giảng viên
+    const {
+        getTeacherDetails,
+        // Các state và hàm khác nếu cần thiết
+    } = useTeacherService();
+
     useEffect(() => {
         let mounted = true;
 
         const fetchCourses = async () => {
             setLoading(true);
+            setError(null);
+
             try {
                 if (!studentId) {
                     setCourses([]);
@@ -65,17 +76,43 @@ const MyCourses = ({ studentId: propStudentId }) => {
                 if (needDetails.length) {
                     const detailResults = await Promise.all(needDetails.map(async (c) => {
                         try {
-                            const teacher = await getTeacherDetails(c.teacherId);
+                            const response = await getTeacherDetails(c.teacherId);
+
+                            // Kiểm tra nếu token hết hạn hoặc lỗi xác thực
+                            if (response?.error) {
+                                if (response.redirectToLogin) {
+                                    // Nếu cần chuyển hướng về trang đăng nhập
+                                    navigate('/login', {
+                                        state: { from: location.pathname, message: response.message }
+                                    });
+                                    return null; // Dừng xử lý
+                                }
+
+                                // Nếu có lỗi nhưng không cần chuyển hướng
+                                return {
+                                    id: c.id,
+                                    teacherName: "Không thể tải thông tin",
+                                    teacherId: c.teacherId
+                                };
+                            }
+
+                            // Lấy dữ liệu teacher từ response mới
+                            const teacher = response.data;
                             return {
                                 id: c.id,
                                 teacherName: teacher?.fullName || teacher?.name || "Chưa cập nhật",
                                 teacherId: c.teacherId,
                             };
-                        } catch {
+                        } catch (err) {
+                            console.error(`Error getting teacher details for course ${c.id}:`, err);
                             return { id: c.id, teacherName: "Chưa cập nhật", teacherId: c.teacherId };
                         }
                     }));
-                    const map = new Map(detailResults.map(r => [r.id, r]));
+
+                    // Lọc ra các kết quả không null (trường hợp redirect)
+                    const validResults = detailResults.filter(result => result !== null);
+
+                    const map = new Map(validResults.map(r => [r.id, r]));
                     normalized = normalized.map(c => {
                         const add = map.get(c.id);
                         return add ? { ...c, ...add } : c;
@@ -85,7 +122,10 @@ const MyCourses = ({ studentId: propStudentId }) => {
                 if (mounted) setCourses(normalized);
             } catch (err) {
                 console.error("Error fetching courses:", err);
-                if (mounted) setCourses([]);
+                if (mounted) {
+                    setCourses([]);
+                    setError("Không thể tải danh sách khóa học. Vui lòng thử lại sau.");
+                }
             } finally {
                 if (mounted) setLoading(false);
             }
@@ -95,7 +135,7 @@ const MyCourses = ({ studentId: propStudentId }) => {
         return () => {
             mounted = false;
         };
-    }, [studentId]);
+    }, [studentId, navigate, location.pathname, getTeacherDetails]);
 
     // Get unique teachers for filter dropdown
     const uniqueTeachers = useMemo(() => {

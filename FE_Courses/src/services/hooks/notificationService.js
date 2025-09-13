@@ -1,10 +1,8 @@
-import axios from "axios";
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import api from "../api";
 
-export const getNotificationUser = async (token, page = 0, size = 10) => {
+export const getNotificationUser = async (page = 0, size = 10) => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/notifications`, {
-            headers: { Authorization: `Bearer ${token}` },
+        const res = await api.get(`/api/notifications`, {
             params: { page, size }
         });
         return res?.data || {};
@@ -14,11 +12,9 @@ export const getNotificationUser = async (token, page = 0, size = 10) => {
     }
 };
 
-export const getUnreadNotification = async (token) => {
+export const getUnreadNotification = async () => {
     try {
-        const res = await axios.get(`${BASE_URL}/api/notifications/unread-count`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get(`/api/notifications/unread-count`);
         return res?.data?.data?.count || 0;
     } catch (err) {
         console.error("Error fetching unread notifications count:", err);
@@ -26,11 +22,9 @@ export const getUnreadNotification = async (token) => {
     }
 };
 
-export const markRead = async (id, token) => {
+export const markRead = async (id) => {
     try {
-        const res = await axios.put(`${BASE_URL}/api/notifications/${id}/read`, {}, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.put(`/api/notifications/${id}/read`, {});
         return res?.data || {};
     } catch (err) {
         console.error(`Error marking notification ${id} as read:`, err);
@@ -38,11 +32,9 @@ export const markRead = async (id, token) => {
     }
 };
 
-export const markReadAll = async (token) => {
+export const markReadAll = async () => {
     try {
-        const res = await axios.put(`${BASE_URL}/api/notifications/read-all`, {}, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.put(`/api/notifications/read-all`, {});
         return res?.data || {};
     } catch (err) {
         console.error("Error marking all notifications as read:", err);
