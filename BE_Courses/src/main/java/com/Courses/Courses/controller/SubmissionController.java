@@ -96,7 +96,7 @@ public class SubmissionController {
      * Lấy danh sách các câu trả lời của một bài nộp (dành cho giáo viên chấm điểm)
      */
     @GetMapping("/{submissionId}/answers")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN', 'STUDENT') or @submissionService.isSubmissionOwnedByCurrentUser(#submissionId)")
     public ResponseEntity<ResponseData<List<SubmissionAnswer>>> getSubmissionAnswers(@PathVariable Long submissionId) {
         return submissionService.getSubmissionAnswers(submissionId);
     }
