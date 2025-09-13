@@ -89,7 +89,7 @@ public class CourseService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Học viên với id: " + studentId));
 
         // Lấy danh sách khoá học active của Học viên
-        List<Course> courses = courseRepository.findByTeacherIdAndActiveTrue(studentId);
+        List<Course> courses = courseRepository.findByEnrollments_Student_IdAndActiveTrue(studentId);
         return courses.stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
