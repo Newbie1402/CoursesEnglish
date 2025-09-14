@@ -33,6 +33,11 @@ public class TeacherController {
      * API lấy thông tin chi tiết giáo viên theo id
      */
     @GetMapping("/view/{id}")
+    @PreAuthorize(
+            "hasRole('ADMIN') " +
+                    "or hasRole('TEACHER') " +
+                    "or (hasRole('STUDENT') and @securityUtils.canViewTeacher(#id))"
+    )
     public ResponseEntity<ResponseData<TeacherDto>> getTeacherById(@PathVariable Long id) {
         return teacherService.getTeacherById(id);
     }

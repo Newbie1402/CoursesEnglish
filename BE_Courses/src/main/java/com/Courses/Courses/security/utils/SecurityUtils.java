@@ -82,4 +82,30 @@ public class SecurityUtils {
         }
         return principal.toString();
     }
+
+    public boolean canViewTeacher(Long teacherId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) return false;
+
+        String email;
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        } else {
+            email = principal.toString();
+        }
+
+        Optional<Users> userOpt = usersRepository.findByEmail(email);
+        if (userOpt.isEmpty()) return false;
+        Users currentUser = userOpt.get();
+
+        Student student = studentRepository.findStudentByUser_Id(currentUser.getId());
+        if (student == null) return false;
+
+        // TODO: check xem student này có liên kết với teacherId không
+        // Ví dụ: return teacherRepository.existsByIdAndStudentsContains(teacherId, student);
+
+        return true; // tạm thời cho phép hết student
+    }
+
 }

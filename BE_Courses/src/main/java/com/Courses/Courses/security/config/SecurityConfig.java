@@ -41,7 +41,8 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                         // phân quyền API
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers("/api/teacher/view/**").hasAnyRole("TEACHER","ADMIN","STUDENT")
+                        .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER","ADMIN")
                         .requestMatchers("/api/student/**").authenticated()
                         // tất cả request khác cần authenticated
                         .anyRequest().authenticated()
