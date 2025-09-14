@@ -35,18 +35,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
-    @Autowired
     private final UsersRepository usersRepository;
-
-    @Autowired
     private final CustomUserDetailService customUserDetailService;
-
-    @Autowired
     private final OAuth2AuthorizedClientService authorizedClientService;
-
     private final GooglePeopleService googlePeopleService;
     private final JWTUtil jwtService;
-
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
 
@@ -56,7 +49,6 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
@@ -64,12 +56,14 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
 
+        // Lấy access token từ Google OAuth2
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
                 oauthToken.getAuthorizedClientRegistrationId(),
                 oauthToken.getName());
         String accessToken = client.getAccessToken().getTokenValue();
 
+        // Lấy số điện thoại từ Google People API
         String phone = null;
         try {
             phone = googlePeopleService.fetchPrimaryPhone(accessToken);
@@ -77,13 +71,14 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             e.printStackTrace();
         }
 
-        // check accepted account
+        // Kiểm tra AcceptedAccount
         Optional<AcceptedAccount> acceptedAccountOptional = acceptedAccountRepository.findByEmail(email);
         if (acceptedAccountOptional.isEmpty()) {
             response.sendRedirect(frontendUrl + "/oauth2/error?reason=not_accepted");
             return;
         }
 
+        // Tìm hoặc tạo mới User
         Optional<Users> optionalUser = usersRepository.findByEmail(email);
         Users user;
         if (optionalUser.isPresent()) {
@@ -105,7 +100,20 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             usersRepository.save(user);
         }
 
+        // ✅ Kiểm tra trạng thái User
+        if (user.getStatus() == Status.INACTIVE) {
+            response.sendRedirect(frontendUrl + "/oauth2/error?reason=not_accepted");
+            return;
+        }
+        if (user.getStatus() == Status.BANNED) {
+            response.sendRedirect(frontendUrl + "/oauth2/error?reason=not_accepted");
+            return;
+        }
+
+        // Load UserDetails để sinh JWT
         UserDetails userDetails = customUserDetailService.loadUserByUsername(user.getEmail());
+
+        // Lấy studentId và teacherId nếu có
         Long studentId = studentRepository.findStudentByUser_Id(user.getId()) != null
                 ? studentRepository.findStudentByUser_Id(user.getId()).getId()
                 : null;
@@ -114,10 +122,11 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 ? teacherRepository.findTeacherByUser_Id(user.getId()).getId()
                 : null;
 
+        // Sinh JWT
         String jwt = jwtService.generateToken(userDetails);
         String encodedToken = URLEncoder.encode(jwt, StandardCharsets.UTF_8);
 
-
+        // Redirect về frontend kèm thông tin
         String redirectUri = frontendUrl + "/oauth2/redirect"
                 + "?token=" + encodedToken
                 + "&userId=" + user.getId()
@@ -125,6 +134,5 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 + "&teacherId=" + (teacherId != null ? teacherId : "null");
 
         response.sendRedirect(redirectUri);
-
     }
 }
