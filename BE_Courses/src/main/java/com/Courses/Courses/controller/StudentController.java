@@ -45,7 +45,7 @@ public class StudentController {
      * API thêm mới học sinh
      */
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','STUDENT')")
     public ResponseEntity<ResponseData<StudentDto>> createStudent(@Validated @RequestBody StudentCreateRequest request) {
         return studentService.createStudent(request);
     }
