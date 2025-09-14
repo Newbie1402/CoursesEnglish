@@ -1,8 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  FaEdit,
-  FaTrash,
   FaPlus,
   FaUserGraduate,
   FaBook,
@@ -24,9 +22,7 @@ import {
 } from 'react-icons/fa';
 import {formatDate, getProgress} from "@/lib/utils.js";
 import useCourseService from "@/services/hooks/useCourseService.js";
-import CourseUpdate from './CourseUpdate.jsx';
-import { useToast } from '@/components/ui/toast/Toast.jsx';
-import Modal from '@/components/ui/modal/Modal.jsx';
+import CourseUpdate from '../../admin/course/CourseUpdate.jsx';
 import LessonCreate from '../lessons/LessonCreate.jsx';
 import LessonDetail from '../lessons/LessonDetail.jsx';
 import useLessonService from "@/services/hooks/useLessonService.js";
@@ -37,19 +33,16 @@ const CourseDetail = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = React.useState('overview');
   const [showUpdateModal, setShowUpdateModal] = React.useState(false);
-  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
   const [showCreateLessonModal, setShowCreateLessonModal] = React.useState(false);
   const [selectedLesson, setSelectedLesson] = React.useState(null);
 
-  const { getCourseDetail, deleteCourse, getStudentListByCourse } = useCourseService();
+  const { getCourseDetail, getStudentListByCourse } = useCourseService();
   const { getLessonList } = useLessonService();
   const { getExamsByCourse } = useAssignmentService();
   const { data: course, isLoading, isError, error, refetch } = getCourseDetail(courseId);
-  const { mutate: handleDeleteCourse, isLoading: isDeleting } = deleteCourse;
   const { data: lessons = [], isLoading: isLoadingLessons, isError: isErrorLessons, refetch: refetchLessons } = getLessonList(courseId);
-  const { data: students = [], isLoading: isLoadingStudents, isError: isErrorStudents } = getStudentListByCourse(courseId);
+  const { data: students = [], isLoading: isLoadingStudents} = getStudentListByCourse(courseId);
   const { data: examsByCourse = [] } = getExamsByCourse(courseId);
-  const { addToast } = useToast();
 
   // Mapping functions for schedule data
   const getDayOfWeekText = (dayOfWeek) => {
@@ -136,9 +129,7 @@ const CourseDetail = () => {
     const endDate = new Date(end);
     return Math.max(0, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1);
   };
-
-  const handleEdit = () => setShowUpdateModal(true);
-  const handleCloseUpdate = () => setShowUpdateModal(false);
+    const handleCloseUpdate = () => setShowUpdateModal(false);
   const handleUpdateSuccess = () => {
     refetch();
   };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -13,11 +13,29 @@ import {
   FaTimes,
   FaEdit,
   FaExclamationCircle,
-  FaSpinner
+  FaSpinner,
+  FaPlus
 } from 'react-icons/fa';
 import { updateCourse as updateCourseApi } from '@/services/hooks/courseService.js';
 import Modal from '@/components/ui/modal/Modal.jsx';
 import { useToast } from '@/components/ui/toast/Toast.jsx';
+
+const DAY_OPTIONS = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY'];
+const SLOT_OPTIONS = ['SLOT_1','SLOT_2','SLOT_3','SLOT_4','SLOT_5','SLOT_6'];
+const TIME_SLOT_RANGES = {
+  SLOT_1: '06:45 - 09:15',
+  SLOT_2: '09:25 - 11:55',
+  SLOT_3: '12:10 - 13:00',
+  SLOT_4: '14:50 - 17:20',
+  SLOT_5: '17:30 - 20:00',
+  SLOT_6: '20:10 - 21:50',
+};
+
+const scheduleSchema = z.object({
+  id: z.number().optional(),
+  dayOfWeek: z.enum(DAY_OPTIONS, { required_error: 'Chọn ngày trong tuần' }),
+  timeSlot: z.enum(SLOT_OPTIONS, { required_error: 'Chọn ca học' })
+});
 
 const courseSchema = z.object({
   title: z.string().min(3, 'Tên khóa học phải có ít nhất 3 ký tự'),
@@ -25,7 +43,8 @@ const courseSchema = z.object({
   online: z.boolean(),
   startDate: z.string().min(1, 'Vui lòng chọn ngày bắt đầu'),
   endDate: z.string().min(1, 'Vui lòng chọn ngày kết thúc'),
-  teacherId: z.number().min(1, 'Vui lòng nhập ID giảng viên')
+  teacherId: z.number().min(1, 'Vui lòng nhập ID giảng viên'),
+  schedules: z.array(scheduleSchema).default([])
 });
 
 const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
@@ -36,22 +55,32 @@ const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
     defaultValues: course ? {
       title: course.title,
       description: course.description,
-      online: course.online,
+      online: !!course.online,
       startDate: course.startDate,
       endDate: course.endDate,
-      teacherId: course.teacherId
-    } : undefined
+      teacherId: course.teacherId,
+      schedules: Array.isArray(course.schedules)
+        ? course.schedules.map(s => ({ id: s.id, dayOfWeek: s.dayOfWeek, timeSlot: s.timeSlot }))
+        : []
+    } : {
+      title: '', description: '', online: false, startDate: '', endDate: '', teacherId: 0, schedules: []
+    }
   });
+
+  const { fields, append, remove } = useFieldArray({ control: form.control, name: 'schedules' });
 
   React.useEffect(() => {
     if (course) {
       form.reset({
         title: course.title,
         description: course.description,
-        online: course.online,
+        online: !!course.online,
         startDate: course.startDate,
         endDate: course.endDate,
-        teacherId: course.teacherId
+        teacherId: course.teacherId,
+        schedules: Array.isArray(course.schedules)
+          ? course.schedules.map(s => ({ id: s.id, dayOfWeek: s.dayOfWeek, timeSlot: s.timeSlot }))
+          : []
       });
     }
   }, [course]);
@@ -59,7 +88,12 @@ const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
   const handleSubmit = async (data) => {
     try {
       setIsLoading(true);
-      const payload = { ...data, teacherId: Number(data.teacherId), online: Boolean(data.online) };
+      const payload = {
+        ...data,
+        teacherId: Number(data.teacherId),
+        online: Boolean(data.online),
+        schedules: Array.isArray(data.schedules) ? data.schedules.map(s => ({ id: s.id, dayOfWeek: s.dayOfWeek, timeSlot: s.timeSlot })) : []
+      };
       const res = await updateCourseApi({ courseId: course.courseId, data: payload });
       const statusCode = res?.statusCode ?? res?.status ?? 200;
       if (res && (statusCode === 200 || statusCode === 0)) {
@@ -153,7 +187,7 @@ const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
                       {...form.register('description')}
                       rows={4}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm resize-none"
-                      placeholder="Nhập mô tả chi ti��t về khóa học..."
+                      placeholder="Nhập mô tả chi tiết về khóa học..."
                     />
                     {form.formState.errors.description && (
                       <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
@@ -244,6 +278,96 @@ const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Schedules Section */}
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-6 border border-orange-100">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Lịch học</h3>
+                <button
+                  type="button"
+                  onClick={() => append({ dayOfWeek: 'MONDAY', timeSlot: 'SLOT_1' })}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-orange-500 text-white hover:bg-orange-600"
+                >
+                  <FaPlus className="w-4 h-4" /> Thêm lịch
+                </button>
+              </div>
+
+              {fields.length === 0 ? (
+                <p className="text-sm text-gray-500">Chưa có lịch học. Nhấn "Thêm lịch" để tạo.</p>
+              ) : (
+                <div className="space-y-4">
+                  {fields.map((field, index) => {
+                    const slot = form.watch(`schedules.${index}.timeSlot`);
+                    return (
+                      <div key={field.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end bg-white/60 p-4 rounded-xl border border-orange-100">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Thứ</label>
+                          <select
+                            {...form.register(`schedules.${index}.dayOfWeek`)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          >
+                            {DAY_OPTIONS.map(d => (
+                              <option key={d} value={d}>{
+                                d === 'MONDAY' ? 'Thứ 2' :
+                                d === 'TUESDAY' ? 'Thứ 3' :
+                                d === 'WEDNESDAY' ? 'Thứ 4' :
+                                d === 'THURSDAY' ? 'Thứ 5' :
+                                d === 'FRIDAY' ? 'Thứ 6' :
+                                d === 'SATURDAY' ? 'Thứ 7' : 'Chủ nhật'
+                              }</option>
+                            ))}
+                          </select>
+                          {form.formState.errors.schedules?.[index]?.dayOfWeek && (
+                            <p className="text-xs text-red-600 mt-1">{form.formState.errors.schedules[index].dayOfWeek.message}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Ca</label>
+                          <select
+                            {...form.register(`schedules.${index}.timeSlot`)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          >
+                            {SLOT_OPTIONS.map(s => (
+                              <option key={s} value={s}>{
+                                s === 'SLOT_1' ? 'Ca 1' :
+                                s === 'SLOT_2' ? 'Ca 2' :
+                                s === 'SLOT_3' ? 'Ca 3' :
+                                s === 'SLOT_4' ? 'Ca 4' :
+                                s === 'SLOT_5' ? 'Ca 5' : 'Ca 6'
+                              }</option>
+                            ))}
+                          </select>
+                          {form.formState.errors.schedules?.[index]?.timeSlot && (
+                            <p className="text-xs text-red-600 mt-1">{form.formState.errors.schedules[index].timeSlot.message}</p>
+                          )}
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Khung giờ</label>
+                          <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700">
+                            {TIME_SLOT_RANGES[slot] || '-'}
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1">Tự động theo ca học</p>
+                        </div>
+
+                        <div className="hidden" />
+
+                        <div className="flex items-end justify-end md:col-span-4">
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            className="px-3 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Teacher Info Section */}

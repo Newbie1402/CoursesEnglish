@@ -152,7 +152,6 @@ const CourseDetail = () => {
         let cancel = false;
         (async () => {
             if (!course) return;
-            // teacherId = 0 coi như chưa phân công → bỏ qua fetch
             if (course.teacherId === 0) return null;
             if (course.teacherName && course.teacherName.trim().length) return;
             if (!course.teacherId) return;

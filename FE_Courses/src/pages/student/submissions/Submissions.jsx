@@ -6,7 +6,6 @@ import { trackChoiceActionBatch, getSubmissionDetail } from '@/services/hooks/su
 import { getAssignmentDetails } from '@/services/hooks/assignmentService';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import {
-  Clock,
   Send,
   Save,
   CheckCircle,
@@ -20,7 +19,6 @@ import {
   Loader2,
   ArrowLeft,
   CircleCheckBig,
-  Circle,
   Brain
 } from 'lucide-react';
 

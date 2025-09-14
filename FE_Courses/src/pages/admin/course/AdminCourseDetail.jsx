@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaTrash, FaUserGraduate, FaBook, FaClipboardList, FaUserPlus, FaCheckCircle, FaTimesCircle, FaClock, FaCalendarAlt } from 'react-icons/fa';
+import { FaTrash, FaUserGraduate, FaBook, FaClipboardList, FaUserPlus, FaCheckCircle, FaTimesCircle, FaClock, FaCalendarAlt, FaEdit } from 'react-icons/fa';
 import { countLessonsInCourse } from '@/services/hooks/lessonService';
 import { countAssignmentsInCourse } from '@/services/hooks/assignmentService';
 import { countStudentsInCourse, getStudentOfCourse } from '@/services/hooks/adminService';
@@ -11,6 +11,7 @@ import { getCourseDetails, deleteCourse } from '@/services/hooks/courseService';
 import { getProgress } from "@/lib/utils.js";
 import AddStudentModal from '../student/AddStudentModal';
 import LessonDetailModal from "@/pages/admin/lesson/LessonDetailModal.jsx";
+import CourseUpdate from './CourseUpdate.jsx';
 import { formatDate } from "@/lib/utils.js";
 
 const AdminCourseDetail = () => {
@@ -29,6 +30,7 @@ const AdminCourseDetail = () => {
   const [selectedLessonId, setSelectedLessonId] = useState(null);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
 
   // Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -181,7 +183,14 @@ const AdminCourseDetail = () => {
                     </span>
                   </div>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center gap-3">
+                  <button
+                    onClick={() => setShowUpdateModal(true)}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-200 space-x-2 shadow-sm"
+                  >
+                    <FaEdit className="w-4 h-4" />
+                    <span>Chỉnh sửa</span>
+                  </button>
                   <button
                     onClick={handleDeleteCourse}
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all duration-200 space-x-2 shadow-lg"
@@ -313,6 +322,7 @@ const AdminCourseDetail = () => {
                             {schedule.timeSlot === 'SLOT_3' && 'Ca 3'}
                             {schedule.timeSlot === 'SLOT_4' && 'Ca 4'}
                             {schedule.timeSlot === 'SLOT_5' && 'Ca 5'}
+                            {schedule.timeSlot === 'SLOT_6' && 'Ca 6'}
                           </p>
                         </div>
                       </div>
@@ -592,6 +602,21 @@ const AdminCourseDetail = () => {
         courseId={courseId}
         onSuccess={handleAddStudentSuccess}
       />
+
+      {/* Update Course Modal */}
+      {showUpdateModal && (
+        <CourseUpdate
+          open={showUpdateModal}
+          onClose={() => setShowUpdateModal(false)}
+          course={course}
+          onSuccess={async () => {
+            // refresh course details after update
+            const updated = await getCourseDetails(courseId);
+            setCourse(updated);
+            showToast('Cập nhật khóa học thành công', 'success');
+          }}
+        />
+      )}
 
       {/* Delete Confirm Modal */}
       {showDeleteConfirmModal && (
