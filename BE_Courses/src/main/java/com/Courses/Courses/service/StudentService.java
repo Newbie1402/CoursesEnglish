@@ -15,7 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -105,6 +107,23 @@ public class StudentService {
         );
     }
 
+    public ResponseEntity<ResponseData<Map<String, Object>>> getStudentsStatsByTeacherId(Long teacherId) {
+        List<Student> students = studentRepository.findAllByTeacherId(teacherId);
+        List<StudentDto> studentDtos = students.stream().map(this::toDto).collect(Collectors.toList());
+        Long count = studentRepository.countByTeacherId(teacherId);
+        Map<String, Object> result = new HashMap<>();
+        result.put("students", studentDtos);
+        result.put("studentCount", count);
+        result.put("teacherId", teacherId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ResponseData<>(
+                        StatusApplication.SUCCESS.getCode(),
+                        StatusApplication.SUCCESS.getMessage(),
+                        result
+                )
+        );
+    }
 
     private StudentDto toDto(Student student) {
         Users user = student.getUser();

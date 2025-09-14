@@ -13,6 +13,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Controller
@@ -56,5 +57,12 @@ public class StudentController {
     @PreAuthorize("hasRole('ADMIN') or @securityUtils.isCurrentUser(#id)")
     public ResponseEntity<ResponseData<StudentDto>> updateStudent(@PathVariable Long id, @Validated @RequestBody StudentUpdateRequest request) {
         return studentService.updateStudent(id, request);
+    }
+
+//     API lấy thống kê học sinh theo ID của một giảng viên cụ thể
+    @GetMapping("/teacher/{teacherId}/count")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public ResponseEntity<ResponseData<Map<String, Object>>> getStudentsStatsByTeacherId(@PathVariable Long teacherId) {
+        return studentService.getStudentsStatsByTeacherId(teacherId);
     }
 }
