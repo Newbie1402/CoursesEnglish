@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 import { Input } from '@/components/ui/input/Input';
 import { Form, FormField } from '@/components/ui/form/Form';
@@ -23,10 +22,8 @@ import {
   FaSpinner
 } from 'react-icons/fa';
 import { useToast } from '@/components/ui/toast/Toast';
-import useTeacherService from '@/services/hooks/useTeacherService.js';
-import { useAuth } from '@/contexts/AuthContext';
+import { createTeacher, getTeacherDetail, updateTeacherInfo, updateUserProfile, uploadAvatar } from '@/services/hooks/teacherService.js';
 import { formatDate, validatePhoneNumber } from '@/lib/utils';
-import axios from 'axios';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -36,7 +33,7 @@ const Settings = () => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const { addToast } = useToast();
-    const [form, setForm] = useState({
+  const [form, setForm] = useState({
     specialization: '',
     bio: '',
     experienceYears: ''
@@ -52,83 +49,49 @@ const Settings = () => {
     avatarUrl: ''
   });
 
-  const teacherId = localStorage.getItem('teacherId');
+  const [teacherId, setTeacherId] = useState(localStorage.getItem('teacherId'));
   const userId = localStorage.getItem('userId');
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  const {
-    teacherInfo,
-    loading: teacherLoading,
-    createTeacher,
-    getTeacherInfo,
-    updateTeacherInfo,
-    setTeacherInfo,
-    updateUserProfile
-  } = useTeacherService(BASE_URL);
-
-  useEffect(() => {
-    // Nếu chưa có teacherId, tự động tạo hồ sơ giảng viên rỗng
-    if (!teacherId || teacherId === 'null') {
-      if (userId) {
-        setLoading(true);
-        createTeacher({ userId })
-          .then((data) => {
-            if (data) {
-              localStorage.setItem('teacherId', data.teacherId);
-              setForm({
-                specialization: data.specialization || '',
-                bio: data.bio || '',
-                experienceYears: data.experienceYears?.toString() || ''
-              });
-              addToast('Đã tạo hồ sơ giảng viên mặc định. Vui lòng cập nhật thông tin!', 'success');
-            }
-          })
-          .catch(() => addToast('Không thể tạo hồ sơ giảng viên mặc định', 'error'))
-          .finally(() => setLoading(false));
+  // Helper: tải chi tiết giảng viên và đổ vào form
+  const loadTeacher = async (id) => {
+    if (!id || id === 'null') return;
+    try {
+      const data = await getTeacherDetail(id);
+      if (data) {
+        setForm({
+          specialization: data.specialization || '',
+          bio: data.bio || '',
+          experienceYears: (data.experienceYears ?? '').toString()
+        });
+        setAccountForm(prev => ({
+          ...prev,
+          fullName: data.fullName || '',
+          email: data.email || '',
+          phoneNumber: data.phoneNumber || '',
+          dateOfBirth: data.dateOfBirth ? data.dateOfBirth.slice(0, 10) : '',
+          gender: data.gender || '',
+          address: data.address || '',
+          avatarUrl: data.avatarUrl || ''
+        }));
       }
-      return;
+    } catch (e) {
+      addToast('Không thể tải thông tin giảng viên', 'error');
     }
-    // Nếu đã có teacherId, load thông tin như cũ
-    setLoading(true);
-    getTeacherInfo(teacherId)
-      .then((data) => {
-        if (data) {
-          setTeacherInfo(data);
-          setForm({
-            specialization: data.specialization || '',
-            bio: data.bio || '',
-            experienceYears: data.experienceYears?.toString() || ''
-          });
-          setAccountForm(prev => ({
-            ...prev,
-            avatarUrl: data.avatarUrl || ''
-          }));
-        }
-      })
-      .catch(() => addToast('Không thể tải thông tin giảng viên', 'error'))
-      .finally(() => setLoading(false));
-  }, [teacherId, userId]);
+  };
 
   useEffect(() => {
-    // Lấy thông tin tài khoản khi vào tab account bằng getTeacherInfo
-    if (activeTab === 'account' && teacherId) {
+    // Nếu đã có teacherId, load thông tin; không tự tạo hồ sơ mặc định
+    if (teacherId && teacherId !== 'null') {
+      setLoading(true);
+      loadTeacher(teacherId).finally(() => setLoading(false));
+    }
+  }, [teacherId]);
+
+  useEffect(() => {
+    // Lấy thông tin tài khoản khi vào tab account
+    if (activeTab === 'account' && teacherId && teacherId !== 'null') {
       setLoadingAccount(true);
-      getTeacherInfo(teacherId)
-        .then((data) => {
-          if (data) {
-            setAccountForm({
-              fullName: data.fullName || '',
-              email: data.email || '',
-              phoneNumber: data.phoneNumber || '',
-              dateOfBirth: data.dateOfBirth ? data.dateOfBirth.slice(0, 10) : '',
-              gender: data.gender || '',
-              address: data.address || '',
-              avatarUrl: data.avatarUrl || ''
-            });
-          }
-        })
-        .catch(() => addToast('Không thể tải thông tin tài khoản', 'error'))
-        .finally(() => setLoadingAccount(false));
+      loadTeacher(teacherId).finally(() => setLoadingAccount(false));
     }
   }, [teacherId, activeTab]);
 
@@ -152,17 +115,17 @@ const Settings = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post(`${BASE_URL}/api/upload/avatar/${userId}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (response.data?.statusCode === 200) {
-        setAccountForm((prev) => ({ ...prev, avatarUrl: response.data.data }));
-        addToast('Tải lên avatar thành công! (reload lại trang để cập nhật)', 'success');
+      const result = await uploadAvatar(userId, formData);
+      const success = result && (result.statusCode === 200 || result.statusCode === 0);
+      if (success) {
+        if (result.url) {
+          setAccountForm((prev) => ({ ...prev, avatarUrl: result.url }));
+        } else if (teacherId && teacherId !== 'null') {
+          await loadTeacher(teacherId);
+        }
+        addToast('Tải lên avatar thành công!', 'success');
       } else {
-        addToast(response.data?.message || 'Đã xảy ra lỗi khi tải lên avatar.', 'error');
+        addToast(result?.message || 'Đã xảy ra lỗi khi tải lên avatar.', 'error');
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
@@ -174,33 +137,41 @@ const Settings = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!form.specialization || !form.bio || !form.experienceYears) {
+    if (!form.specialization || !form.bio || (!form.experienceYears && form.experienceYears !== 0)) {
       addToast('Vui lòng nhập đầy đủ thông tin', 'warning');
       return;
     }
+    const expYears = Number.parseInt(form.experienceYears, 10) || 0;
     setLoading(true);
     try {
       if (teacherId === 'null' || !teacherId) {
+        // Lần đầu: tạo hồ sơ giảng viên bằng dữ liệu từ form
         const data = await createTeacher({
-          userId,
+          userId: Number(userId),
           specialization: form.specialization,
           bio: form.bio,
-          experienceYears: form.experienceYears
+          experienceYears: expYears
         });
-        if (data) {
-          localStorage.setItem('teacherId', data.teacherId);
-          setTeacherInfo(data);
+        if (data && data.teacherId) {
+          localStorage.setItem('teacherId', String(data.teacherId));
+          setTeacherId(String(data.teacherId));
           addToast('Tạo hồ sơ giảng viên thành công!', 'success');
+          await loadTeacher(String(data.teacherId));
+        } else {
+          addToast('Không thể tạo hồ sơ giảng viên', 'error');
         }
       } else {
-        const data = await updateTeacherInfo(teacherId, {
+        // Cập nhật hồ sơ cá nhân
+        const updated = await updateTeacherInfo(teacherId, {
           specialization: form.specialization,
           bio: form.bio,
-          experienceYears: form.experienceYears
+          experienceYears: expYears
         });
-        if (data) {
-          setTeacherInfo(data);
+        if (updated) {
           addToast('Cập nhật hồ sơ thành công!', 'success');
+          await loadTeacher(teacherId);
+        } else {
+          addToast('Cập nhật hồ sơ thất bại!', 'error');
         }
       }
     } catch (err) {
@@ -225,16 +196,18 @@ const Settings = () => {
     }
     setLoadingAccount(true);
     try {
-      const res = await updateUserProfile(userId, {
+      const res = await updateUserProfile(Number(userId), {
         fullName: accountForm.fullName,
         phoneNumber: accountForm.phoneNumber,
         dateOfBirth: accountForm.dateOfBirth,
         gender: accountForm.gender,
         address: accountForm.address
       });
-      if (res && res.statusCode === 200) {
+      if (res && (res.statusCode === 200 || res.statusCode === 0)) {
         setEditMode(false);
         addToast('Cập nhật thông tin tài khoản thành công!', 'success');
+        // Tải lại thông tin tài khoản
+        if (teacherId && teacherId !== 'null') await loadTeacher(teacherId);
       } else {
         addToast('Cập nhật thất bại!', 'error');
       }
@@ -394,7 +367,7 @@ const Settings = () => {
                       ) : (
                         <>
                           <FaSave className="mr-2" />
-                          {teacherId ? 'Cập nhật hồ sơ' : 'Tạo hồ sơ'}
+                          {(teacherId && teacherId !== 'null') ? 'Cập nhật hồ sơ' : 'Tạo hồ sơ'}
                         </>
                       )}
                     </Button>

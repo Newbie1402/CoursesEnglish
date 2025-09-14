@@ -92,15 +92,6 @@ const ProfileDropdownTeacher = ({ teacher }) => {
               hoverColor: 'hover:bg-gray-100'
           },
         {
-          icon: FaChartBar,
-          label: 'Thống kê',
-          description: 'Xem báo cáo chi tiết',
-          onClick: () => navigate('/teacher/reports'),
-          color: 'text-indigo-500',
-          bgColor: 'bg-indigo-50',
-          hoverColor: 'hover:bg-indigo-100'
-        },
-        {
           icon: FaBell,
           label: 'Thông báo',
           description: 'Quản lý thông báo',
@@ -108,7 +99,6 @@ const ProfileDropdownTeacher = ({ teacher }) => {
           color: 'text-yellow-500',
           bgColor: 'bg-yellow-50',
           hoverColor: 'hover:bg-yellow-100',
-          badge: 3
         },
       ]
     }

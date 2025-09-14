@@ -5,21 +5,13 @@ import {
   FaBook,
   FaClipboardList,
   FaUserGraduate,
-  FaChartLine,
-  FaCalendarAlt,
   FaClock,
   FaEye,
   FaUsers,
   FaTrophy,
-  FaArrowUp,
-  FaArrowDown,
-  FaCheckCircle,
-  FaStar,
   FaGraduationCap,
   FaLightbulb,
   FaRocket,
-  FaHeart,
-  FaPlus
 } from "react-icons/fa";
 import useTeacherService from '@/services/hooks/useTeacherService.js';
 import useCourseService, { fetchStudentsByCourse } from '@/services/hooks/useCourseService';
@@ -197,37 +189,6 @@ const TeacherDashboard = () => {
         status: course.status || "Đang diễn ra",
       }));
   }, [recentCoursesWithDetails]);
-
-  const quickActions = [
-    {
-      title: 'Tạo bài học',
-      description: 'Thêm bài học mới',
-      icon: FaPlus,
-      color: 'bg-blue-500 hover:bg-blue-600',
-      action: () => navigate('/teacher/lessons/new')
-    },
-    {
-      title: 'Xem điểm số',
-      description: 'Quản lý điểm',
-      icon: FaChartLine,
-      color: 'bg-green-500 hover:bg-green-600',
-      action: () => navigate('/teacher/grades')
-    },
-    {
-      title: 'Lập lịch',
-      description: 'Quản lý thời khóa biểu',
-      icon: FaCalendarAlt,
-      color: 'bg-purple-500 hover:bg-purple-600',
-      action: () => navigate('/teacher/schedule')
-    },
-    {
-      title: 'Báo cáo',
-      description: 'Xem thống kê',
-      icon: FaChartLine,
-      color: 'bg-orange-500 hover:bg-orange-600',
-      action: () => navigate('/teacher/reports')
-    }
-  ];
 
   // Fetch 5 notifications gần nhất từ API
   const fetchRecentNotifications = async () => {
@@ -482,8 +443,11 @@ const TeacherDashboard = () => {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Enhanced Recent Courses */}
+          {/* Sidebar */}
+          <div className="space-y-8">
+            {/* Moved Recent Courses to Sidebar */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
@@ -498,7 +462,7 @@ const TeacherDashboard = () => {
                   <span>Xem tất cả</span>
                 </button>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {recentCourses.slice(0, 4).map((course) => (
                   <div key={course.id} className="p-4 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200 group cursor-pointer">
                     <div className="flex items-center justify-between mb-3">
@@ -531,40 +495,6 @@ const TeacherDashboard = () => {
                     </div>
                   </div>
                 ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-8">
-            {/* Performance Insights */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center space-x-2">
-                <FaHeart className="text-red-500" />
-                <span>Hiệu suất tuần này</span>
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
-                  <div className="flex items-center space-x-3">
-                    <FaCheckCircle className="text-green-500" />
-                    <span className="text-sm font-medium text-gray-900">Tỷ lệ hoàn thành</span>
-                  </div>
-                  <span className="text-green-600 font-semibold">87%</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
-                  <div className="flex items-center space-x-3">
-                    <FaStar className="text-blue-500" />
-                    <span className="text-sm font-medium text-gray-900">Đánh giá trung bình</span>
-                  </div>
-                  <span className="text-blue-600 font-semibold">4.8/5</span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
-                  <div className="flex items-center space-x-3">
-                    <FaUsers className="text-purple-500" />
-                    <span className="text-sm font-medium text-gray-900">Tương tác học viên</span>
-                  </div>
-                  <span className="text-purple-600 font-semibold">92%</span>
-                </div>
               </div>
             </div>
 

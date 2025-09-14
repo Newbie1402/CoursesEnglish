@@ -33,7 +33,6 @@ public class TeacherController {
      * API lấy thông tin chi tiết giáo viên theo id
      */
     @GetMapping("/view/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN') or @securityUtils.isCurrentUser(#id)")
     public ResponseEntity<ResponseData<TeacherDto>> getTeacherById(@PathVariable Long id) {
         return teacherService.getTeacherById(id);
     }
@@ -42,7 +41,7 @@ public class TeacherController {
      * API thêm mới giáo viên
      */
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER')")
     public ResponseEntity<ResponseData<TeacherDto>> createTeacher(@Validated @RequestBody TeacherCreateRequest request) {
         return teacherService.createTeacher(request);
     }
@@ -51,7 +50,7 @@ public class TeacherController {
      * API cập nhật thông tin giáo viên theo id
      */
     @PutMapping("/update/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @securityUtils.isCurrentUser(#id)")
+    @PreAuthorize("hasRole('TEACHER') or @securityUtils.isCurrentUser(#id)")
     public ResponseEntity<ResponseData<TeacherDto>> updateTeacher(@PathVariable Long id, @Validated @RequestBody TeacherUpdateRequest request) {
         return teacherService.updateTeacher(id, request);
     }

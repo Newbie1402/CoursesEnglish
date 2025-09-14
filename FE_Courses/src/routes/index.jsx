@@ -44,7 +44,6 @@ import ScheduleStudent from "@/pages/student/schedules/ScheduleStudent.jsx";
 
 // Tạo lazy loading cho các routes phụ
 const AssignmentList = React.lazy(() => import('@/pages/teacher/assignments/AssignmentList'));
-const Reports = React.lazy(() => import('@/pages/teacher/reports/Reports'));
 const Settings = React.lazy(() => import('@/pages/teacher/settings/Settings'));
 const AssignmentDetail = React.lazy(() => import('@/pages/teacher/assignments/AssignmentDetail'));
 const SubmissionList = React.lazy(() => import('@/pages/teacher/submissions/SubmissionList.jsx'));
@@ -147,14 +146,6 @@ const router = createBrowserRouter([
                 </React.Suspense>
             ),
         },
-      {
-        path: 'reports',
-        element: (
-          <React.Suspense fallback={<LoadingFallback />}>
-            <Reports />
-          </React.Suspense>
-        ),
-      },
       {
         path: 'settings',
         element: (

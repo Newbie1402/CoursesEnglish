@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getSubmissionDetail } from '@/services/hooks/submissionService';
 import { getStudentDetail } from '@/services/hooks/studentService';
-import { FaUser, FaClock, FaCalendarAlt, FaCheckCircle, FaEye, FaArrowLeft, FaRedoAlt, FaExclamationTriangle } from 'react-icons/fa';
+import { FaUser, FaClock, FaCalendarAlt, FaCheckCircle, FaEye, FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
 import { cn } from '@/lib/utils';
 
 const formatDateTime = (iso) => {
@@ -147,29 +147,28 @@ const SubmissionDetail = () => {
                 <FaUser className="w-8 h-8 text-blue-600" />
                 Chi tiết bài nộp
               </h1>
-              <p className="text-gray-600 mt-2">
-                Submission #{submissionId} • Exam #{examId}
-                {studentData && (
-                  <span className="font-medium text-blue-600 ml-2">
-                    • {studentData.fullName}
-                  </span>
-                )}
-              </p>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={fetchDetail}
-                className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-medium"
-              >
-                <FaRedoAlt className="w-4 h-4" />
-                Làm mới
-              </button>
+                <Link
+                    to={`/teacher/assignments/${examId}/submissions/${submissionId}/answers`}
+                    className={cn(
+                        'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                        isInProgress
+                            ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed pointer-events-none'
+                            : 'bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 shadow-sm'
+                    )}
+                    onClick={isInProgress ? (e) => e.preventDefault() : undefined}
+                    title={isInProgress ? 'Học viên chưa nộp bài' : 'Xem chi tiết câu trả lời'}
+                >
+                    <FaEye className="w-4 h-4" />
+                    Xem câu trả lời
+                </Link>
               <Link
                 to={`/teacher/assignments/${examId}/submissions`}
-                className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300/60 transition-colors"
               >
                 <FaArrowLeft className="w-4 h-4" />
-                Quay lại danh sách
+                Quay lại
               </Link>
             </div>
           </div>
@@ -228,7 +227,6 @@ const SubmissionDetail = () => {
                         studentData?.fullName || `Student #${data.studentId}`
                       )}
                     </h2>
-                    <p className="text-gray-600">ID: {data.studentId}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <statusInfo.icon className="w-5 h-5" />
@@ -248,14 +246,6 @@ const SubmissionDetail = () => {
                 </h2>
                 <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gray-50 rounded-xl p-4">
-                    <dt className="text-gray-600 text-sm font-medium mb-1">Submission ID</dt>
-                    <dd className="text-lg font-bold text-gray-900">#{data.id}</dd>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <dt className="text-gray-600 text-sm font-medium mb-1">Exam ID</dt>
-                    <dd className="text-lg font-bold text-gray-900">#{data.examId}</dd>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-4">
                     <dt className="text-gray-600 text-sm font-medium mb-1">Bắt đầu làm bài</dt>
                     <dd className="font-mono text-sm text-gray-900">{formatDateTime(data.startedAt)}</dd>
                   </div>
@@ -273,8 +263,11 @@ const SubmissionDetail = () => {
                   </div>
                 </dl>
               </div>
+            </div>
 
-              {/* Score & Feedback */}
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Score & Feedback (moved here replacing Actions) */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                   <FaCheckCircle className="w-5 h-5 text-green-600" />
@@ -282,62 +275,31 @@ const SubmissionDetail = () => {
                 </h2>
                 <div className="space-y-6">
                   <div className="flex items-center gap-6">
-                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white text-center min-w-[120px]">
-                      <p className="text-sm opacity-90 mb-1">Điểm số</p>
-                      <p className="text-3xl font-bold">
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white text-center min-w-[100px]">
+                      <p className="text-xs opacity-90 mb-1">Điểm số</p>
+                      <p className="text-2xl font-bold">
                         {(typeof data.score === 'number' && !Number.isNaN(data.score)) ? data.score : '-'}
                       </p>
-                      <p className="text-sm opacity-90">/ {data.maxScore}</p>
+                      <p className="text-xs opacity-90">/ {data.maxScore}</p>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-600 font-medium mb-2">Trạng thái chấm điểm</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                      <p className="text-xs text-gray-600 font-medium mb-2">Trạng thái chấm điểm</p>
+                      <p className="text-base font-semibold text-gray-900">
                         {(typeof data.score === 'number' && !Number.isNaN(data.score)) ? 'Đã chấm điểm' : 'Chưa chấm điểm'}
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600 font-medium mb-3">Nhận xét từ giáo viên</p>
-                    <div className="bg-gray-50 rounded-xl p-4 min-h-[100px]">
-                      <p className="text-gray-700 whitespace-pre-wrap">
+                    <p className="text-xs text-gray-600 font-medium mb-3">Nhận xét từ giáo viên</p>
+                    <div className="bg-gray-50 rounded-xl p-4 min-h-[80px]">
+                      <p className="text-gray-700 whitespace-pre-wrap text-sm">
                         {data.teacherFeedback || (
                           <span className="text-gray-400 italic">Chưa có nhận xét từ giáo viên</span>
                         )}
                       </p>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Quick Actions */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Hành động</h3>
-                <div className="space-y-3">
-                  <Link
-                    to={`/teacher/assignments/${examId}/submissions/${submissionId}/answers`}
-                    className={cn(
-                      'flex items-center gap-3 w-full p-4 rounded-xl font-medium transition-all duration-200',
-                      isInProgress
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
-                    )}
-                    onClick={isInProgress ? (e) => e.preventDefault() : undefined}
-                    title={isInProgress ? 'Học viên chưa nộp bài' : 'Xem chi tiết câu trả lời'}
-                  >
-                    <FaEye className="w-4 h-4" />
-                    Xem câu trả lời
-                  </Link>
-                  <Link
-                    to={`/teacher/assignments/${examId}/submissions`}
-                    className="flex items-center gap-3 w-full p-4 rounded-xl border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 font-medium transition-all duration-200"
-                  >
-                    <FaArrowLeft className="w-4 h-4" />
-                    Quay lại danh sách
-                  </Link>
                 </div>
               </div>
 
@@ -368,16 +330,6 @@ const SubmissionDetail = () => {
                   )}
                 </div>
               </div>
-
-              {/* Status Info */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Thông tin trạng thái</h3>
-                <div className="text-sm text-gray-600 space-y-2">
-                  <p>• <strong>Đang làm:</strong> Học viên chưa nộp bài</p>
-                  <p>• <strong>Đã nộp:</strong> Đã nộp nhưng chưa chấm</p>
-                  <p>• <strong>Đã chấm:</strong> Đã có điểm và nhận xét</p>
-                </div>
-              </div>
             </div>
           </div>
         )}
@@ -387,4 +339,3 @@ const SubmissionDetail = () => {
 };
 
 export default SubmissionDetail;
-

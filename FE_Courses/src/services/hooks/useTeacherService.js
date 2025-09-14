@@ -30,7 +30,7 @@ const useTeacherService = () => {
         bio,
         experienceYears: Number(experienceYears)
       });
-      if (res.data?.statusCode === 200) {
+      if (res.data?.statusCode === 200 || res.data?.statusCode === 0) {
         setTeacherInfo(res.data.data);
         return res.data.data;
       }
@@ -49,10 +49,8 @@ const useTeacherService = () => {
    * @returns {Promise<object|null>} Thông tin giảng viên hoặc null nếu không tìm thấy
    */
   const getTeacherDetails = useCallback(async (teacherId) => {
-    // Nếu không có teacherId, trả về null ngay lập tức
     if (!teacherId) return null;
 
-    // Nếu đã có trong cache, trả về từ cache
     if (teacherCache.has(teacherId)) {
       return teacherCache.get(teacherId);
     }
@@ -64,78 +62,45 @@ const useTeacherService = () => {
       // Kiểm tra token trước khi gọi API
       const token = localStorage.getItem('token');
       if (!token) {
-        console.warn("Không tìm thấy token xác thực");
-        setError("Bạn cần đăng nhập để xem thông tin này");
+        console.warn('Không tìm thấy token xác thực');
+        setError('Bạn cần đăng nhập để xem thông tin này');
         return null;
       }
 
-      // Sử dụng API để lấy thông tin khóa học của giảng viên thay vì thông tin cá nhân
-      // Điều này giúp tránh lỗi CORS vì API này thường ít hạn chế hơn
-      const res = await api.get(`/api/courses/teacher/${teacherId}`);
-
-      // Lấy thông tin giảng viên từ khóa học đầu tiên nếu có
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        const firstCourse = res.data[0];
-        if (firstCourse.teacher) {
-          // Lưu vào cache
-          teacherCache.set(teacherId, firstCourse.teacher);
-          return firstCourse.teacher;
-        }
+      // Gọi trực tiếp API thông tin giảng viên (đúng endpoint)
+      const teacherRes = await api.get(`/api/teacher/view/${teacherId}`);
+      if (teacherRes.data?.data) {
+        teacherCache.set(teacherId, teacherRes.data.data);
+        return teacherRes.data.data;
       }
 
-      // Nếu không thể lấy từ danh sách khóa học, thử gọi API thông tin giảng viên
-      // Nhưng API này có thể bị hạn chế quyền truy cập
-      try {
-        const teacherRes = await api.get(`/api/teacher/view/${teacherId}`);
-        if (teacherRes.data?.data) {
-          // Lưu vào cache
-          teacherCache.set(teacherId, teacherRes.data.data);
-          return teacherRes.data.data;
-        }
-      } catch (teacherErr) {
-        // Xử lý lỗi CORS hoặc lỗi xác thực
-        if (teacherErr.code === 'ERR_NETWORK' || teacherErr.message === 'Network Error') {
-          console.warn("Lỗi CORS hoặc xác thực: Token có thể đã hết hạn");
-
-          // Kiểm tra nếu bị chuyển hướng đến trang đăng nhập OAuth
-          if (teacherErr.request?.responseURL?.includes('accounts.google.com')) {
-            // Xóa token không hợp lệ
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-
-            // Chuyển hướng đến trang đăng nhập
-            setTimeout(() => {
-              navigate('/login', { state: { from: location.pathname, message: "Phiên đăng nhập đã hết hạn" } });
-            }, 100);
-          }
-        }
-
-        // Trả về thông tin mặc định cho giảng viên
-        return {
-          id: teacherId,
-          fullName: "Giảng viên",
-          specialization: "Chưa cập nhật",
-          bio: "Chưa cập nhật thông tin"
-        };
-      }
-
-      // Trường hợp không tìm thấy thông tin
+      // Không có data hợp lệ -> trả về mặc định
       return {
         id: teacherId,
-        fullName: "Giảng viên " + teacherId,
-        specialization: "Chưa cập nhật",
-        bio: "Chưa cập nhật thông tin"
+        fullName: `Giảng viên ${teacherId}`,
+        specialization: 'Chưa cập nhật',
+        bio: 'Chưa cập nhật thông tin'
       };
     } catch (err) {
+      // Xử lý lỗi CORS hoặc lỗi xác thực
+      if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
+        console.warn('Lỗi CORS hoặc xác thực: Token có thể đã hết hạn');
+        if (err.request?.responseURL?.includes('accounts.google.com')) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setTimeout(() => {
+            navigate('/login', { state: { from: location.pathname, message: 'Phiên đăng nhập đã hết hạn' } });
+          }, 100);
+        }
+      }
+
       console.error(`Lỗi khi lấy thông tin giảng viên ID ${teacherId}:`, err);
       setError(err.response?.data?.message || 'Có lỗi xảy ra khi lấy thông tin giảng viên');
-
-      // Trả về thông tin mặc định khi có lỗi
       return {
         id: teacherId,
-        fullName: "Giảng viên " + teacherId,
-        specialization: "Chưa cập nhật",
-        bio: "Chưa cập nhật thông tin"
+        fullName: `Giảng viên ${teacherId}`,
+        specialization: 'Chưa cập nhật',
+        bio: 'Chưa cập nhật thông tin'
       };
     } finally {
       setLoading(false);
@@ -197,6 +162,3 @@ const useTeacherService = () => {
 };
 
 export default useTeacherService;
-
-export class getAllTeacher {
-}

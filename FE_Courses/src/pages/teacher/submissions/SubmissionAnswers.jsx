@@ -140,14 +140,6 @@ const SubmissionAnswers = () => {
                 <FaEye className="w-8 h-8 text-blue-600" />
                 Câu trả lời chi tiết
               </h1>
-              <p className="text-gray-600 mt-2">
-                Submission #{submissionId} • Exam #{examId}
-                {studentData && (
-                  <span className="font-medium text-blue-600 ml-2">
-                    • {studentData.fullName}
-                  </span>
-                )}
-              </p>
               <p className="text-sm text-gray-500 mt-1">
                 Tổng {stats.total} câu hỏi • {stats.multiple} trắc nghiệm • {stats.writing} tự luận
               </p>
@@ -186,7 +178,6 @@ const SubmissionAnswers = () => {
                     studentData?.fullName || `Student #${submission.studentId}`
                   )}
                 </h2>
-                <p className="text-gray-600">ID: {submission.studentId}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600 font-medium">Điểm tổng</p>
@@ -200,7 +191,7 @@ const SubmissionAnswers = () => {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -221,18 +212,6 @@ const SubmissionAnswers = () => {
               <div>
                 <p className="text-sm text-gray-600 font-medium">Trắc nghiệm</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.multiple}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <FaEdit className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Tự luận</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.writing}</p>
               </div>
             </div>
           </div>

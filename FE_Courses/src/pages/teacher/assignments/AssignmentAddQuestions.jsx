@@ -50,7 +50,7 @@ const AssignmentAddQuestions = () => {
   };
 
   const handleGoBack = () => {
-    navigate(`/teacher/assignments/${examId}`);
+    navigate(-1);
   };
 
   return (

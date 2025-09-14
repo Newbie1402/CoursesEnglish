@@ -22,7 +22,6 @@ const ROUTE_NAMES = {
   '/teacher/notifications': 'Thông báo',
   '/teacher/courses': 'Khóa học',
   '/teacher/assignments': 'Bài tập',
-  '/teacher/reports': 'Báo cáo',
   '/teacher/settings': 'Cài đặt'
 };
 

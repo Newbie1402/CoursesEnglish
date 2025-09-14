@@ -273,13 +273,6 @@ const AssignmentList = () => {
           `bg-gradient-to-r ${statusInfo.gradientFrom} ${statusInfo.gradientTo}`
         )} />
 
-        {/* Priority indicator */}
-        {assignment.priority === 'high' && (
-          <div className="absolute top-4 right-4">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-          </div>
-        )}
-
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1 pr-4">
@@ -287,16 +280,12 @@ const AssignmentList = () => {
               {assignment.title}
             </h3>
             <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-              {assignment.description}
+                {assignment.type === 'MULTIPLE_CHOICE' ? 'Trắc nghiệm' : 'Tự luận'}
             </p>
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <FaBookOpen className="text-xs" />
                 <span>{assignment.course}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <FaClock className="text-xs" />
-                <span>{assignment.duration} phút</span>
               </div>
             </div>
           </div>
@@ -348,27 +337,6 @@ const AssignmentList = () => {
             >
               <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
             </div>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-            <FaUsers className="text-blue-500 mx-auto mb-1 text-lg" />
-            <p className="text-xs text-blue-600 font-medium">Học viên</p>
-            <p className="font-bold text-blue-900 text-sm">{assignment.totalStudents}</p>
-          </div>
-          <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-            <FaClipboardList className="text-green-500 mx-auto mb-1 text-lg" />
-            <p className="text-xs text-green-600 font-medium">Đã nộp</p>
-            <p className="font-bold text-green-900 text-sm">{assignment.submissions}</p>
-          </div>
-          <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-            <FaChartBar className="text-purple-500 mx-auto mb-1 text-lg" />
-            <p className="text-xs text-purple-600 font-medium">Loại</p>
-            <p className="font-bold text-purple-900 text-xs">
-              {assignment.type === 'MULTIPLE_CHOICE' ? 'Trắc nghiệm' : 'Tự luận'}
-            </p>
           </div>
         </div>
 

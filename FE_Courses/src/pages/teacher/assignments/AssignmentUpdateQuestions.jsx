@@ -365,7 +365,7 @@ const AssignmentUpdateQuestions = ({ question, onClose, examId }) => {
                 <FaCheckCircle className="w-5 h-5 text-blue-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Xác nhận cập nh��t
+                Xác nhận cập nhật
               </h3>
             </div>
 

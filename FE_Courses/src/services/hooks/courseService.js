@@ -59,3 +59,14 @@ export const getCourseOfTeacher = async (teacherId) => {
         return null;
     }
 }
+
+export const updateCourse = async ({ courseId, data }) => {
+    try {
+        // Sử dụng endpoint và method giống hook useCourseService
+        const res = await api.put(`/api/courses/update/${courseId}`, data);
+        return res?.data || null;
+    } catch (err) {
+        console.error(`Error updating course ID ${courseId}:`, err);
+        return null;
+    }
+}

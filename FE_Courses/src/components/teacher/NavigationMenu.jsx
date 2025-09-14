@@ -62,18 +62,8 @@ const navigationGroups = [
     ]
   },
   {
-    title: 'Báo cáo & Cài đặt',
+    title: 'Cài đặt',
     items: [
-      {
-        label: 'Báo cáo',
-        icon: FaChartBar,
-        path: '/teacher/reports',
-        color: 'text-indigo-500',
-        bgColor: 'bg-indigo-50',
-        hoverColor: 'hover:bg-indigo-100',
-        activeGradient: 'from-indigo-500 to-indigo-600',
-        description: 'Xem thống kê và báo cáo'
-      },
       {
         label: 'Cài đặt',
         icon: FaCog,

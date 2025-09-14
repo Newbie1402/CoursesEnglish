@@ -143,21 +143,6 @@ const CourseDetail = () => {
     refetch();
   };
 
-  const handleDelete = () => setShowDeleteModal(true);
-  const handleCloseDelete = () => setShowDeleteModal(false);
-  const handleConfirmDelete = () => {
-    handleDeleteCourse(course.courseId, {
-      onSuccess: () => {
-        addToast('Xóa khóa học thành công!', 'success');
-        setShowDeleteModal(false);
-        navigate('/teacher/courses');
-      },
-      onError: () => {
-        addToast('Xóa khóa học thất bại!', 'error');
-      }
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
@@ -257,24 +242,6 @@ const CourseDetail = () => {
               <p className="text-blue-100 text-lg leading-relaxed max-w-3xl">
                 {course.description}
               </p>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex flex-wrap gap-3">
-              <button
-                className="flex items-center gap-2 px-6 py-3 bg-white bg-opacity-20 text-white rounded-xl hover:bg-opacity-30 transition-all duration-200 transform hover:scale-105 backdrop-blur-sm"
-                onClick={handleEdit}
-              >
-                <FaEdit className="w-4 h-4" />
-                Chỉnh sửa
-              </button>
-              <button
-                className="flex items-center gap-2 px-6 py-3 bg-red-500 bg-opacity-80 text-white rounded-xl hover:bg-red-600 transition-all duration-200 transform hover:scale-105"
-                onClick={handleDelete}
-              >
-                <FaTrash className="w-4 h-4" />
-                Xóa khóa học
-              </button>
             </div>
           </div>
         </div>
@@ -873,38 +840,6 @@ const CourseDetail = () => {
           onClose={() => setSelectedLesson(null)}
           onSuccess={refetchLessons}
         />
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <Modal isOpen={showDeleteModal} onClose={handleCloseDelete} title="">
-          <div className="p-6 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaExclamationTriangle className="w-8 h-8 text-red-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Xác nhận xóa khóa học</h3>
-            <p className="text-gray-600 mb-6">
-              Bạn có chắc chắn muốn xóa khóa học "<span className="font-semibold text-gray-900">{course.title}</span>"?
-              <br />
-              <span className="text-red-600 font-medium">Hành động này không thể hoàn tác và sẽ xóa tất cả dữ liệu liên quan.</span>
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={handleCloseDelete}
-                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors duration-200"
-              >
-                Hủy
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                disabled={isDeleting}
-                className="px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 disabled:opacity-50"
-              >
-                {isDeleting ? 'Đang xóa...' : 'Xác nhận xóa'}
-              </button>
-            </div>
-          </div>
-        </Modal>
       )}
     </div>
   );

@@ -15,7 +15,7 @@ import {
   FaExclamationCircle,
   FaSpinner
 } from 'react-icons/fa';
-import useCourseService from '@/services/hooks/useCourseService';
+import { updateCourse as updateCourseApi } from '@/services/hooks/courseService.js';
 import Modal from '@/components/ui/modal/Modal.jsx';
 import { useToast } from '@/components/ui/toast/Toast.jsx';
 
@@ -29,9 +29,8 @@ const courseSchema = z.object({
 });
 
 const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
-  const { updateCourse } = useCourseService();
-  const { mutate: updateCourseMutate, isLoading } = updateCourse;
   const { addToast } = useToast();
+  const [isLoading, setIsLoading] = React.useState(false);
   const form = useForm({
     resolver: zodResolver(courseSchema),
     defaultValues: course ? {
@@ -57,20 +56,24 @@ const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
     }
   }, [course]);
 
-  const handleSubmit = (data) => {
-    updateCourseMutate(
-      { courseId: course.courseId, data: { ...data, teacherId: Number(data.teacherId), online: Boolean(data.online) } },
-      {
-        onSuccess: () => {
-          addToast('Cập nhật khóa học thành công!', 'success');
-          onClose();
-          if (onSuccess) onSuccess();
-        },
-        onError: () => {
-          addToast('Cập nhật thất bại!', 'error');
-        }
+  const handleSubmit = async (data) => {
+    try {
+      setIsLoading(true);
+      const payload = { ...data, teacherId: Number(data.teacherId), online: Boolean(data.online) };
+      const res = await updateCourseApi({ courseId: course.courseId, data: payload });
+      const statusCode = res?.statusCode ?? res?.status ?? 200;
+      if (res && (statusCode === 200 || statusCode === 0)) {
+        addToast('Cập nhật khóa học thành công!', 'success');
+        onClose();
+        if (onSuccess) onSuccess();
+      } else {
+        addToast('Cập nhật thất bại!', 'error');
       }
-    );
+    } catch (e) {
+      addToast('Cập nhật thất bại!', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -150,7 +153,7 @@ const CourseUpdate = ({ open, onClose, course, onSuccess }) => {
                       {...form.register('description')}
                       rows={4}
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm resize-none"
-                      placeholder="Nhập mô tả chi tiết về khóa học..."
+                      placeholder="Nhập mô tả chi ti��t về khóa học..."
                     />
                     {form.formState.errors.description && (
                       <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
