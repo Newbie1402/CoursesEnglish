@@ -112,22 +112,6 @@ const AdminStudentList = () => {
             <FaEnvelope className="w-3 h-3 text-gray-400" />
             <span className="truncate">{student.email || 'Không có email'}</span>
           </div>
-          {student.phoneNumber && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <FaPhone className="w-3 h-3 text-gray-400" />
-              <span>{student.phoneNumber}</span>
-            </div>
-          )}
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <FaCalendarAlt className="w-3 h-3 text-gray-400" />
-            <span>Sinh ngày: {formatDate(student.dateOfBirth)}</span>
-          </div>
-          {student.address && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <FaMapMarkerAlt className="w-3 h-3 text-gray-400" />
-              <span className="truncate">{student.address}</span>
-            </div>
-          )}
         </div>
 
         {/* Footer */}

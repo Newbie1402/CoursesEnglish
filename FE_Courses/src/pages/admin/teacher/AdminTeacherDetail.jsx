@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTeacherDetails } from '@/services/hooks/teacherService';
+import { getTeacherDetails, countStudents } from '@/services/hooks/teacherService';
+import { getCourseOfTeacher } from '@/services/hooks/courseService';
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner';
 import {
   FaArrowLeft,
@@ -13,12 +14,9 @@ import {
   FaFemale,
   FaUser,
   FaGraduationCap,
-  FaEdit,
   FaBook,
   FaChartLine,
-  FaTrophy,
   FaClock,
-  FaAward,
   FaBriefcase
 } from 'react-icons/fa';
 
@@ -28,13 +26,18 @@ const AdminTeacherDetail = () => {
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    coursesTeaching: 0,
+    totalStudents: 0,
+    coursesCompleted: 0,
+  });
 
   useEffect(() => {
     const fetchTeacherDetail = async () => {
       try {
         setLoading(true);
         const response = await getTeacherDetails(teacherId);
-        setTeacher(response);
+        setTeacher(response.data);
       } catch (error) {
         console.error('Error fetching teacher detail:', error);
         setError('Không thể tải thông tin giảng viên. Vui lòng thử lại.');
@@ -44,6 +47,37 @@ const AdminTeacherDetail = () => {
     };
 
     fetchTeacherDetail();
+  }, [teacherId]);
+
+  // Lấy danh sách khóa học của giảng viên và tính toán số liệu thống kê
+  useEffect(() => {
+    const fetchTeacherCourses = async () => {
+      try {
+        const raw = await getCourseOfTeacher(teacherId);
+        const courses = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+        const now = new Date();
+        const coursesCompleted = courses.filter(c => c?.endDate && new Date(c.endDate) < now).length;
+        const coursesTeaching = courses.filter(c => !c?.endDate || new Date(c.endDate) >= now).length;
+        setStats(prev => ({ ...prev, coursesTeaching, coursesCompleted }));
+      } catch (e) {
+        console.error('Error fetching courses for teacher:', e);
+      }
+    };
+    if (teacherId) fetchTeacherCourses();
+  }, [teacherId]);
+
+  // Lấy tổng số học viên của giảng viên qua API countStudents
+  useEffect(() => {
+    const fetchTotalStudents = async () => {
+      try {
+        const total = await countStudents(teacherId);
+        const safeTotal = typeof total === 'number' ? total : (total?.studentCount ?? 0);
+        setStats(prev => ({ ...prev, totalStudents: safeTotal }));
+      } catch (e) {
+        console.error('Error counting students for teacher:', e);
+      }
+    };
+    if (teacherId) fetchTotalStudents();
   }, [teacherId]);
 
   const formatDate = (dateString) => {
@@ -78,13 +112,7 @@ const AdminTeacherDetail = () => {
     return { text: 'Expert', color: 'purple' };
   };
 
-  // Mock stats - có thể thay thế bằng API thực tế
-  const mockStats = {
-    coursesTeaching: 5,
-    totalStudents: 120,
-    avgRating: 4.8,
-    coursesCompleted: 12
-  };
+  // Số liệu thống kê đã chuẩn hóa (coursesTeaching, coursesCompleted lấy từ API khóa học của GV)
 
   if (loading) {
     return (
@@ -168,9 +196,17 @@ const AdminTeacherDetail = () => {
       <div className="bg-gradient-to-r from-purple-500 to-blue-600 rounded-2xl overflow-hidden">
         <div className="px-8 py-12 text-white">
           <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold">
-              {teacher.fullName?.charAt(0) || 'T'}
-            </div>
+            {teacher.avatarUrl ? (
+              <img
+                src={teacher.avatarUrl}
+                alt={teacher.fullName || 'Teacher avatar'}
+                className="w-24 h-24 rounded-full object-cover ring-2 ring-white/30"
+              />
+            ) : (
+              <div className="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold">
+                {teacher.fullName?.charAt(0) || 'T'}
+              </div>
+            )}
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-2">{teacher.fullName || 'Không có tên'}</h1>
               <div className="flex items-center space-x-4 text-white text-opacity-90 mb-3">
@@ -195,18 +231,12 @@ const AdminTeacherDetail = () => {
                 </div>
               )}
             </div>
-            <div className="flex space-x-3">
-              <button className="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">
-                <FaEdit className="w-4 h-4" />
-                <span>Chỉnh sửa</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex items-center space-x-3 mb-2">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -214,7 +244,7 @@ const AdminTeacherDetail = () => {
             </div>
             <h3 className="text-sm font-medium text-gray-500">Khóa học đang dạy</h3>
           </div>
-          <p className="text-3xl font-bold text-blue-600">{mockStats.coursesTeaching}</p>
+          <p className="text-3xl font-bold text-blue-600">{stats.coursesTeaching}</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -224,17 +254,7 @@ const AdminTeacherDetail = () => {
             </div>
             <h3 className="text-sm font-medium text-gray-500">Tổng học viên</h3>
           </div>
-          <p className="text-3xl font-bold text-green-600">{mockStats.totalStudents}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <FaTrophy className="w-5 h-5 text-yellow-600" />
-            </div>
-            <h3 className="text-sm font-medium text-gray-500">Đánh giá TB</h3>
-          </div>
-          <p className="text-3xl font-bold text-yellow-600">{mockStats.avgRating}/5</p>
+          <p className="text-3xl font-bold text-green-600">{stats.totalStudents}</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -244,7 +264,7 @@ const AdminTeacherDetail = () => {
             </div>
             <h3 className="text-sm font-medium text-gray-500">Khóa học hoàn thành</h3>
           </div>
-          <p className="text-3xl font-bold text-purple-600">{mockStats.coursesCompleted}</p>
+          <p className="text-3xl font-bold text-purple-600">{stats.coursesCompleted}</p>
         </div>
       </div>
 
@@ -340,16 +360,6 @@ const AdminTeacherDetail = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <FaAward className="w-4 h-4 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Trình độ</p>
-                <p className="font-medium text-gray-900">Cử nhân/Thạc sĩ</p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                 <FaUser className="w-4 h-4 text-blue-600" />
               </div>
@@ -373,14 +383,6 @@ const AdminTeacherDetail = () => {
           </div>
         </div>
       )}
-
-      {/* Action Buttons */}
-      <div className="flex justify-end space-x-4">
-        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-          <FaEdit className="w-4 h-4" />
-          <span>Chỉnh sửa thông tin</span>
-        </button>
-      </div>
     </div>
   );
 };

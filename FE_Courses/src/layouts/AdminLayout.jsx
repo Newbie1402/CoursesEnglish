@@ -6,7 +6,6 @@ import {
   FaGraduationCap,
   FaClipboardList,
   FaBell,
-  FaChartBar,
   FaUserGraduate,
   FaChalkboardTeacher,
   FaBars,
@@ -158,7 +157,7 @@ const AdminLayout = () => {
   }, [alertTimeout]);
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -167,16 +166,16 @@ const AdminLayout = () => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Fixed Sidebar - Always visible */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50
+        fixed inset-y-0 left-0 z-50
         w-72 bg-white border-r border-gray-200
-        flex flex-col shadow-xl lg:shadow-sm
-        transform transition-transform duration-300 ease-in-out lg:transform-none
+        flex flex-col shadow-xl
+        transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        {/* Logo/Brand */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
+        {/* Logo/Brand - Fixed at top */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
               <FaGraduationCap className="text-blue-600 text-lg" />
@@ -191,8 +190,8 @@ const AdminLayout = () => {
           </button>
         </div>
 
-        {/* Navigation Menu */}
-        <nav className="flex-1 py-6 px-4 overflow-y-auto">
+        {/* Navigation Menu - Scrollable */}
+        <nav className="flex-1 py-6 px-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <div className="space-y-2">
             {adminMenu.map((item) => {
               const Icon = item.icon;
@@ -237,8 +236,8 @@ const AdminLayout = () => {
           </div>
         </nav>
 
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50">
+        {/* Footer - Fixed at bottom */}
+        <div className="p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
           <div className="text-center">
             <p className="text-sm font-medium text-gray-600">EduAdmin v2.0</p>
             <p className="text-xs text-gray-500 mt-1">© 2025 Courses Admin</p>
@@ -246,10 +245,10 @@ const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 min-h-screen lg:ml-0">
-        {/* Header */}
-        <header className="h-16 flex items-center justify-between px-4 lg:px-8 border-b border-gray-200 bg-white shadow-sm">
+      {/* Main content with proper spacing */}
+      <div className="lg:ml-72">
+        {/* Sticky Header - Always visible when scrolling */}
+        <header className="sticky top-0 z-30 h-16 flex items-center justify-between px-4 lg:px-8 border-b border-gray-200 bg-white shadow-sm backdrop-blur-sm bg-white/95">
           {/* Left side */}
           <div className="flex items-center space-x-4">
             {/* Mobile menu button */}
@@ -318,46 +317,51 @@ const AdminLayout = () => {
           </div>
         </header>
 
-        {/* Page Content */}
-        <div className="p-4 lg:p-8">
-          {/* Breadcrumb */}
-          <div className="mb-6">
-            <nav className="flex items-center space-x-2 text-sm text-gray-500">
-              <span>Admin</span>
-              <span>/</span>
-              <span className="text-gray-700 font-medium">{getCurrentPageTitle()}</span>
-            </nav>
-          </div>
+        {/* Scrollable Page Content */}
+        <main className="min-h-[calc(100vh-4rem)]">
+          <div className="p-4 lg:p-8">
+            {/* Breadcrumb */}
+            <div className="mb-6">
+              <nav className="flex items-center space-x-2 text-sm text-gray-500">
+                <span>Admin</span>
+                <span>/</span>
+                <span className="text-gray-700 font-medium">{getCurrentPageTitle()}</span>
+              </nav>
+            </div>
 
-          {/* Content */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 min-h-[calc(100vh-200px)]">
-            <Outlet />
-          </div>
-        </div>
-
-        {/* New notification alert (bottom right corner) */}
-        {showNewNotificationAlert && (
-          <div className="fixed bottom-4 right-4 z-50">
-            <div className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-md border border-gray-200">
-              <div className="flex-shrink-0">
-                <FaInfoCircle className="text-blue-500 text-2xl" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-gray-700">
-                  Bạn có {unreadNotifications - previousUnreadCount} thông báo mới.
-                </p>
-              </div>
-              <button
-                onClick={handleDismissAlert}
-                className="flex-shrink-0 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title="Đóng thông báo"
-              >
-                <FaTimes className="text-gray-600" />
-              </button>
+            {/* Content Container - This is where scrolling happens */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 min-h-[calc(100vh-12rem)]">
+              <Outlet />
             </div>
           </div>
-        )}
-      </main>
+        </main>
+      </div>
+
+      {/* New notification alert (bottom right corner) - Fixed position */}
+      {showNewNotificationAlert && (
+        <div className="fixed bottom-4 right-4 z-50 animate-slide-in-right">
+          <div className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-lg border border-gray-200 max-w-sm">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <FaInfoCircle className="text-blue-500 text-lg" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-900">Thông báo mới</p>
+              <p className="text-xs text-gray-600">
+                Bạn có {unreadNotifications - previousUnreadCount} thông báo mới
+              </p>
+            </div>
+            <button
+              onClick={handleDismissAlert}
+              className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              title="Đóng thông báo"
+            >
+              <FaTimes className="text-gray-400 w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

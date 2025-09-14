@@ -81,3 +81,13 @@ export const getTeacherDetails = async (teacherId) => {
         };
     }
 };
+
+export const countStudents = async (teacherId) => {
+    try {
+        const res = await api.get(`/api/student/teacher/${teacherId}/count`);
+        return res.data?.data || 0;
+    } catch (err) {
+        console.error(`Error counting students for teacher ID ${teacherId}:`, err);
+        throw err;
+    }
+}

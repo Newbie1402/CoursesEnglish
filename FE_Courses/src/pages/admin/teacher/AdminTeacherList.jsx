@@ -138,16 +138,6 @@ const AdminTeacherList = () => {
               <span>{teacher.phoneNumber}</span>
             </div>
           )}
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <FaCalendarAlt className="w-3 h-3 text-gray-400" />
-            <span>Sinh ngày: {formatDate(teacher.dateOfBirth)}</span>
-          </div>
-          {teacher.address && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <FaMapMarkerAlt className="w-3 h-3 text-gray-400" />
-              <span className="truncate">{teacher.address}</span>
-            </div>
-          )}
         </div>
 
         {/* Footer */}
@@ -242,49 +232,6 @@ const AdminTeacherList = () => {
           <p className="text-gray-600 mt-1">
             Tổng cộng {stats.total} giảng viên • {filteredTeachers.length} đang hiển thị
           </p>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <FaUsers className="w-5 h-5 text-purple-600" />
-            </div>
-            <h3 className="text-sm font-medium text-gray-500">Tổng giảng viên</h3>
-          </div>
-          <p className="text-3xl font-bold text-purple-600">{stats.total}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <FaChalkboardTeacher className="w-5 h-5 text-blue-600" />
-            </div>
-            <h3 className="text-sm font-medium text-gray-500">Có kinh nghiệm</h3>
-          </div>
-          <p className="text-3xl font-bold text-blue-600">{stats.withExperience}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <FaGraduationCap className="w-5 h-5 text-green-600" />
-            </div>
-            <h3 className="text-sm font-medium text-gray-500">Chuyên môn</h3>
-          </div>
-          <p className="text-3xl font-bold text-green-600">{stats.specializations}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <FaCalendarAlt className="w-5 h-5 text-orange-600" />
-            </div>
-            <h3 className="text-sm font-medium text-gray-500">KN trung bình</h3>
-          </div>
-          <p className="text-3xl font-bold text-orange-600">{stats.avgExperience} năm</p>
         </div>
       </div>
 

@@ -413,7 +413,7 @@ const AdminExamDetail = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center space-x-4 mb-4">
           <button
-            onClick={() => navigate('/admin/exams')}
+            onClick={() => navigate(-1)}
             className="inline-flex items-center px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <FaArrowLeft className="w-4 h-4 mr-2" />

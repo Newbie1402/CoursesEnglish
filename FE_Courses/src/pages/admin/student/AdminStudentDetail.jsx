@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getStudentDetail } from '@/services/hooks/studentService';
+import { getCourseOfStudent } from '@/services/hooks/courseService';
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner';
 import {
   FaArrowLeft,
@@ -13,7 +14,6 @@ import {
   FaFemale,
   FaUser,
   FaUsers,
-  FaEdit,
   FaBook,
   FaChartLine,
   FaTrophy,
@@ -26,6 +26,12 @@ const AdminStudentDetail = () => {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    coursesEnrolled: 0,
+    completedCourses: 0,
+    currentGPA: 0,
+    attendanceRate: 0,
+  });
 
   useEffect(() => {
     const fetchStudentDetail = async () => {
@@ -42,6 +48,23 @@ const AdminStudentDetail = () => {
     };
 
     fetchStudentDetail();
+  }, [studentId]);
+
+  // Lấy danh sách khóa học của học viên và tính toán số liệu thống kê theo endDate
+  useEffect(() => {
+    const fetchStudentCourses = async () => {
+      try {
+        const raw = await getCourseOfStudent(studentId);
+        const courses = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+        const now = new Date();
+        const completedCourses = courses.filter(c => c?.endDate && new Date(c.endDate) < now).length;
+        const coursesEnrolled = courses.filter(c => !c?.endDate || new Date(c.endDate) >= now).length;
+        setStats(prev => ({ ...prev, completedCourses, coursesEnrolled }));
+      } catch (e) {
+        console.error('Error fetching courses for student:', e);
+      }
+    };
+    if (studentId) fetchStudentCourses();
   }, [studentId]);
 
   const formatDate = (dateString) => {
@@ -68,14 +91,6 @@ const AdminStudentDetail = () => {
     }
   };
 
-  // Mock stats - có thể thay thế bằng API thực tế
-  const mockStats = {
-    coursesEnrolled: 3,
-    completedCourses: 1,
-    currentGPA: 8.5,
-    attendanceRate: 92
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -97,7 +112,7 @@ const AdminStudentDetail = () => {
           <h3 className="text-xl font-semibold text-gray-900 mb-2">Có lỗi xảy ra</h3>
           <p className="text-gray-500 mb-6">{error}</p>
           <button
-            onClick={() => navigate('/admin/students')}
+            onClick={() => navigate(-1)}
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <FaArrowLeft className="w-4 h-4 mr-2" />
@@ -118,7 +133,7 @@ const AdminStudentDetail = () => {
           <h3 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy học viên</h3>
           <p className="text-gray-500 mb-6">Học viên với ID {studentId} không tồn tại trong hệ thống.</p>
           <button
-            onClick={() => navigate('/admin/students')}
+            onClick={() => navigate(-1)}
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <FaArrowLeft className="w-4 h-4 mr-2" />
@@ -144,7 +159,7 @@ const AdminStudentDetail = () => {
           <span className="text-gray-900 font-medium">Chi tiết học viên</span>
         </div>
         <button
-          onClick={() => navigate('/admin/students')}
+          onClick={() => navigate(-1)}
           className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
         >
           <FaArrowLeft className="w-4 h-4 mr-2" />
@@ -156,9 +171,17 @@ const AdminStudentDetail = () => {
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl overflow-hidden">
         <div className="px-8 py-12 text-white">
           <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold">
-              {student.fullName?.charAt(0) || 'S'}
-            </div>
+              {student.avatarUrl ? (
+                  <img
+                      src={student.avatarUrl}
+                      alt={student.fullName || 'Student avatar'}
+                      className="w-24 h-24 rounded-full object-cover ring-2 ring-white/30"
+                  />
+              ) : (
+                  <div className="w-24 h-24 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-3xl font-bold">
+                      {student.fullName?.charAt(0) || 'T'}
+                  </div>
+              )}
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-2">{student.fullName || 'Không có tên'}</h1>
               <div className="flex items-center space-x-4 text-white text-opacity-90">
@@ -177,18 +200,12 @@ const AdminStudentDetail = () => {
                 </div>
               </div>
             </div>
-            <div className="flex space-x-3">
-              <button className="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">
-                <FaEdit className="w-4 h-4" />
-                <span>Chỉnh sửa</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex items-center space-x-3 mb-2">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -196,7 +213,7 @@ const AdminStudentDetail = () => {
             </div>
             <h3 className="text-sm font-medium text-gray-500">Khóa học đăng ký</h3>
           </div>
-          <p className="text-3xl font-bold text-blue-600">{mockStats.coursesEnrolled}</p>
+          <p className="text-3xl font-bold text-blue-600">{stats.coursesEnrolled}</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -206,27 +223,7 @@ const AdminStudentDetail = () => {
             </div>
             <h3 className="text-sm font-medium text-gray-500">Khóa học hoàn thành</h3>
           </div>
-          <p className="text-3xl font-bold text-green-600">{mockStats.completedCourses}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <FaChartLine className="w-5 h-5 text-yellow-600" />
-            </div>
-            <h3 className="text-sm font-medium text-gray-500">Điểm trung bình</h3>
-          </div>
-          <p className="text-3xl font-bold text-yellow-600">{mockStats.currentGPA}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <FaClock className="w-5 h-5 text-purple-600" />
-            </div>
-            <h3 className="text-sm font-medium text-gray-500">Tỷ lệ tham gia</h3>
-          </div>
-          <p className="text-3xl font-bold text-purple-600">{mockStats.attendanceRate}%</p>
+          <p className="text-3xl font-bold text-green-600">{stats.completedCourses}</p>
         </div>
       </div>
 
@@ -356,14 +353,6 @@ const AdminStudentDetail = () => {
           </div>
         </div>
       )}
-
-      {/* Action Buttons */}
-      <div className="flex justify-end space-x-4">
-        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-          <FaEdit className="w-4 h-4" />
-          <span>Chỉnh sửa thông tin</span>
-        </button>
-      </div>
     </div>
   );
 };

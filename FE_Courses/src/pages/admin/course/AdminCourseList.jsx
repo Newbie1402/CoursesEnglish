@@ -93,6 +93,7 @@ const AdminCourseList = () => {
 
   const CourseCard = ({ course }) => {
     const progress = getProgress(course.startDate, course.endDate);
+    const status = progress >= 100 ? 'completed' : (course.active ? 'active' : 'inactive');
 
     return (
       <div
@@ -114,7 +115,12 @@ const AdminCourseList = () => {
               </p>
             </div>
             <div className="ml-4 flex flex-col items-end space-y-2">
-              {course.active ? (
+              {status === 'completed' ? (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                  <FaCheckCircle className="w-3 h-3 mr-1" />
+                  Hoàn thành
+                </span>
+              ) : status === 'active' ? (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   <FaCheckCircle className="w-3 h-3 mr-1" />
                   Hoạt động

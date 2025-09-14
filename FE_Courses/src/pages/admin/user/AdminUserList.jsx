@@ -12,13 +12,107 @@ import {
   FaEnvelope,
   FaPhone,
   FaCalendarAlt,
-  FaEye,
   FaUserCheck,
-  FaChevronDown
+  FaChevronDown,
+  FaExclamationTriangle,
+  FaTimes
 } from 'react-icons/fa';
 import AddUserModal from './AddUserModal';
 import { getAllUsers, inactiveUser, activeUser } from '@/services/hooks/adminService';
 import {FaChalkboardUser} from "react-icons/fa6";
+
+// Component Modal để nhập lý do vô hiệu hóa
+const ReasonModal = ({ isOpen, onClose, onConfirm, user, loading }) => {
+  const [reason, setReason] = useState('Vi phạm quy định');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (reason.trim()) {
+      onConfirm(reason.trim());
+    }
+  };
+
+  const handleClose = () => {
+    setReason('Vi phạm quy định');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4">
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <FaExclamationTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Vô hiệu hóa tài khoản
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {user?.fullName} (ID: {user?.id})
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <FaTimes className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Lý do vô hiệu hóa <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Nhập lý do vô hiệu hóa tài khoản..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              rows="3"
+              required
+            />
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+            <div className="flex items-start space-x-2">
+              <FaExclamationTriangle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-yellow-800">
+                <strong>Cảnh báo:</strong> Hành động này sẽ ngăn người dùng đăng nhập vào hệ thống.
+                Bạn có thể kích hoạt lại tài khoản bất cứ lúc nào.
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={loading}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="submit"
+              disabled={loading || !reason.trim()}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Đang xử lý...' : 'Vô hiệu hóa'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const AdminUserList = () => {
   const [users, setUsers] = useState([]);
@@ -31,6 +125,9 @@ const AdminUserList = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [refreshTick, setRefreshTick] = useState(0);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  // Thêm state cho ReasonModal
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const normalizeStatus = (status) => {
     switch (status) {
@@ -140,17 +237,34 @@ const AdminUserList = () => {
     );
   };
 
-  const handleInactive = async (user) => {
-    const reason = window.prompt('Nhập lý do vô hiệu hóa tài khoản:', 'Vi phạm quy định');
-    if (reason === null) return; // cancel
+  // Cập nhật handleInactive để mở modal thay vì dùng prompt
+  const handleInactive = (user) => {
+    setSelectedUser(user);
+    setShowReasonModal(true);
+  };
+
+  // Xử lý confirm từ modal
+  const handleConfirmInactive = async (reason) => {
+    if (!selectedUser) return;
+
     try {
-      setActionLoadingId(user.id);
-      await inactiveUser(user.id, reason, 'admin');
+      setActionLoadingId(selectedUser.id);
+      await inactiveUser(selectedUser.id, reason, 'admin');
       showToast('Vô hiệu hóa thành công');
       fetchUsers();
+      setShowReasonModal(false);
+      setSelectedUser(null);
     } catch (e) {
       showToast('Lỗi vô hiệu hóa', 'error');
-    } finally { setActionLoadingId(null); }
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Đóng modal
+  const handleCloseReasonModal = () => {
+    setShowReasonModal(false);
+    setSelectedUser(null);
   };
 
   const handleActive = async (user) => {
@@ -183,7 +297,13 @@ const AdminUserList = () => {
               </div>
             </div>
           </div>
-          {getStatusBadge(user.status)}
+          <div className="text-right">
+            {getStatusBadge(user.status)}
+            {/* Hiển thị ID dưới trạng thái */}
+            <div className="text-xs text-gray-500 mt-1">
+              ID: {user.id}
+            </div>
+          </div>
         </div>
 
         {/* Contact Info */}
@@ -206,13 +326,6 @@ const AdminUserList = () => {
 
         {/* Actions */}
         <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">ID: {user.id}</span>
-            <button className="inline-flex items-center px-3 py-1.5 text-xs bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors">
-              <FaEye className="w-3 h-3 mr-1" />
-              Xem chi tiết
-            </button>
-          </div>
           {(user.role === 'TEACHER' || user.role === 'STUDENT') && (
             <div className="flex items-center gap-2">
               {user.originalStatus === 'ACTIVE' ? (
@@ -228,13 +341,6 @@ const AdminUserList = () => {
                   className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-xs rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >{actionLoadingId === user.id ? 'Đang xử lý...' : 'Kích hoạt'}</button>
               )}
-              {/* Hiển thị cả hai nút nếu muốn song song */}
-              <button
-                onClick={() => user.originalStatus === 'ACTIVE' ? handleInactive(user) : handleActive(user)}
-                disabled={actionLoadingId === user.id}
-                className="hidden" aria-hidden>
-                Toggle
-              </button>
             </div>
           )}
         </div>
@@ -511,6 +617,15 @@ const AdminUserList = () => {
         isOpen={showAddUserModal}
         onClose={() => setShowAddUserModal(false)}
         onSuccess={handleAddUserSuccess}
+      />
+
+      {/* Reason Modal */}
+      <ReasonModal
+        isOpen={showReasonModal}
+        onClose={handleCloseReasonModal}
+        onConfirm={handleConfirmInactive}
+        user={selectedUser}
+        loading={actionLoadingId === selectedUser?.id}
       />
     </div>
   );

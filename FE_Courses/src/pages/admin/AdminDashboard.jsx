@@ -1,35 +1,49 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  FaUsers,
-  FaGraduationCap,
-  FaClipboardList,
-  FaUserGraduate,
-  FaChalkboardTeacher,
-  FaArrowUp,
-  FaArrowDown,
-  FaEye,
-  FaPlus,
-  FaChartLine,
-  FaCalendarAlt,
-  FaBell,
-  FaCog,
-  FaCheckCircle,
-  FaExclamationTriangle,
-  FaClock,
-  FaDownload,
-  FaEdit,
-  FaTrash,
-  FaUserLock,
-  FaUserCheck
+    FaUsers,
+    FaGraduationCap,
+    FaClipboardList,
+    FaUserGraduate,
+    FaChalkboardTeacher,
+    FaArrowUp,
+    FaArrowDown,
+    FaEye,
+    FaPlus,
+    FaBell,
+    FaClock,
+    FaEdit,
+    FaTrash,
+    FaUserLock,
+    FaUserCheck, FaCheckCircle, FaTimesCircle
 } from 'react-icons/fa';
 import { getNotificationUser } from '@/services/hooks/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+// Services to populate stats
+import { getAllUsers, getAllCourseActive, getAllExams } from '@/services/hooks/adminService';
+import { getAllStudent } from '@/services/hooks/studentService';
+import { getAllTeacher } from '@/services/hooks/teacherService';
+import { getSubmissionsList, notAttempts } from '@/services/hooks/submissionService';
+import AddUserModal from "@/pages/admin/user/AddUserModal.jsx";
 
 const AdminDashboard = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [recentActivities, setRecentActivities] = useState([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
+  // Stats state
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsData, setStatsData] = useState({
+    totalUsers: 0,
+    activeCourses: 0,
+    totalExams: 0,
+    totalStudents: 0,
+    totalTeachers: 0,
+    completionRate: 0,
+  });
 
   // Mapping notification types to icons and colors
   const notificationTypeConfig = {
@@ -105,6 +119,112 @@ const AdminDashboard = () => {
     }
   };
 
+  // Helper to normalize possibly-wrapped API arrays
+  const toArray = (maybe) => {
+    if (Array.isArray(maybe)) return maybe;
+    if (maybe && Array.isArray(maybe.data)) return maybe.data;
+    if (maybe && Array.isArray(maybe.content)) return maybe.content;
+    return [];
+  };
+
+  // Compute completion rate across exams
+  const computeCompletionRate = async (exams = []) => {
+    if (!exams.length) return 0;
+    try {
+      // Limit to avoid heavy loads on very large datasets
+      const list = exams.slice(0, 20); // compute on up to 20 exams
+      const results = await Promise.all(
+        list.map(async (ex) => {
+          const examId = ex.examId ?? ex.id;
+          if (!examId) return { completed: 0, total: 0 };
+          try {
+            const [subs, notTried] = await Promise.all([
+              getSubmissionsList(examId),
+              notAttempts(examId)
+            ]);
+            const submissions = Array.isArray(subs) ? subs : toArray(subs);
+            const notAttempted = Array.isArray(notTried) ? notTried : toArray(notTried);
+            const totalAssigned = submissions.length + notAttempted.length;
+            // If submission object has a status, count only finished ones, else treat any submission as completed
+            const finishedCount = submissions.filter((s) => {
+              const st = (s.status || s.state || '').toString().toUpperCase();
+              if (!st) return true;
+              return st.includes('FINISH') || st.includes('COMPLET');
+            }).length;
+            return { completed: finishedCount, total: totalAssigned || submissions.length };
+          } catch {
+            return { completed: 0, total: 0 };
+          }
+        })
+      );
+      const agg = results.reduce(
+        (acc, r) => ({ completed: acc.completed + r.completed, total: acc.total + r.total }),
+        { completed: 0, total: 0 }
+      );
+      if (!agg.total) return 0;
+      return Math.round((agg.completed / agg.total) * 100);
+    } catch {
+      return 0;
+    }
+  };
+
+  // Fetch dashboard stats
+  const fetchStats = async () => {
+    try {
+      setStatsLoading(true);
+      const [usersRes, coursesRes, examsRes, studentsRes, teachersRes] = await Promise.all([
+        getAllUsers(),
+        getAllCourseActive(),
+        getAllExams(),
+        getAllStudent(),
+        getAllTeacher(),
+      ]);
+
+      const users = toArray(usersRes);
+      const courses = toArray(coursesRes);
+      const exams = toArray(examsRes);
+      const students = toArray(studentsRes);
+      const teachers = toArray(teachersRes);
+
+      const rate = await computeCompletionRate(exams);
+
+      setStatsData({
+        totalUsers: users.length,
+        activeCourses: courses.length,
+        totalExams: exams.length,
+        totalStudents: students.length,
+        totalTeachers: teachers.length,
+        completionRate: rate,
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      setStatsData({
+        totalUsers: 0,
+        activeCourses: 0,
+        totalExams: 0,
+        totalStudents: 0,
+        totalTeachers: 0,
+        completionRate: 0,
+      });
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+    // Toast functions
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => {
+            setToast({ show: false, message: '', type: 'success' });
+        }, 3000);
+    };
+
+    // Handle add user success
+    const handleAddUserSuccess = (message, type = 'success') => {
+        showToast(message, type);
+        setShowAddUserModal(false);
+    };
+
   // Fetch recent activities from notifications
   const fetchRecentActivities = async () => {
     if (!token) return;
@@ -156,13 +276,15 @@ const AdminDashboard = () => {
     fetchRecentActivities();
   }, [token]);
 
-  // Mock data - sẽ được thay thế bằng API calls
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  // Build stats cards from state
   const stats = [
     {
       title: 'Tổng người dùng',
-      value: 1247,
-      change: '+12%',
-      trend: 'up',
+      value: statsLoading ? '—' : statsData.totalUsers,
       icon: FaUsers,
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50',
@@ -170,9 +292,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'Khóa học hoạt động',
-      value: 32,
-      change: '+8%',
-      trend: 'up',
+      value: statsLoading ? '—' : statsData.activeCourses,
       icon: FaGraduationCap,
       color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50',
@@ -180,9 +300,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'Bài kiểm tra',
-      value: 156,
-      change: '+24%',
-      trend: 'up',
+      value: statsLoading ? '—' : statsData.totalExams,
       icon: FaClipboardList,
       color: 'from-purple-500 to-purple-600',
       bgColor: 'bg-purple-50',
@@ -190,9 +308,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'Học viên đang học',
-      value: 892,
-      change: '+15%',
-      trend: 'up',
+      value: statsLoading ? '—' : statsData.totalStudents,
       icon: FaUserGraduate,
       color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50',
@@ -200,9 +316,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'Giảng viên',
-      value: 45,
-      change: '+3%',
-      trend: 'up',
+      value: statsLoading ? '—' : statsData.totalTeachers,
       icon: FaChalkboardTeacher,
       color: 'from-pink-500 to-pink-600',
       bgColor: 'bg-pink-50',
@@ -210,10 +324,8 @@ const AdminDashboard = () => {
     },
     {
       title: 'Tỷ lệ hoàn thành',
-      value: '87%',
-      change: '+5%',
-      trend: 'up',
-      icon: FaCheckCircle,
+      value: statsLoading ? '—' : `${statsData.completionRate}%`,
+      icon: FaUserCheck,
       color: 'from-teal-500 to-teal-600',
       bgColor: 'bg-teal-50',
       textColor: 'text-teal-600'
@@ -222,6 +334,22 @@ const AdminDashboard = () => {
 
   return (
     <div className="p-6 space-y-6">
+        {/* Toast Notification */}
+        {toast.show && (
+            <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transition-all duration-300 ${
+                toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`}>
+                <div className="flex items-center space-x-2">
+                    {toast.type === 'success' ? (
+                        <FaCheckCircle className="w-5 h-5" />
+                    ) : (
+                        <FaTimesCircle className="w-5 h-5" />
+                    )}
+                    <span>{toast.message}</span>
+                </div>
+            </div>
+        )}
+
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -237,10 +365,6 @@ const AdminDashboard = () => {
             <FaClock className="inline mr-2" />
             {currentTime.toLocaleString('vi-VN')}
           </div>
-          <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">
-            <FaDownload />
-            <span>Xuất báo cáo</span>
-          </button>
         </div>
       </div>
 
@@ -263,15 +387,6 @@ const AdminDashboard = () => {
                   <p className="text-3xl font-bold text-gray-900 mb-2">
                     {stat.value}
                   </p>
-                  <div className="flex items-center space-x-2">
-                    <div className={`flex items-center space-x-1 ${
-                      stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      <TrendIcon className="text-xs" />
-                      <span className="text-sm font-medium">{stat.change}</span>
-                    </div>
-                    <span className="text-xs text-gray-500">so với tháng trước</span>
-                  </div>
                 </div>
                 <div className={`${stat.bgColor} p-3 rounded-xl group-hover:scale-110 transition-transform duration-200`}>
                   <Icon className={`text-2xl ${stat.textColor}`} />
@@ -358,17 +473,27 @@ const AdminDashboard = () => {
             Thao tác nhanh
           </h3>
           <div className="space-y-4">
-            <button className="w-full bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
+            <button
+                onClick={() => setShowAddUserModal(true)}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
               <FaPlus className="text-lg" />
               <span>Thêm người dùng mới</span>
             </button>
-            <button className="w-full bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
+            <button
+                onClick={() => navigate('/admin/courses/new')}
+                className="w-full bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg transition-colors flex items-center space-x-3">
               <FaGraduationCap className="text-lg" />
               <span>Tạo khóa học mới</span>
             </button>
           </div>
         </div>
       </div>
+        {/* Add User Modal */}
+        <AddUserModal
+            isOpen={showAddUserModal}
+            onClose={() => setShowAddUserModal(false)}
+            onSuccess={handleAddUserSuccess}
+        />
     </div>
   );
 };

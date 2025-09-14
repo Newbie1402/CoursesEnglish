@@ -40,6 +40,16 @@ export const getAllCourses = async () => {
     }
 }
 
+export const getAllCourseActive = async () => {
+    try{
+        const res = await api.get(`/api/courses/view/all`);
+        return res?.data || [];
+    } catch (err) {
+        console.error('Error fetching active courses:', err);
+        throw err;
+    }
+}
+
 export const getAllExams = async () => {
     try{
         const res = await api.get(`/api/exams`);

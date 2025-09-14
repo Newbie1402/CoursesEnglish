@@ -43,10 +43,19 @@ export const getCourseOfStudent = async (studentId) => {
     try {
         const res = await api.get(`/api/courses/student/${studentId}`);
         const raw = res?.data;
-        const list = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
-        return list;
+        return Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
     } catch (err) {
         console.error(`Error fetching course for studentID ${studentId}:`, err);
         return [];// luôn trả về mảng để tránh phải check null phía UI
+    }
+}
+
+export const getCourseOfTeacher = async (teacherId) => {
+    try {
+        const res = await api.get(`/api/courses/teacher/${teacherId}`);
+        return res?.data || null; // Trả về null nếu không có dữ liệu
+    } catch (err) {
+        console.error(`Error fetching course for teacherID ${teacherId}:`, err);
+        return null;
     }
 }

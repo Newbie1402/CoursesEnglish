@@ -11,6 +11,7 @@ import { getCourseDetails, deleteCourse } from '@/services/hooks/courseService';
 import { getProgress } from "@/lib/utils.js";
 import AddStudentModal from '../student/AddStudentModal';
 import LessonDetailModal from "@/pages/admin/lesson/LessonDetailModal.jsx";
+import { formatDate } from "@/lib/utils.js";
 
 const AdminCourseDetail = () => {
   const { courseId } = useParams();
@@ -140,11 +141,11 @@ const AdminCourseDetail = () => {
     try {
       await deleteCourse(courseId);
       setShowDeleteConfirmModal(false);
-      showToast('Xóa khóa học thành công', 'success');
+      showToast('Ẩn khóa học thành công', 'success');
       navigate('/admin/courses');
     } catch (error) {
       setShowDeleteConfirmModal(false);
-      showToast('Xóa khóa học thất bại', 'error');
+      showToast('Ẩn khóa học thất bại', 'error');
     }
   };
 
@@ -186,7 +187,7 @@ const AdminCourseDetail = () => {
                     className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all duration-200 space-x-2 shadow-lg"
                   >
                     <FaTrash className="w-4 h-4" />
-                    <span>Xóa khóa học</span>
+                    <span>Ẩn khóa học</span>
                   </button>
                 </div>
               </div>
@@ -209,7 +210,7 @@ const AdminCourseDetail = () => {
                     </div>
                     <h3 className="text-lg font-semibold text-purple-900">Thời gian học</h3>
                   </div>
-                  <p className="text-purple-800 font-medium">{course.startDate} - {course.endDate}</p>
+                  <p className="text-purple-800 font-medium">{formatDate(course.startDate)} - {formatDate(course.endDate)}</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
@@ -376,7 +377,9 @@ const AdminCourseDetail = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {students.map((student) => (
-                      <tr key={student.studentId} className="hover:bg-gray-50 transition-colors">
+                      <tr key={student.id}
+                          onClick={() => navigate(`/admin/students/${student.id}`)}
+                          className="hover:bg-gray-50 transition-colors cursor-pointer">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
@@ -384,7 +387,7 @@ const AdminCourseDetail = () => {
                             </div>
                             <div>
                               <p className="font-medium text-gray-900">{student.fullName}</p>
-                              <p className="text-sm text-gray-500">ID: {student.studentId}</p>
+                              <p className="text-sm text-gray-500">ID: {student.id}</p>
                             </div>
                           </div>
                         </td>
@@ -451,16 +454,6 @@ const AdminCourseDetail = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900">Danh sách bài tập</h2>
-              <button
-                onClick={() => {
-                  // TODO: Implement add assignment functionality
-                  showToast('Tính năng thêm bài tập sẽ được cập nhật sớm', 'info');
-                }}
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 space-x-2 shadow-lg"
-              >
-                <FaClipboardList className="w-4 h-4" />
-                <span>Thêm bài tập</span>
-              </button>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -471,14 +464,10 @@ const AdminCourseDetail = () => {
                   </div>
                   <p className="text-gray-500 mb-4">Chưa có bài tập nào trong khóa học này</p>
                   <button
-                    onClick={() => {
-                      // TODO: Implement add assignment functionality
-                      showToast('Tính năng thêm bài tập sẽ được cập nhật sớm', 'info');
-                    }}
                     className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors space-x-2"
                   >
                     <FaClipboardList className="w-4 h-4" />
-                    <span>Thêm bài tập đầu tiên</span>
+                    <span>Chưa có bài tập</span>
                   </button>
                 </div>
               ) : (
@@ -489,7 +478,6 @@ const AdminCourseDetail = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hạn nộp</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm tối đa</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -513,10 +501,10 @@ const AdminCourseDetail = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                          {assignment.createdAt ? new Date(assignment.createdAt).toLocaleDateString('vi-VN') : '-'}
+                          {assignment.startTime ? new Date(assignment.startTime).toLocaleDateString('vi-VN') : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                          {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString('vi-VN') : '-'}
+                          {assignment.endTime ? new Date(assignment.endTime).toLocaleDateString('vi-VN') : '-'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -534,9 +522,6 @@ const AdminCourseDetail = () => {
                               </>
                             )}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                          {assignment.maxScore ? `${assignment.maxScore} điểm` : '-'}
                         </td>
                       </tr>
                     ))}
@@ -624,17 +609,17 @@ const AdminCourseDetail = () => {
                 <FaTrash className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Xác nhận xóa khóa học</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Xác nhận ẩn khóa học</h3>
                 <p className="text-sm text-gray-500">Hành động này không thể hoàn tác</p>
               </div>
             </div>
 
             <div className="mb-6">
               <p className="text-gray-700 leading-relaxed">
-                Bạn có chắc chắn muốn xóa khóa học <span className="font-semibold text-gray-900">"{course?.title}"</span>?
+                Bạn có chắc chắn muốn ẩn khóa học <span className="font-semibold text-gray-900">"{course?.title}"</span>?
               </p>
               <p className="text-sm text-red-600 mt-2">
-                ⚠️ Tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn.
+                ⚠️ Tất cả dữ liệu liên quan sẽ bị ẩn.
               </p>
             </div>
 
@@ -650,7 +635,7 @@ const AdminCourseDetail = () => {
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
                 <FaTrash className="w-4 h-4" />
-                <span>Xóa khóa học</span>
+                <span>Ẩn khóa học</span>
               </button>
             </div>
           </div>
