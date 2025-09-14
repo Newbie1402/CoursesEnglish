@@ -47,7 +47,7 @@ public class SubmissionAnswerController {
      * @return Câu trả lời sau khi cập nhật
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('STUDENT') and @submissionService.isSubmissionAnswerOwnedByCurrentUser(#id)")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ResponseData<SubmissionAnswer>> updateAnswer(
             @PathVariable Long id,
             @RequestBody @Valid SubmissionAnswer answer) {
@@ -58,7 +58,7 @@ public class SubmissionAnswerController {
      * Xóa câu trả lời
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('STUDENT') and @submissionService.isSubmissionAnswerOwnedByCurrentUser(#id)")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ResponseData<Void>> deleteAnswer(@PathVariable Long id) {
         return submissionService.deleteAnswer(id);
     }

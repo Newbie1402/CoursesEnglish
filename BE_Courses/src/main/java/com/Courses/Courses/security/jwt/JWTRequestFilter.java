@@ -34,6 +34,10 @@ public class JWTRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         final String authorizationHeader = request.getHeader("Authorization");
+
+        // Thêm log cho Authorization header
+        System.out.println("Authorization header: " + authorizationHeader);
+
         String username = null;
         String jwt = null;
 
@@ -43,37 +47,52 @@ public class JWTRequestFilter extends OncePerRequestFilter {
             if (tokenBlackListService.isTokenBlacklisted(jwt)) {
                 System.out.println("Blocked blacklisted token: " + jwt);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"unauthorized\",\"message\":\"Token is blacklisted\"}");
                 return;
             }
 
             try {
                 username = jwtUtil.extractUsername(jwt);
+                // Thêm log cho username được trích xuất
+                System.out.println("Extracted username: " + username);
             } catch (Exception e) {
-                // Log lỗi nhưng không ngăn chặn request
-                System.err.println("Errors username: " + e.getMessage());
+                // Trả về lỗi 401 thay vì cho phép request tiếp tục
+                System.err.println("Invalid token: " + e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"unauthorized\",\"message\":\"Invalid or expired token\"}");
+                return;
             }
+        }
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
                 if (jwtUtil.validateToken(jwt, userDetails)) {
-                    // Extract roles from token
                     List<String> roles = jwtUtil.extractRoles(jwt);
                     List<GrantedAuthority> authorities = roles.stream()
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
-
-                    // Create authentication token with roles
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("{\"error\":\"unauthorized\",\"message\":\"Invalid token\"}");
+                    return;
                 }
             } catch (Exception e) {
-                System.err.println("Error authen: " + e.getMessage());
+                System.err.println("Error during authentication: " + e.getMessage());
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("{\"error\":\"unauthorized\",\"message\":\"Authentication error\"}");
+                return;
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }

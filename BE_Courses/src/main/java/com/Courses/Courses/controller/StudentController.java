@@ -36,7 +36,7 @@ public class StudentController {
      * API lấy thông tin chi tiết học sinh theo id
      */
     @GetMapping("/view/{id}")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN') or @securityUtils.isCurrentUser(#id)")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('STUDENT') and @securityUtils.isCurrentUserByStudentId(#id)) or (hasRole('TEACHER') and @securityUtils.isAssignedTeacher(#id))")
     public ResponseEntity<ResponseData<StudentDto>> getStudentById(@PathVariable Long id) {
         return studentService.getStudentById(id);
     }
