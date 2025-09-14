@@ -42,7 +42,11 @@ public class SubmissionController {
      * Lấy tất cả bài nộp của một bài kiểm tra (chỉ dành cho TEACHER và ADMIN)
      */
     @GetMapping("/exam/{examId}")
-    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @PreAuthorize(
+            "hasRole('ADMIN') " +
+                    "or hasRole('TEACHER') " +
+                    "or (hasRole('STUDENT') and @securityUtils.isCurrentStudentOfExam(#examId))"
+    )
     public ResponseEntity<ResponseData<List<SubmissionDto>>> getAllByExam(@PathVariable Long examId) {
         return submissionService.getAllByExamId(examId);
     }

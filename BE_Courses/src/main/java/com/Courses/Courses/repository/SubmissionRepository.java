@@ -47,4 +47,13 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
             "WHERE ex.course_id = :courseId)",
             nativeQuery = true)
     List<Student> findStudentsNotAttemptedAnyCourseExams(@Param("courseId") Long courseId);
+
+    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Submission s WHERE s.id = :submissionId AND s.student.id = :studentId")
+    boolean existsByIdAndStudentId(@Param("submissionId") Long submissionId, @Param("studentId") Long studentId);
+
+    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END " +
+            "FROM Submission s " +
+            "WHERE s.exam.id = :examId AND s.student.id = :studentId")
+    boolean existsByExamIdAndStudentId(@Param("examId") Long examId, @Param("studentId") Long studentId);
+
 }

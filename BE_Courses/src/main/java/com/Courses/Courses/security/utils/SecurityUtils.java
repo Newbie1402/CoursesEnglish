@@ -4,6 +4,7 @@ import com.Courses.Courses.model.entity.Student;
 import com.Courses.Courses.model.entity.Teacher;
 import com.Courses.Courses.model.entity.Users;
 import com.Courses.Courses.repository.StudentRepository;
+import com.Courses.Courses.repository.SubmissionRepository;
 import com.Courses.Courses.repository.TeacherRepository;
 import com.Courses.Courses.repository.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ public class SecurityUtils {
 
     @Autowired
     private TeacherRepository teacherRepository;
+    @Autowired
+    private SubmissionRepository submissionRepository;
 
     /** ----------------- HÀM CŨ (wrapper, để code cũ không gãy) ----------------- */
     public boolean isCurrentUser(Long id) {
@@ -107,5 +110,36 @@ public class SecurityUtils {
 
         return true; // tạm thời cho phép hết student
     }
+
+    // Check student có submission trong exam hay không
+    public boolean isCurrentStudentOfExam(Long examId) {
+        String email = extractEmail();
+        if (email == null) return false;
+
+        Optional<Users> userOpt = usersRepository.findByEmail(email);
+        if (userOpt.isEmpty()) return false;
+
+        Student student = studentRepository.findStudentByUser_Id(userOpt.get().getId());
+        if (student == null) return false;
+
+        // ✅ Check trong bảng submission xem có record khớp examId + studentId không
+        return submissionRepository.existsByExamIdAndStudentId(examId, student.getId());
+    }
+
+    // Check submission thuộc về chính current student
+    public boolean isSubmissionOwnedByCurrentUser(Long submissionId) {
+        String email = extractEmail();
+        if (email == null) return false;
+
+        Optional<Users> userOpt = usersRepository.findByEmail(email);
+        if (userOpt.isEmpty()) return false;
+
+        Student student = studentRepository.findStudentByUser_Id(userOpt.get().getId());
+        if (student == null) return false;
+
+        return submissionRepository.existsByIdAndStudentId(submissionId, student.getId());
+    }
+
+
 
 }
