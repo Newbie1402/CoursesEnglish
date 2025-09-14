@@ -97,7 +97,7 @@ const MyCourses = ({ studentId: propStudentId }) => {
                             }
 
                             // Lấy dữ liệu teacher từ response mới
-                            const teacher = response.data;
+                            const teacher = response;
                             return {
                                 id: c.id,
                                 teacherName: teacher?.fullName || teacher?.name || "Chưa cập nhật",
@@ -450,11 +450,6 @@ const MyCourses = ({ studentId: propStudentId }) => {
                                     <div className="relative p-6 pb-4 bg-gradient-to-br from-blue-50 to-purple-50">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                                                        ID: {course.id}
-                                                    </span>
-                                                </div>
                                                 <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
                                                     {course.name}
                                                 </h3>

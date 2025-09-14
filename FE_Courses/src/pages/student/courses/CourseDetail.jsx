@@ -153,14 +153,14 @@ const CourseDetail = () => {
         (async () => {
             if (!course) return;
             // teacherId = 0 coi như chưa phân công → bỏ qua fetch
-            if (course.teacherId === 0) return;
+            if (course.teacherId === 0) return null;
             if (course.teacherName && course.teacherName.trim().length) return;
             if (!course.teacherId) return;
             try {
                 const detail = await getTeacherDetails(course.teacherId);
                 if (cancel) return;
-                if (detail?.fullName || detail?.name) {
-                    setCourse((prev) => prev ? { ...prev, teacherName: detail.fullName || detail.name } : prev);
+                if (detail.data?.fullName || detail?.name) {
+                    setCourse((prev) => prev ? { ...prev, teacherName: detail.data.fullName || detail.name } : prev);
                 }
             } catch (e) {
                 // silent
