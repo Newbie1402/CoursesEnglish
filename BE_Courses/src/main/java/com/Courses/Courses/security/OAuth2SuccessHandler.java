@@ -53,6 +53,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     @Autowired
     private AcceptedAccountRepository acceptedAccountRepository;
 
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -77,11 +80,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         // check accepted account
         Optional<AcceptedAccount> acceptedAccountOptional = acceptedAccountRepository.findByEmail(email);
         if (acceptedAccountOptional.isEmpty()) {
-            response.sendRedirect("http://localhost:5173/oauth2/error?reason=not_accepted");
+            response.sendRedirect(frontendUrl + "/oauth2/error?reason=not_accepted");
             return;
         }
 
-        // create or update user
         Optional<Users> optionalUser = usersRepository.findByEmail(email);
         Users user;
         if (optionalUser.isPresent()) {
@@ -116,13 +118,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String encodedToken = URLEncoder.encode(jwt, StandardCharsets.UTF_8);
 
 
-        String redirectUri = "http://localhost:5173/oauth2/redirect"
+        String redirectUri = frontendUrl + "/oauth2/redirect"
                 + "?token=" + encodedToken
                 + "&userId=" + user.getId()
                 + "&studentId=" + (studentId != null ? studentId : "null")
                 + "&teacherId=" + (teacherId != null ? teacherId : "null");
 
-
         response.sendRedirect(redirectUri);
+
     }
 }
