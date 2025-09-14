@@ -237,7 +237,7 @@ const StudentSettings = () => {
                                     />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-600 mb-1">Application</label>
+                                    <label className="block text-sm font-medium text-gray-600 mb-1">Giới thiệu bản thân</label>
                                     <textarea
                                         value={application}
                                         onChange={(e) => setApplication(e.target.value)}

@@ -19,6 +19,7 @@ import AdminCourseDetail from '@/pages/admin/course/AdminCourseDetail.jsx';
 import AdminExamList from '@/pages/admin/exam/AdminExamList.jsx';
 import AdminExamDetail from '@/pages/admin/exam/AdminExamDetail.jsx';
 import AdminNotificationList from '@/pages/admin/AdminNotificationList';
+import AdminReports from '@/pages/admin/AdminReports';
 import PrivateRoute from '@/components/auth/PrivateRoute';
 import AuthRedirect from '@/pages/login/AuthRedirect.jsx';
 import Forbidden403 from '@/pages/login/Forbidden403.jsx';
@@ -186,6 +187,7 @@ const router = createBrowserRouter([
       { path: 'exams/:examId', element: <AdminExamDetail /> },
       { path: 'submissions/:submissionId', element: <AdminSubmissionDetail /> },
       { path: 'notifications', element: <AdminNotificationList /> },
+      { path: 'reports', element: <AdminReports /> },
       { path: 'students', children: [
         { index: true, element: <AdminStudentList /> },
         { path: ':studentId', element: <AdminStudentDetail /> },

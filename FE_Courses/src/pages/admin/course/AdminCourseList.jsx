@@ -237,7 +237,9 @@ const AdminCourseList = () => {
         }
       </p>
       {(!searchTerm && filterStatus === 'all') && (
-        <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button
+            onClick={() => navigate('/admin/courses/new')}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           <FaPlus className="w-4 h-4 mr-2" />
           Tạo khóa học mới
         </button>

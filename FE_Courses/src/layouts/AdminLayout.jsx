@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   FaHome,
@@ -11,11 +11,13 @@ import {
   FaBars,
   FaTimes,
   FaSearch,
-  FaInfoCircle
+  FaInfoCircle,
+  FaChartLine
 } from 'react-icons/fa';
 import ProfileDropdownAdmin from '../components/ui/profile/ProfileDropdownAdmin.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { getUnreadNotification } from '@/services/hooks/notificationService.js';
+import {getNotificationUser, getUnreadNotification} from '@/services/hooks/notificationService.js';
+import {NOTIFICATION_TYPES} from "@/pages/teacher/notifications/NotificaitonsTypes.jsx";
 
 const adminMenu = [
   {
@@ -60,7 +62,32 @@ const adminMenu = [
     icon: FaChalkboardTeacher,
     color: 'text-teal-500'
   },
+  {
+    label: 'Báo cáo',
+    path: '/admin/reports',
+    icon: FaChartLine,
+    color: 'text-red-500'
+  },
 ];
+
+// Helper: format ISO date to "time ago" in Vietnamese
+const formatTimeAgo = (dateInput) => {
+  try {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    const diff = Date.now() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    if (seconds < 60) return 'vừa xong';
+    if (minutes < 60) return `${minutes} phút trước`;
+    if (hours < 24) return `${hours} giờ trước`;
+    if (days < 7) return `${days} ngày trước`;
+    return date.toLocaleDateString();
+  } catch {
+    return '';
+  }
+};
 
 const AdminLayout = () => {
   const { user, token } = useAuth();
@@ -69,9 +96,12 @@ const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [recentNotifications, setRecentNotifications] = useState([]);
   const [previousUnreadCount, setPreviousUnreadCount] = useState(0);
   const [showNewNotificationAlert, setShowNewNotificationAlert] = useState(false);
   const [alertTimeout, setAlertTimeout] = useState(null);
+  const notificationsRef = useRef(null);
 
   // Tạo admin object từ user data
   const admin = {
@@ -84,6 +114,44 @@ const AdminLayout = () => {
   const getCurrentPageTitle = () => {
     const currentMenu = adminMenu.find(item => item.path === location.pathname);
     return currentMenu?.label || 'Quản trị hệ thống';
+  };
+
+  const fetchRecentNotifications = async () => {
+    if (!token) return;
+
+    try {
+      setLoadingNotifications(true);
+      const response = await getNotificationUser(token);
+
+      if (response?.data?.content) {
+        // Lấy 5 notifications gần nhất
+        const recent5Notifications = response.data.content.slice(0, 5);
+
+        // Transform notifications để có format phù hợp với UI
+        const transformedNotifications = recent5Notifications.map((notification) => {
+          const typeConfig = NOTIFICATION_TYPES[notification.type] || NOTIFICATION_TYPES.COURSE_CREATED;
+
+          return {
+            id: notification.id,
+            type: notification.type,
+            message: notification.message,
+            time: formatTimeAgo(notification.createdAt),
+            icon: typeConfig.icon,
+            color: { text: typeConfig.color, bg: typeConfig.bgColor },
+            read: notification.read
+          };
+        });
+
+        setRecentNotifications(transformedNotifications);
+      } else {
+        setRecentNotifications([]);
+      }
+    } catch (error) {
+      console.error('Error fetching recent notifications:', error);
+      setRecentNotifications([]);
+    } finally {
+      setLoadingNotifications(false);
+    }
   };
 
   // Fetch số lượng thông báo chưa đọc
@@ -122,6 +190,7 @@ const AdminLayout = () => {
   // Handle notification click
   const handleNotificationClick = () => {
     navigate('/admin/notifications');
+    setShowNotifications(false);
     setShowNewNotificationAlert(false); // Ẩn alert khi click vào notifications
   };
 
@@ -132,6 +201,11 @@ const AdminLayout = () => {
       clearTimeout(alertTimeout);
     }
   };
+
+  // Fetch recent notifications khi component mount
+  useEffect(() => {
+    fetchRecentNotifications();
+  }, [token]);
 
   // Fetch unread notifications khi component mount
   useEffect(() => {
@@ -155,6 +229,32 @@ const AdminLayout = () => {
       }
     };
   }, [alertTimeout]);
+
+  // Refresh recent notifications when opening dropdown
+  useEffect(() => {
+    if (showNotifications) {
+      fetchRecentNotifications();
+    }
+  }, [showNotifications]);
+
+  // Đóng dropdown khi click ra ngoài hoặc nhấn Escape
+  useEffect(() => {
+    if (!showNotifications) return;
+    const handleClickOutside = (e) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(e.target)) {
+        setShowNotifications(false);
+      }
+    };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') setShowNotifications(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [showNotifications]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -288,29 +388,83 @@ const AdminLayout = () => {
             </div>
 
             {/* Notifications */}
-            <button
-              onClick={handleNotificationClick}
-              className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors group"
-              title="Thông báo"
-            >
-              <FaBell className={`text-lg transition-colors ${
-                loadingNotifications ? 'text-blue-500 animate-pulse' : 'text-gray-600 group-hover:text-blue-600'
-              }`} />
+            <div className="relative" ref={notificationsRef}>
+              <button
+                onClick={() => setShowNotifications((v) => !v)}
+                className="relative p-3 rounded-xl hover:bg-gray-100 transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                aria-label="Mở thông báo"
+                aria-haspopup="menu"
+                aria-expanded={showNotifications}
+                title="Thông báo"
+              >
+                <FaBell className="w-5 h-5 text-gray-600 group-hover:text-blue-600" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center leading-none shadow-sm">
+                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                  </span>
+                )}
+              </button>
 
-              {/* Badge hiển thị số thông báo chưa đọc */}
-              {unreadNotifications > 0 && !loadingNotifications && (
-                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs
-                               rounded-full flex items-center justify-center animate-pulse font-medium
-                               shadow-lg border-2 border-white">
-                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                </span>
-              )}
+              {/* Notifications Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+                  <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-900">Thông báo</h3>
+                    <span className="text-xs text-gray-500">Chưa đọc: {unreadNotifications}</span>
+                  </div>
 
-              {/* Loading indicator */}
-              {loadingNotifications && (
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
+                  <div className="max-h-64 overflow-y-auto">
+                    {loadingNotifications ? (
+                      <div className="divide-y divide-gray-100">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="p-4 flex items-start space-x-3 animate-pulse">
+                            <div className="w-9 h-9 rounded-lg bg-gray-100" />
+                            <div className="flex-1 space-y-2">
+                              <div className="h-3 bg-gray-100 rounded w-3/4" />
+                              <div className="h-3 bg-gray-100 rounded w-1/2" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : recentNotifications.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500">
+                        <FaBell className="mx-auto mb-2 w-6 h-6 text-gray-400" />
+                        <p className="text-sm">Không có thông báo nào</p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-100">
+                        {recentNotifications.map((n) => {
+                          const Icon = n.icon || FaBell;
+                          return (
+                            <div key={n.id} className="p-4 hover:bg-gray-50">
+                              <div className="flex items-start space-x-3">
+                                <div className={`p-2 rounded-lg ${n.color?.bg || 'bg-blue-100'}`}>
+                                  <Icon className={`${n.color?.text || 'text-blue-600'} w-5 h-5`} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-gray-900 truncate">{n.message}</p>
+                                  <p className="text-xs text-gray-500 mt-1">{n.time}</p>
+                                </div>
+                                {!n.read && <span className="w-2 h-2 bg-blue-500 rounded-full mt-2" />}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-3 border-t border-gray-100 bg-gray-50">
+                    <button
+                      onClick={handleNotificationClick}
+                      className="w-full text-center text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    >
+                      Xem tất cả thông báo
+                    </button>
+                  </div>
+                </div>
               )}
-            </button>
+            </div>
 
             {/* Profile Dropdown */}
             <ProfileDropdownAdmin admin={admin} />
