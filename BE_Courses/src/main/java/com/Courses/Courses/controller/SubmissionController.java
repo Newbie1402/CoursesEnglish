@@ -33,7 +33,7 @@ public class SubmissionController {
      * Chỉ học sinh đó mới nhìn thấy bài nộp của mình
      */
     @GetMapping("/student/{studentId}")
-    @PreAuthorize("hasRole('STUDENT') and @securityUtils.isCurrentUser(#studentId)")
+    @PreAuthorize("hasRole('STUDENT') ")
     public ResponseEntity<ResponseData<List<SubmissionDto>>> getAllByStudent(@PathVariable Long studentId) {
         return submissionService.getAllByStudent(studentId);
     }
