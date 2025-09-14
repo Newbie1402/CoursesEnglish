@@ -73,8 +73,8 @@ const AdminCourseCreate = () => {
   useEffect(() => {
     const fetchTeachers = async () => {
       setLoadingTeachers(true);
-      const allTeachers = await getAllTeacher();
-      setTeachers(allTeachers);
+      const response = await getAllTeacher();
+      setTeachers(response.data || []);
       setLoadingTeachers(false);
     };
 

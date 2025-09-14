@@ -43,6 +43,7 @@ const AdminCourseDetail = () => {
 
   useEffect(() => {
     if (!course) return; // Chỉ chạy khi course đã có dữ liệu
+    console.log("teacherId", course.teacherId);
 
     const fetchTeacher = async () => {
       if (!course.teacherId) {
@@ -51,7 +52,7 @@ const AdminCourseDetail = () => {
       }
 
       const teacher = await getTeacherDetails(course.teacherId);
-      setTeacherName(teacher?.fullName || 'Không xác định');
+      setTeacherName(teacher.data?.fullName || 'Không xác định');
     };
 
     fetchTeacher();

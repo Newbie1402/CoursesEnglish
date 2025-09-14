@@ -35,7 +35,7 @@ const TeacherDashboard = () => {
   const { token } = useAuth();
   const teacherId = localStorage.getItem('teacherId');
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const { getTeacherInfo } = useTeacherService(BASE_URL);
+  const { getTeacherDetails } = useTeacherService(BASE_URL);
   const { getCourseList } = useCourseService();
   const { getActiveExamsByTeacher } = useAssignmentService();
 
@@ -66,7 +66,7 @@ const TeacherDashboard = () => {
 
   useEffect(() => {
     if (teacherId) {
-      getTeacherInfo(teacherId).then((data) => {
+      getTeacherDetails(teacherId).then((data) => {
         if (data) {
           setProfile({
             fullName: data.fullName || '',

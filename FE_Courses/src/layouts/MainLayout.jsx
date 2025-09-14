@@ -78,7 +78,7 @@ const MainLayout = () => {
   // Lấy thông tin giảng viên từ API
   const teacherId = localStorage.getItem('teacherId');
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const { getTeacherInfo } = useTeacherService(BASE_URL);
+  const { getTeacherDetails } = useTeacherService(BASE_URL);
   const [profile, setProfile] = React.useState({
     fullName: '',
     email: '',
@@ -88,7 +88,7 @@ const MainLayout = () => {
 
   React.useEffect(() => {
     if (teacherId) {
-      getTeacherInfo(teacherId).then((data) => {
+      getTeacherDetails(teacherId).then((data) => {
         if (data) {
           setProfile({
             fullName: data.fullName || '',
